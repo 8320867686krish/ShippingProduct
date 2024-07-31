@@ -1,8 +1,7 @@
 <?php
 
-use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ApiController;
+use App\Http\Controllers\ProductApiController;
 use App\Http\Controllers\HomeController;
 
 /*
@@ -22,4 +21,4 @@ Route::get('/{path?}', [HomeController::class, 'common'])
     ->where('path', '.*')
     ->fallback();
 
-Route::get('/products', [ApiController::class, 'products'])->name('products');
+Route::get('/products', [ProductApiController::class, 'products'])->name('products');
