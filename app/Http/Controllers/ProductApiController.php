@@ -103,7 +103,7 @@ class ApiController extends Controller
     public function getCountryList(Request $request)
     {
         try {
-            Retrieve the Shopify session
+            // Retrieve the Shopify session
             $shop = $request->attributes->get('shopifySession');
             // $shop = "krishnalaravel-test.myshopify.com";
 
