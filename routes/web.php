@@ -14,6 +14,8 @@ use App\Http\Controllers\HomeController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
+
 Route::get('/', [HomeController::class, 'index'])->middleware(['verify.shop', 'verify.shopify'])->name('home');
 Route::get('/{path?}', [HomeController::class, 'common'])
     ->where('path', '^(?!uploads).')
@@ -21,4 +23,8 @@ Route::get('/{path?}', [HomeController::class, 'common'])
     ->where('path', '.*')
     ->fallback();
 
+
+    
 Route::get('/products', [ProductApiController::class, 'products'])->name('products');
+    
+

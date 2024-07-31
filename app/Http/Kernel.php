@@ -66,6 +66,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'csp' => \App\Http\Middleware\ContentSecurityPolicy::class,
         'verify.shop' => \App\Http\Middleware\VerifyShop::class,
-
+        'check.token' => \App\Http\Middleware\CheckToken::class,
     ];
 }

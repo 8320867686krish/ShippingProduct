@@ -6,10 +6,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use DougSisk\CountryState\CountryState;
+use CountryState;
+
 use Illuminate\Http\Client\RequestException;
 
-class ApiController extends Controller
+class ProductApiController extends Controller
 {
     public function products(Request $request)
     {
@@ -105,7 +106,7 @@ class ApiController extends Controller
         try {
             // Retrieve the Shopify session
             $shop = $request->attributes->get('shopifySession');
-            // $shop = "krishnalaravel-test.myshopify.com";
+            // $shop = "swatipatel.myshopify.com";
 
             if (!$shop) {
                 return response()->json([
@@ -113,10 +114,10 @@ class ApiController extends Controller
                     'message' => 'Token not provided.'
                 ], 400);
             }
-
+            
             // Fetch the token for the shop
             $token = User::where('name', $shop)->pluck('password')->first();
-
+            
             if (!$token) {
                 return response()->json([
                     'status' => false,
@@ -125,7 +126,6 @@ class ApiController extends Controller
             }
 
             $countriesArray = CountryState::getCountries();
-
             // Initialize an empty array to hold the formatted data
             $countries = [];
 
