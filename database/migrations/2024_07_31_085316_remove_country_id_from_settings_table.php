@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::table('settings', function (Blueprint $table) {
             if (Schema::hasColumn('settings', 'country_id')) {
-                $table->dropForeign(['country_id']);
+                $table->dropColumn('country_id');
+                // $table->dropForeign(['country_id']);
             }
 
-            $table->dropColumn('country_id');
         });
     }
 
