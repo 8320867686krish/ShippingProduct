@@ -14,14 +14,26 @@ class ProductApiController extends Controller
 {
     public function products(Request $request)
     {
-        $shopName = $request->input('shop');
-        $shopExist = User::where( 'name', $shopName )->first();
+        $shop = $request->attributes->get('shopifySession');
+            // $shop = "swatipatel.myshopify.com";
 
-        if (!$shopExist) {
-            return response()->json(['error' => 'Shop not found'], 404);
-        }
+            if (!$shop) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token not provided.'
+                ], 400);
+            }
+            
+            // Fetch the token for the shop
+            $token = User::where('name', $shop)->pluck('password')->first();
+            
+            if (!$token) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not found.'
+                ], 404);
+            }
 
-        $token = $shopExist->password;
         $first = $request->input('first', 5);
         $last = $request->input('last', 5);
        
@@ -81,7 +93,7 @@ class ProductApiController extends Controller
         $response = Http::withHeaders( [
             'X-Shopify-Access-Token' => $token,
             'Content-Type' => 'application/json',
-        ] )->post( 'https://' . $shopName . '/admin/api/2023-10/graphql.json', [
+        ] )->post( 'https://' . $shop . '/admin/api/2023-10/graphql.json', [
             'query' => $query,
             // 'variables' => $variables, 
         ] );

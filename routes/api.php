@@ -20,4 +20,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::middleware(['check.token'])->group(function () {
     Route::get('country', [ProductApiController::class,'getCountryList']);
+    Route::get('products', [ProductApiController::class, 'products'])->name('products');
 });

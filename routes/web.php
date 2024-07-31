@@ -25,6 +25,6 @@ Route::get('/{path?}', [HomeController::class, 'common'])
 
 
     
-Route::get('/products', [ProductApiController::class, 'products'])->name('products');
+
     
 
