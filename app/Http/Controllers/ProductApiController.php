@@ -26,7 +26,7 @@ class ProductApiController extends Controller
             
             // Fetch the token for the shop
             $token = User::where('name', $shop)->pluck('password')->first();
-            
+           
             if (!$token) {
                 return response()->json([
                     'status' => false,
@@ -39,7 +39,7 @@ class ProductApiController extends Controller
        
         $endCursor = $request->input('endCursor', null);
         $startCursor = $request->input('startCursor', null);
-
+      
         $query = '{ products(';
 
         if (isset($endCursor)) {
@@ -60,9 +60,7 @@ class ProductApiController extends Controller
                       node { 
                         id 
                         title 
-                        price 
-                        sku 
-                        position                        
+                        price                     
                       } 
                     } 
                   } 
@@ -70,7 +68,6 @@ class ProductApiController extends Controller
                     edges { 
                       node { 
                       src 
-                         
                       } 
                     } 
                   } 
@@ -87,30 +84,54 @@ class ProductApiController extends Controller
           } 
         } 
     '; 
-
+    
         Log::info('query:', ['query' => $query]);
 
         $response = Http::withHeaders( [
             'X-Shopify-Access-Token' => $token,
             'Content-Type' => 'application/json',
-        ] )->post( 'https://' . $shop . '/admin/api/2023-10/graphql.json', [
-            'query' => $query,
-            // 'variables' => $variables, 
+        ] )->post( 'https://' . $shop . '/admin/api/2023-07/graphql.json', [
+            'query' => $query, 
         ] );
 
-        if ( $response->failed() ) {
-            return [ 'data' => $response->json() ];
-        } else {
-            return [ 'data' => $response->json() ];
-        }
-
+        
         if (isset($response['data']['errors'])) {
             return response()->json(['error' => 'Failed to fetch products', 'details' => $response['data']['errors']], 500);
         }
 
-        $productsData = $response['data']['data']['products']['edges'];
-        
-        return response()->json($productsData);
+        $jsonResponse = $response->json();
+
+            // Prepare the response data
+            $data = [];
+            if (isset($jsonResponse['data'])) 
+            {
+                $collectionsArray = [];
+                foreach ($jsonResponse['data']['products']['edges'] as $value) {
+                    $product = $value['node'];
+                    // Fetch the first variant's price
+                    $price = null;
+                    if (isset($product['variants']['edges'][0]['node']['price'])) {
+                        $price = $product['variants']['edges'][0]['node']['price'];
+                    }
+                    $itemArray = [
+                        'id' => str_replace('gid://shopify/Product/', '', $product['id']),
+                        'title' => ucfirst($product['title']),
+                        'image' => isset($product['images']['edges'][0]['node']['src']) ? $product['images']['edges'][0]['node']['src'] : null,
+                        'price' => $price
+                    ];
+                    $collectionsArray[] = $itemArray;
+                }
+
+                $data['products'] = $collectionsArray;
+                $data['hasNextPage'] = $jsonResponse['data']['products']['pageInfo']['hasNextPage'];
+                $data['hasPreviousPage'] = $jsonResponse['data']['products']['pageInfo']['hasPreviousPage'];
+                $data['endCursor'] = $jsonResponse['data']['products']['pageInfo']['endCursor'];
+                $data['startCursor'] = $jsonResponse['data']['products']['pageInfo']['startCursor'];
+            }
+
+            // Return the JSON response
+            return response()->json($data);
+
     }
 
     public function getCountryList(Request $request)
