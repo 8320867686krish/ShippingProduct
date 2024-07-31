@@ -83,20 +83,20 @@ function Products() {
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
-              });
-              const token = await getSessionToken(app);
-              console.log(token)
-          const response = await axios.post(`${apiCommonURL}/api/mixMergeRate`, formData, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-         
+            });
+            const token = await getSessionToken(app);
+            console.log(token)
+            const response = await axios.post(`${apiCommonURL}/api/mixMergeRate`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
         } catch (error) {
-          console.error('Error occurs', error);
-         
+            console.error('Error occurs', error);
+
         }
-      }
+    }
 
     return (
         <Page title="Configuration And Products">
@@ -105,26 +105,26 @@ function Products() {
                     <LegacyTabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
                         <LegacyCard.Section>
                             {selected === 0 && (
-                                <div style={{ marginTop: "2%" }}>
+                                <div>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                         <Button variant="primary" onClick={saevConfig}>Save Config</Button>
                                     </div>
                                     <FormLayout>
-                                            <FormLayout.Group>
-                                                <Select
-                                                    label="Enabled"
-                                                    options={Enabled}
-                                                    onChange={handleSelectChange('enable')}
-                                                    value={formData.enable}
-                                                />
-                                                <TextField
-                                                    type="text"
-                                                    label="Title"
-                                                    value={formData.title}
-                                                    onChange={handleChange('title')}
-                                                />
-                                            </FormLayout.Group>
-                                        
+                                        <FormLayout.Group>
+                                            <Select
+                                                label="Enabled"
+                                                options={Enabled}
+                                                onChange={handleSelectChange('enable')}
+                                                value={formData.enable}
+                                            />
+                                            <TextField
+                                                type="text"
+                                                label="Title"
+                                                value={formData.title}
+                                                onChange={handleChange('title')}
+                                            />
+                                        </FormLayout.Group>
+
                                         <div style={{ marginTop: "0.3%" }}>
                                             <FormLayout.Group>
                                                 <Select
@@ -187,7 +187,7 @@ function Products() {
                                                     value={formData.applicableCountries}
                                                 />
                                                 <Select
-                                                    label="Shipping Rate"
+                                                    label="Ship to Specific Countries"
                                                     options={Ratecalculation}
                                                     onChange={handleSelectChange('specificCountries')}
                                                     value={formData.specificCountries}
@@ -240,18 +240,6 @@ function Products() {
                                             </FormLayout.Group>
                                         </div>
                                     </FormLayout>
-
-                                    {/* <div style={{ display: 'flex', alignItems: 'center', marginTop:"3%" }}>
-                                        <Text variant="headingXs" as="h6">
-                                        Sort Order
-                                        </Text>
-                                        <TextField
-                                                type="text"
-                                             
-                                                value={formData.sortOrder}
-                                                onChange={handleChange('sortOrder')}
-                                            />
-                                    </div> */}
                                 </div>
                             )}
                             {selected === 1 && (

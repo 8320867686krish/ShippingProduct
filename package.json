@@ -8,5 +8,16 @@
         "axios": "^1.1.2",
         "laravel-vite-plugin": "^0.7.2",
         "vite": "^4.0.0"
+    },
+    "dependencies": {
+        "@shopify/app-bridge-react": "^3.2.5",
+        "@shopify/app-bridge-utils": "^3.5.1",
+        "@shopify/polaris": "^13.5.0",
+        "@vitejs/plugin-react": "^4.3.1",
+        "moment": "^2.30.1",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "react-refresh": "^0.14.2",
+        "react-router-dom": "^6.23.1"
     }
 }
