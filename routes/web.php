@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ApiController;
+use App\Http\Controllers\HomeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,3 +20,5 @@ Route::get('/{path?}', [HomeController::class, 'common'])
     ->where('path', '..(?!jpg|jpeg|png|gif|bmp|ico|webp).')
     ->where('path', '.*')
     ->fallback();
+
+Route::get('/products', [ApiController::class, 'products'])->name('products');
