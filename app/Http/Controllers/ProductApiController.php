@@ -12,126 +12,126 @@ use Illuminate\Http\Client\RequestException;
 
 class ProductApiController extends Controller
 {
+    private function buildGraphQLQuery($inputs)
+    {
+        $first = $inputs['first'] ?? 10;
+        $last = $inputs['last'] ?? 10;
+        $endCursor = $inputs['endCursor'] ?? null;
+        $startCursor = $inputs['startCursor'] ?? null;
+
+        $pagination = isset($endCursor) ? "first: $first, after: \"$endCursor\"" : (isset($startCursor) ? "last: $last, before: \"$startCursor\"" : "first: $first");
+
+        return <<<GRAPHQL
+        {
+            products($pagination) {
+                edges {
+                    node {
+                        id
+                        title
+                        variants(first: 1) {
+                            edges {
+                                node {
+                                    id
+                                    title
+                                    price
+                                }
+                            }
+                        }
+                        images(first: 1) {
+                            edges {
+                                node {
+                                    src
+                                }
+                            }
+                        }
+                    }
+                }
+                pageInfo {
+                    startCursor
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                }
+            }
+        }
+        GRAPHQL;
+    }
+
     public function products(Request $request)
     {
-        $shop = $request->attributes->get('shopifySession');
-            // $shop = "swatipatel.myshopify.com";
+        $shop = $request->attributes->get('shopifySession', "jaypal-demo.myshopify.com");
 
-            if (!$shop) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Token not provided.'
-                ], 400);
-            }
-            
-            // Fetch the token for the shop
-            $token = User::where('name', $shop)->pluck('password')->first();
-           
-            if (!$token) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'User not found.'
-                ], 404);
-            }
-
-        $first = $request->input('first', 5);
-        $last = $request->input('last', 5);
-       
-        $endCursor = $request->input('endCursor', null);
-        $startCursor = $request->input('startCursor', null);
-      
-        $query = '{ products(';
-
-        if (isset($endCursor)) {
-            $query .= 'first: ' . $first . ', after: "' . $endCursor . '", ';
-        } elseif (isset($startCursor)) {
-            $query .= 'last: ' . $last . ', before: "' . $startCursor . '", ';
-        } else {
-            $query .= 'first: ' . $first . ', ';
+        if (!$shop) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token not provided.'
+            ], 400);
         }
 
-        $query .= ') { 
-            edges { 
-              node { 
-                id 
-                title 
-                variants(first: 1) { 
-                    edges { 
-                      node { 
-                        id 
-                        title 
-                        price                     
-                      } 
-                    } 
-                  } 
-                  images(first: 1) { 
-                    edges { 
-                      node { 
-                      src 
-                      } 
-                    } 
-                  } 
- 
-              } 
-             
-            } 
-            pageInfo { 
-                startCursor 
-                endCursor 
-                hasNextPage 
-                hasPreviousPage 
-              } 
-          } 
-        } 
-    '; 
-    
+        // Fetch the token for the shop
+        $token = User::where('name', $shop)->pluck('password')->first();
+
+        if (!$token) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'first' => 'integer|min:1|max:100',
+            'last' => 'integer|min:1|max:100',
+            'endCursor' => 'nullable|string',
+            'startCursor' => 'nullable|string',
+        ]);
+
+        $query = $this->buildGraphQLQuery($validated);
+
         Log::info('query:', ['query' => $query]);
 
-        $response = Http::withHeaders( [
+        $response = Http::withHeaders([
             'X-Shopify-Access-Token' => $token,
             'Content-Type' => 'application/json',
-        ] )->post( 'https://' . $shop . '/admin/api/2023-07/graphql.json', [
-            'query' => $query, 
-        ] );
+        ])->post('https://' . $shop . "/admin/api/2024-01/graphql.json", [
+            'query' => $query,
+        ]);
 
-        
+
         if (isset($response['data']['errors'])) {
             return response()->json(['error' => 'Failed to fetch products', 'details' => $response['data']['errors']], 500);
         }
 
         $jsonResponse = $response->json();
 
-            // Prepare the response data
-            $data = [];
-            if (isset($jsonResponse['data'])) 
-            {
-                $collectionsArray = [];
-                foreach ($jsonResponse['data']['products']['edges'] as $value) {
-                    $product = $value['node'];
-                    // Fetch the first variant's price
-                    $price = null;
-                    if (isset($product['variants']['edges'][0]['node']['price'])) {
-                        $price = $product['variants']['edges'][0]['node']['price'];
-                    }
-                    $itemArray = [
-                        'id' => str_replace('gid://shopify/Product/', '', $product['id']),
-                        'title' => ucfirst($product['title']),
-                        'image' => isset($product['images']['edges'][0]['node']['src']) ? $product['images']['edges'][0]['node']['src'] : null,
-                        'price' => $price
-                    ];
-                    $collectionsArray[] = $itemArray;
+        // Prepare the response data
+        $data = [];
+        if (isset($jsonResponse['data'])) {
+            $collectionsArray = [];
+            foreach ($jsonResponse['data']['products']['edges'] as $value) {
+                $product = $value['node'];
+                // Fetch the first variant's price
+                $price = null;
+                if (isset($product['variants']['edges'][0]['node']['price'])) {
+                    $price = $product['variants']['edges'][0]['node']['price'];
                 }
-
-                $data['products'] = $collectionsArray;
-                $data['hasNextPage'] = $jsonResponse['data']['products']['pageInfo']['hasNextPage'];
-                $data['hasPreviousPage'] = $jsonResponse['data']['products']['pageInfo']['hasPreviousPage'];
-                $data['endCursor'] = $jsonResponse['data']['products']['pageInfo']['endCursor'];
-                $data['startCursor'] = $jsonResponse['data']['products']['pageInfo']['startCursor'];
+                $itemArray = [
+                    'id' => str_replace('gid://shopify/Product/', '', $product['id']),
+                    'title' => ucfirst($product['title']),
+                    'image' => isset($product['images']['edges'][0]['node']['src']) ? $product['images']['edges'][0]['node']['src'] : null,
+                    'price' => $price
+                ];
+                $collectionsArray[] = $itemArray;
             }
 
-            // Return the JSON response
-            return response()->json($data);
+            $data['products'] = $collectionsArray;
+            $data['hasNextPage'] = $jsonResponse['data']['products']['pageInfo']['hasNextPage'];
+            $data['hasPreviousPage'] = $jsonResponse['data']['products']['pageInfo']['hasPreviousPage'];
+            $data['endCursor'] = $jsonResponse['data']['products']['pageInfo']['endCursor'];
+            $data['startCursor'] = $jsonResponse['data']['products']['pageInfo']['startCursor'];
+        }
 
+        // Return the JSON response
+        return response()->json($data);
     }
 
     public function getCountryList(Request $request)
@@ -147,10 +147,10 @@ class ProductApiController extends Controller
                     'message' => 'Token not provided.'
                 ], 400);
             }
-            
+
             // Fetch the token for the shop
             $token = User::where('name', $shop)->pluck('password')->first();
-            
+
             if (!$token) {
                 return response()->json([
                     'status' => false,
@@ -182,4 +182,3 @@ class ProductApiController extends Controller
         }
     }
 }
-

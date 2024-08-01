@@ -1,5 +1,3 @@
-<?php
-
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -9,18 +7,18 @@ use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
-    public function Index(Request $request)
-    {
-        $post = $request->input();
-        $shop = $request->input('shop');
-        $host = $request->input('host');
+	public function Index(Request $request)
+	{
+		$post = $request->input();
+		$shop = $request->input('shop');
+		$host = $request->input('host');
 
-        $shopName = $post['shop'];
-        $token = User::where('name', $shopName)->first();
-        $this->setMetaFiled($token);
+		$shopName = $post['shop'];
+		$token = User::where('name', $shopName)->first();
+		$this->setMetaFiled($token);
 
-        return view('welcome', compact('shop', 'host'));
-    }
+		return view('welcome', compact('shop', 'host'));
+	}
 
     public function common(Request $request)
     {
@@ -28,6 +26,7 @@ class HomeController extends Controller
         $host = $request->input('host');
         return view('welcome', compact('shop', 'host'));
     }
+	
     public function setMetaFiled($shop){
         $url = "https://".$shop['name']."/admin/api/2021-10/graphql.json";
         $query = 'mutation MetafieldDefinitionCreateMutation($input: MetafieldDefinitionInput!) {
@@ -54,7 +53,7 @@ class HomeController extends Controller
                 'useAsCollectionCondition' => false,
             ],
         ];
-    
+
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'X-Shopify-Access-Token' => $shop['password'],
