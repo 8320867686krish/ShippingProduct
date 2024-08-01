@@ -2,12 +2,53 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\Settings;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class SettingsApiController extends Controller
 {
+    public function index(Request $request)
+    {
+        try {
+            $shop = $request->attributes->get('shopifySession', "jaypal-demo.myshopify.com");
+
+            if (!$shop) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token not provided.'
+                ], 400);
+            }
+
+            // Fetch the token for the shop
+            $token = User::where('name', $shop)->pluck('password')->first();
+
+            if (!$token) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not found.'
+                ], 404);
+            }
+
+            $setting = Setting::all();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Setting list retrieved successfully.',
+                'settings' => $setting,
+            ]);
+
+        } catch (\Illuminate\Database\QueryException $ex) {
+            Log::error('Database error when retrieving setting list', ['exception' => $ex->getMessage()]);
+            return response()->json(['status' => false, 'message' => 'Database error occurred.'], 500);
+        } catch (\Exception $ex) {
+            Log::error('Unexpected error when retrieving setting list', ['exception' => $ex->getMessage()]);
+            return response()->json(['status' => false, 'message' => 'An unexpected error occurred.'], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -33,5 +74,44 @@ class SettingsApiController extends Controller
         $settings = Setting::create($request->all());
 
         return response()->json($settings, 201);
+    }
+
+    public function settingBasedToken(Request $request)
+    {
+        try {
+            $shop = $request->attributes->get('shopifySession', "jaypal-demo.myshopify.com");
+
+            if (!$shop) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token not provided.'
+                ], 400);
+            }
+
+            // Fetch the token for the shop
+            $userId = User::where('name', $shop)->pluck('id')->first();
+
+            if (!$userId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not found.'
+                ], 404);
+            }
+
+            $setting = Setting::where('user_id', $userId)->get();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Setting list retrieved successfully.',
+                'settings' => $setting
+            ]);
+
+        } catch (\Illuminate\Database\QueryException $ex) {
+            Log::error('Database error when retrieving setting based on token list', ['exception' => $ex->getMessage()]);
+            return response()->json(['status' => false, 'message' => 'Database error occurred.'], 500);
+        } catch (\Exception $ex) {
+            Log::error('Unexpected error when retrieving setting based on token list', ['exception' => $ex->getMessage()]);
+            return response()->json(['status' => false, 'message' => 'An unexpected error occurred.'], 500);
+        }
     }
 }

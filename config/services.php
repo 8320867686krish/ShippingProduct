@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'shopify' => [
+        'api_version' => env('SHOPIFY_API_VERSION', '2024-04'),
+    ],
+
 ];
