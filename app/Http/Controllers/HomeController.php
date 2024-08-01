@@ -17,7 +17,7 @@ class HomeController extends Controller
 
         $shopName = $post['shop'];
         $token = User::where('name', $shopName)->first();
-
+        $this->setMetaFiled($token);
 
         return view('welcome', compact('shop', 'host'));
     }
@@ -27,5 +27,42 @@ class HomeController extends Controller
         $shop = $request->input('shop');
         $host = $request->input('host');
         return view('welcome', compact('shop', 'host'));
+    }
+    public function setMetaFiled($shop){
+        $url = "https://".$shop['name']."/admin/api/2021-10/graphql.json";
+        $query = 'mutation MetafieldDefinitionCreateMutation($input: MetafieldDefinitionInput!) {
+            metafieldDefinitionCreate(definition: $input) {
+                userErrors {
+                    code
+                    message
+                    field
+                    typename
+                }
+                typename
+            }
+        }';
+        $variables = [
+            'input' => [
+                'ownerType' => 'PRODUCT',
+                'namespace' => 'custom',
+                'key' => 'shipping_price',
+                'type' => 'number_decimal',
+                'validations' => [],
+                'name' => 'Shipping Price',
+                'description' => '',
+                'pin' => true,
+                'useAsCollectionCondition' => false,
+            ],
+        ];
+    
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'X-Shopify-Access-Token' => $shop['password'],
+        ])->post($url, [
+            'query' => $query,
+            'variables' => $variables,
+        ]);
+        return $response->json();
+
     }
 }
