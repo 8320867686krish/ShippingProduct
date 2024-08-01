@@ -24,10 +24,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('carrier/callback', [CarrierServiceCallbackController::class, 'handleCallback']);
 
-// Route::middleware(['check.token'])->group(function () {
+Route::middleware(['check.token'])->group(function () {
     Route::get('country', [ProductApiController::class, 'getCountryList']);
     Route::post('products', [ProductApiController::class, 'products']);
     Route::post('settings/save', [SettingsApiController::class, 'store']);
     Route::get('settingBasedToken', [SettingsApiController::class, 'settingBasedToken']);
     Route::resource('setting', SettingsApiController::class);
-// });
+});
