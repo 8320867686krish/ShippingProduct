@@ -14,9 +14,7 @@ return new class extends Migration
         Schema::table('settings', function (Blueprint $table) {
             if (Schema::hasColumn('settings', 'country_id')) {
                 $table->dropColumn('country_id');
-                // $table->dropForeign(['country_id']);
             }
-
         });
     }
 
@@ -27,7 +25,6 @@ return new class extends Migration
     {
         Schema::table('settings', function (Blueprint $table) {
             $table->unsignedBigInteger('country_id');
-
             $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade');
         });
     }

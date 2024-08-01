@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
 Route::middleware(['check.token'])->group(function () {
     Route::get('country', [ProductApiController::class,'getCountryList']);
     Route::post('products', [ProductApiController::class, 'products']);
