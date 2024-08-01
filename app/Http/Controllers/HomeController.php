@@ -1,10 +1,10 @@
+<?php
 namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-
 class HomeController extends Controller
 {
 	public function Index(Request $request)
@@ -26,7 +26,7 @@ class HomeController extends Controller
         $host = $request->input('host');
         return view('welcome', compact('shop', 'host'));
     }
-	
+
     public function setMetaFiled($shop){
         $url = "https://".$shop['name']."/admin/api/2021-10/graphql.json";
         $query = 'mutation MetafieldDefinitionCreateMutation($input: MetafieldDefinitionInput!) {
