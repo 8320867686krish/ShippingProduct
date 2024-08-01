@@ -2,14 +2,34 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
-use App\Models\Settings;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 class SettingsApiController extends Controller
 {
     public function store(Request $request)
     {
+        $shop = $request->attributes->get('shopifySession', "jaypal-demo.myshopify.com");
+
+        if (!$shop) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token not provided.'
+            ], 400);
+        }
+
+        // Fetch the token for the shop
+        $token = User::where('name', $shop)->pluck('password')->first();
+
+        if (!$token) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found.'
+            ], 404);
+        }
+
         $validator = Validator::make($request->all(), [
             'enabled' => 'required|boolean',
             'title' => 'required|string|max:100',
@@ -29,8 +49,11 @@ class SettingsApiController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-
-        $settings = Setting::create($request->all());
+        $post = $request->input();
+        $post['user_id'] = $token['id'];
+        $searchCriteria = ['id' => $post['id']];
+    // Use updateOrCreate method
+        $settings = Setting::updateOrCreate($searchCriteria, $post);
 
         return response()->json($settings, 201);
     }
