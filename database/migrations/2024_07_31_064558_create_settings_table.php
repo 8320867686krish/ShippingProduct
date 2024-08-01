@@ -14,8 +14,8 @@ return new class extends Migration
         if (!Schema::hasTable('settings')) {
             Schema::create('settings', function (Blueprint $table) {
                 $table->id();
-                $table->unsignedBigInteger('country_id');
-                $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade');
+                $table->unsignedBigInteger('user_id');
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
                 $table->boolean('enabled');
                 $table->string('title', 100);
                 $table->string('shipping_rate', 20);

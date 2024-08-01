@@ -12,11 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            if (Schema::hasColumn('settings', 'country_id')) {
-                $table->dropForeign(['country_id']);
-            }
+            //
+          //  $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
-            $table->dropColumn('country_id');
         });
     }
 
@@ -26,9 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->unsignedBigInteger('country_id');
-
-            $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade');
+            //
         });
     }
 };
