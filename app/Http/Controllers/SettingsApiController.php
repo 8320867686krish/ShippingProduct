@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class SettingsApiController extends Controller
             }
 
             // Fetch the token for the shop
-            $token = User::where('name', $shop)->pluck('password')->first();
+            $token = User::where('name', $shop)->pluck('id')->first();
 
             if (!$token) {
                 return response()->json([
@@ -32,12 +33,12 @@ class SettingsApiController extends Controller
                 ], 404);
             }
 
-            $setting = Setting::all();
+            $setting = Setting::with('productdata')->where('user_id', $token)->first();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Setting list retrieved successfully.',
-                'settings' => $setting,
+                'setting' => $setting,
             ]);
         } catch (\Illuminate\Database\QueryException $ex) {
             Log::error('Database error when retrieving setting list', ['exception' => $ex->getMessage()]);
@@ -126,15 +127,30 @@ class SettingsApiController extends Controller
             $post['user_id'] = $token;
 
             // Use updateOrCreate method
-            $settings = Setting::updateOrCreate(['id' => $request->input('id')], $post);
+            $setting = Setting::updateOrCreate(['id' => $request->input('id')], $post);
 
-            if ($settings->wasRecentlyCreated) {
+            if(null !== $request->input('productdata')) {
+                $productData = [];
+                foreach($request->input('productdata') as $product){
+                    $productData[] = [
+                        "user_id" => $token,
+                        "setting_id" => $setting->id,
+                        "product_id" => $product['id'],
+                        "name" => $product['title'],
+                        "shipping_price" => $product['value']
+                    ];
+                }
+                Product::where('setting_id', $setting->id)->delete();
+                Product::insert($productData);
+            }
+
+            if ($setting->wasRecentlyCreated) {
                 $message = 'Setting added successfully.';
             } else {
                 $message = 'Setting updated successfully.';
             }
 
-            return response()->json(['status' => true, 'message' => $message, 'setting' => $settings]);
+            return response()->json(['status' => true, 'message' => $message, 'setting' => $setting]);
         } catch (\Illuminate\Database\QueryException $ex) {
             Log::error('Database error when retrieving setting add', ['exception' => $ex->getMessage()]);
             return response()->json(['status' => false, 'message' => 'Database error occurred.'], 500);
@@ -166,12 +182,12 @@ class SettingsApiController extends Controller
                 ], 404);
             }
 
-            $setting = Setting::where('user_id', $userId)->get();
+            $setting = Setting::with('productdata')->where('user_id', $userId)->first();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Setting list retrieved successfully.',
-                'settings' => $setting
+                'setting' => $setting
             ]);
         } catch (\Illuminate\Database\QueryException $ex) {
             Log::error('Database error when retrieving setting based on token list', ['exception' => $ex->getMessage()]);

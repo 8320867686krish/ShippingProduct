@@ -9,7 +9,11 @@ class Setting extends Model
 {
     use HasFactory;
 
-    protected $fillable = ["user_id", "enabled", "title", "shipping_rate", "shipping_rate_calculation", "method_name", "product_shipping_cost", "rate_per_item", "handling_fee", "applicable_countries", "countries", "method_if_not_applicable", "displayed_error_message", "show_method_for_admin", "min_order_amount", "max_order_amount"];
+    protected $fillable = ["user_id", "enabled", "title", "shipping_rate", "shipping_rate_calculation", "method_name", "product_shipping_cost", "rate_per_item", "handling_fee", "applicable_countries", "countries", "method_if_not_applicable", "displayed_error_message", "show_method_for_admin", "min_order_amount", "max_order_amount", "sort_order"];
+
+    public function productdata(){
+        return $this->hasMany(Product::class);
+    }
 
     public function setCountriesAttribute($value)
     {
