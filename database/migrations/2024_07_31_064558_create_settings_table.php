@@ -24,13 +24,14 @@ return new class extends Migration
                 $table->boolean('product_shipping_cost')->comment('1=Yes 0=No');
                 $table->decimal('rate_per_item', 8, 2)->nullable();
                 $table->decimal('handling_fee', 8, 2)->nullable();
-                $table->boolean('applicable_countries')->comment('0=All Allowed Countries 2=Specific Countries');
+                $table->boolean('applicable_countries')->comment('0=All Allowed Countries 1=Specific Countries');
                 $table->longText('countries')->nullable();
                 $table->boolean('method_if_not_applicable')->comment('1=Yes 0=No')->nullable();
                 $table->text('displayed_error_message')->nullable();
                 $table->boolean('show_method_for_admin')->nullable()->comment('1=Yes 0=No');
                 $table->decimal('min_order_amount', 8, 2)->nullable();
                 $table->decimal('max_order_amount', 8, 2)->nullable();
+                $table->string('sort_order')->nullable();
                 $table->timestamp('created_at')->useCurrent();
                 $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             });
