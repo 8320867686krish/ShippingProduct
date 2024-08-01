@@ -82,8 +82,14 @@ function Products() {
 
     const handleProductDataChange = (index, key, value) => {
         const updatedProductData = [...formData.productdata];
+        const product = filteredProducts[index]; 
         if (!updatedProductData[index]) {
-            updatedProductData[index] = {};
+            updatedProductData[index] = {
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                value: ''
+            };
         }
         updatedProductData[index][key] = value;
         setFormData((prevState) => ({
@@ -238,12 +244,13 @@ function Products() {
                 {price}
             </IndexTable.Cell>
             <IndexTable.Cell>
+                <div style={{width:"50%"}}>
                 <TextField
-                    
                     value={formData.productdata[index]?.value || ''}
                     onChange={(value) => handleProductDataChange(index, 'value', value)}
                     autoComplete="off"
                 />
+                </div>
             </IndexTable.Cell>
         </IndexTable.Row>
     ));
