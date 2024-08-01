@@ -13,8 +13,14 @@ import {
     LegacyStack,
     Tag,
     useIndexResourceState,
-    IndexTable
+    IndexTable,
+    Thumbnail,
+    Icon
 } from '@shopify/polaris';
+import {
+    SearchIcon,
+    PlusIcon
+} from '@shopify/polaris-icons';
 import createApp from '@shopify/app-bridge';
 import { getSessionToken } from "@shopify/app-bridge-utils";
 const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
@@ -27,11 +33,15 @@ function Products() {
     const [allCountries, setAllCountries] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [Product, setProduct] = useState([])
-    const [startCursor, setStartCursor] = useState('');
-    const [endCursor, setEndCursor] = useState('');
-    const [hasNextPage, setHasNextPage] = useState(false);
-    const [hasPreviousPage, setHasPreviousPage] = useState(false);
+    const [value, setValue] = useState('');
     const [filteredProducts, setFilteredProducts] = useState([]);
+    const [pageInfo, setPageInfo] = useState({
+        startCursor: null,
+        endCursor: null,
+        hasNextPage: false,
+        hasPreviousPage: false
+    });
+
     const [formData, setFormData] = useState({
         enable: 'yes',
         title: 'Flat Rate Canada',
@@ -46,7 +56,8 @@ function Products() {
         showMethod: "no",
         sortOrder: "1",
         minOrder: "1",
-        maxOrder: "100"
+        maxOrder: "100",
+        productdata: []
     })
     const handleTabChange = useCallback((selectedTabIndex) => setSelected(selectedTabIndex), []);
     const tabs = [
@@ -68,6 +79,19 @@ function Products() {
             [field]: value,
         }));
     };
+
+    const handleProductDataChange = (index, key, value) => {
+        const updatedProductData = [...formData.productdata];
+        if (!updatedProductData[index]) {
+            updatedProductData[index] = {};
+        }
+        updatedProductData[index][key] = value;
+        setFormData((prevState) => ({
+            ...prevState,
+            productdata: updatedProductData,
+        }));
+    };
+
     const handleSelectChange = (field) => (value) => {
         setFormData({
             ...formData,
@@ -117,7 +141,7 @@ function Products() {
         }
     }
 
-    const products = async () => {
+    const fetchProducts = async () => {
         try {
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
@@ -130,7 +154,15 @@ function Products() {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            console.log(response.data)
+            const productData = response.data;
+            setProduct(productData.products);
+            setFilteredProducts(productData.products);
+            setPageInfo({
+                startCursor: productData.startCursor,
+                endCursor: productData.endCursor,
+                hasNextPage: productData.hasNextPage,
+                hasPreviousPage: productData.hasPreviousPage,
+            });
         } catch (error) {
             console.error('Error occurs', error);
 
@@ -139,9 +171,29 @@ function Products() {
 
     useEffect(() => {
         getCountry()
-        products()
+        fetchProducts()
     }, [])
 
+
+    const handleserchChange = useCallback(
+        (newValue) => {
+            setValue(newValue);
+            if (newValue === '') {
+                setFilteredProducts(Product);
+            } else {
+                const lowerCaseValue = newValue.toLowerCase();
+                setFilteredProducts(Product.filter(product =>
+                    product.title.toLowerCase().includes(lowerCaseValue)
+                ));
+            }
+        },
+        [Product]
+    );
+
+    const handleClearButtonClick = useCallback(() => {
+        setValue('');
+        setFilteredProducts(Product);
+    }, [Product]);
 
     const resourceName = {
         singular: 'Products',
@@ -151,59 +203,50 @@ function Products() {
     const { selectedResources, allResourcesSelected, handleSelectionChange } =
         useIndexResourceState(filteredProducts);
 
-    const rowMarkup = filteredProducts.map(({ id, title, image }, index) => (
+    const handleNextPage = () => {
+        if (pageInfo.hasNextPage) {
+            fetchProducts(pageInfo.endCursor, 'next');
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if (pageInfo.hasPreviousPage) {
+            fetchProducts(pageInfo.startCursor, 'prev');
+        }
+    };
+    const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => (
         <IndexTable.Row
             id={id}
             key={id}
             selected={selectedResources.includes(id)}
             position={index}
+          
         >
             <IndexTable.Cell>
-                <div style={{ opacity: visibilityEnabled ? 1 : 0.5 }}>
-                    <Thumbnail
-                        source={image}
-                        size="large"
-                        alt="Black choker necklace"
-                    />
-                </div>
+                <Thumbnail
+                    source={image}
+                    size="large"
+                    alt="Black choker necklace"
+                />
             </IndexTable.Cell>
             <IndexTable.Cell>
-                <div style={{ opacity: visibilityEnabled ? 1 : 0.5 }}>
-                    <Link
-                        dataPrimaryLink
-                        onClick={() => console.log(`Clicked ${title}`)}
-                    >
-                        <Text fontWeight="bold" as="span">
-                            {title}
-                        </Text>
-                    </Link>
-                </div>
+                <Text fontWeight="bold" as="span">
+                    {title}
+                </Text>
             </IndexTable.Cell>
             <IndexTable.Cell>
-                <div style={{ width: "53%",position:"relative" }}>
-                    <Select
-                        options={options}
-                        onChange={handleSelectChange}
-                        value={selected}
-                        disabled={!visibilityEnabled}
-                    />
-                </div>
+                {price}
+            </IndexTable.Cell>
+            <IndexTable.Cell>
+                <TextField
+                    
+                    value={formData.productdata[index]?.value || ''}
+                    onChange={(value) => handleProductDataChange(index, 'value', value)}
+                    autoComplete="off"
+                />
             </IndexTable.Cell>
         </IndexTable.Row>
     ));
-
-    const handleNextPage = () => {
-        if (hasNextPage) {
-            fetchProducts(endCursor);
-        }
-    };
-
-    const handlePreviousPage = () => {
-        if (hasPreviousPage) {
-            fetchProducts(startCursor);
-        }
-    };
-
 
     const updateText = useCallback(
         (value) => {
@@ -293,7 +336,7 @@ function Products() {
                             {selected === 0 && (
                                 <div>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                        <Button variant="primary" onClick={saevConfig}>Save Config</Button>
+                                        <Button variant="primary" onClick={saevConfig}>Save</Button>
                                     </div>
                                     <FormLayout>
                                         <FormLayout.Group>
@@ -432,29 +475,48 @@ function Products() {
                                 </div>
                             )}
                             {selected === 1 && (
-                                <div style={{ marginTop: "6%" }}>
-                                <IndexTable
-                                    resourceName={resourceName}
-                                    itemCount={filteredProducts.length}
-                                    selectedItemsCount={
-                                        allResourcesSelected ? 'All' : selectedResources.length
-                                    }
-                                    onSelectionChange={handleSelectionChange}
-                                    headings={[
-                                        { title: 'Image' },
-                                        { title: 'Title' },
-                                        { title: 'Shipping Settings' },
-                                    ]}
-                                    pagination={{
-                                        hasNext: hasNextPage,
-                                        hasPrevious: hasPreviousPage,
-                                        onNext: handleNextPage,
-                                        onPrevious: handlePreviousPage,
-                                    }}
-                                >
-                                    {rowMarkup}
-                                </IndexTable>
-                            </div>
+                                <div>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                        <Button variant="primary" onClick={saevConfig}>Save </Button>
+                                    </div>
+                                    <div style={{marginTop:"2.5%"}}>
+
+                                    <TextField
+                                    placeholder='search'
+                                    onChange={handleserchChange}
+                                    value={value}
+                                    type="text"
+                                    prefix={<Icon source={SearchIcon} color="inkLighter" />}
+                                    autoComplete="off"
+                                    clearButton
+                                    onClearButtonClick={handleClearButtonClick}
+                                />
+                                </div>
+                                <div style={{marginTop:"2%"}}>
+                                    <IndexTable
+                                        resourceName={resourceName}
+                                        itemCount={filteredProducts.length}
+                                        selectedItemsCount={
+                                            allResourcesSelected ? 'All' : selectedResources.length
+                                        }
+                                        onSelectionChange={handleSelectionChange}
+                                        headings={[
+                                            { title: 'Image' },
+                                            { title: 'Title' },
+                                            { title: 'Price' },
+                                            { title: 'Rate Price' },
+                                        ]}
+                                        pagination={{
+                                            hasNext: pageInfo.hasNextPage,
+                                            onNext: handleNextPage,
+                                            hasPrevious: pageInfo.hasPreviousPage,
+                                            onPrevious: handlePreviousPage,
+                                        }}
+                                    >
+                                        {rowMarkup}
+                                    </IndexTable>
+                                    </div>
+                                </div>
                             )}
                         </LegacyCard.Section>
                     </LegacyTabs>
