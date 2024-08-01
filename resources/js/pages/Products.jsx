@@ -15,7 +15,8 @@ import {
     useIndexResourceState,
     IndexTable,
     Thumbnail,
-    Icon
+    Icon,
+    Toast
 } from '@shopify/polaris';
 import {
     SearchIcon,
@@ -35,29 +36,51 @@ function Products() {
     const [Product, setProduct] = useState([])
     const [value, setValue] = useState('');
     const [filteredProducts, setFilteredProducts] = useState([]);
+    const [toastContent, setToastContent] = useState("");
+    const [showToast, setShowToast] = useState(false);
+    const toastDuration = 3000
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
         hasNextPage: false,
         hasPreviousPage: false
     });
-
+    const enabledd = [
+        { label: 'Yes', value: 1 },
+        { label: 'No', value: 0 },
+    ]
+    const shipping_rate = [
+        { label: 'per Item(s)', value: 1 },
+        { label: 'per Order', value: 2 },
+    ]
+    const applicable_countries = [
+        { label: 'All Allowed Countries', value: 0 },
+        { label: 'Specific Countries', value: 1 },
+    ]
+    const Ratecalculation = [
+        { label: 'Sum of Rate', value: 1 },
+        { label: 'Maximum value', value: 2 },
+        { label: 'Minimum value', value: 3 },
+    ]
     const [formData, setFormData] = useState({
-        enable: 'yes',
+        id : 0,
+        enabled: 1,
         title: 'Flat Rate Canada',
-        shippingRate: 'item',
-        rate_calculation: 'max',
-        method: "Test",
-        productShippinCost: "no",
-        ratePerItem: "10",
-        handlingFee: '0',
-        applicableCountries: "all",
-        errorMessage: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
-        showMethod: "no",
-        sortOrder: "1",
-        minOrder: "1",
-        maxOrder: "100",
-        productdata: []
+        shipping_rate: 1,
+        shipping_rate_calculation: 2,
+        method_name: "Test",
+        product_shipping_cost: 0,
+        rate_per_item: 10,
+        handling_fee: 0,
+        applicable_countries: 0,
+        displayed_error_message: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
+        show_method_for_admin: 0,
+        sort_order: 1,
+        min_order_amount: 1,
+        max_order_amount: 100,
+        method_if_not_applicable: 0,
+        productdata: [],
+        countries: []
     })
     const handleTabChange = useCallback((selectedTabIndex) => setSelected(selectedTabIndex), []);
     const tabs = [
@@ -82,7 +105,7 @@ function Products() {
 
     const handleProductDataChange = (index, key, value) => {
         const updatedProductData = [...formData.productdata];
-        const product = filteredProducts[index]; 
+        const product = filteredProducts[index];
         if (!updatedProductData[index]) {
             updatedProductData[index] = {
                 id: product.id,
@@ -98,29 +121,13 @@ function Products() {
         }));
     };
 
-    const handleSelectChange = (field) => (value) => {
-        setFormData({
-            ...formData,
-            [field]: value,
-        });
+    const handleSelectChange = (field, value) => {
+        setFormData(prevState => ({
+            ...prevState,
+            [field]: value
+        }));
     };
-    const Enabled = [
-        { label: 'Yes', value: 'yes' },
-        { label: 'No', value: 'no' },
-    ]
-    const shippingRate = [
-        { label: 'per Item(s)', value: 'item' },
-        { label: 'per Order', value: 'orderno' },
-    ]
-    const applicableCountries = [
-        { label: 'All Allowed Countries', value: 'all' },
-        { label: 'Specific Countries', value: 'specific' },
-    ]
-    const Ratecalculation = [
-        { label: 'Sum of Rate', value: 'sum' },
-        { label: 'Maximum value', value: 'max' },
-        { label: 'Minimum value', value: 'min' },
-    ]
+
 
     const getCountry = async () => {
         try {
@@ -154,8 +161,8 @@ function Products() {
                 host: new URLSearchParams(location.search).get("host"),
             });
             const token = await getSessionToken(app);
-            console.log(token)
-            const response = await axios.post(`${apiCommonURL}/api/products`, Product, {
+            // console.log(token);
+            const response = await axios.post(`${apiCommonURL}/api/products`, pageInfo, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -174,10 +181,48 @@ function Products() {
 
         }
     }
+    const settingData = async () => {
+        try {
+            const app = createApp({
+                apiKey: SHOPIFY_API_KEY,
+                host: new URLSearchParams(location.search).get("host"),
+            });
+
+            const token = await getSessionToken(app);
+            const response = await axios.get(`${apiCommonURL}/api/setting`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            console.log(response.data.settings,'data from api')
+            // setFormData(prevState => ({
+            //     ...prevState,
+            //     enabled: response.data.settings.enabled,
+            //     title: response.data.settings.title,
+            //     id: response.data.settings.id,
+            //     shipping_rate: response.data.settings.shipping_rate,
+            //     method_name: response.data.settings.method_name,
+            //     product_shipping_cost: response.data.settings.product_shipping_cost,
+            //     rate_per_item: response.data.settings.rate_per_item,
+            //     handling_fee: response.data.settings.handling_fee,
+            //     applicable_countries: response.data.settings.applicable_countries,
+            //     displayed_error_message: response.data.settings.displayed_error_message,
+            //     show_method_for_admin: response.data.settings.show_method_for_admin,
+            //     sort_order: response.data.settings.sort_order,
+            //     min_order_amount: response.data.settings.min_order_amount,
+            //     max_order_amount: response.data.settings.max_order_amount,
+            //     method_if_not_applicable: response.data.settings.method_if_not_applicable,
+            //     countries: response.data.settings.countries,
+            //   }));
+        } catch (error) {
+            console.error('Error occurs', error);
+        }
+    }
 
     useEffect(() => {
         getCountry()
         fetchProducts()
+        settingData()
     }, [])
 
 
@@ -212,12 +257,13 @@ function Products() {
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
             fetchProducts(pageInfo.endCursor, 'next');
+            console.log(pageInfo.endCursor, 'end cursor')
         }
     };
-
     const handlePreviousPage = () => {
         if (pageInfo.hasPreviousPage) {
             fetchProducts(pageInfo.startCursor, 'prev');
+            console.log(pageInfo.startCursor, 'start cursor')
         }
     };
     const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => (
@@ -226,7 +272,7 @@ function Products() {
             key={id}
             selected={selectedResources.includes(id)}
             position={index}
-          
+
         >
             <IndexTable.Cell>
                 <Thumbnail
@@ -244,12 +290,12 @@ function Products() {
                 {price}
             </IndexTable.Cell>
             <IndexTable.Cell>
-                <div style={{width:"50%"}}>
-                <TextField
-                    value={formData.productdata[index]?.value || ''}
-                    onChange={(value) => handleProductDataChange(index, 'value', value)}
-                    autoComplete="off"
-                />
+                <div style={{ width: "50%" }}>
+                    <TextField
+                        value={formData.productdata[index]?.value || ''}
+                        onChange={(value) => handleProductDataChange(index, 'value', value)}
+                        autoComplete="off"
+                    />
                 </div>
             </IndexTable.Cell>
         </IndexTable.Row>
@@ -295,7 +341,7 @@ function Products() {
     const textField = (
         <Autocomplete.TextField
             onChange={updateText}
-            label="Select Countries"
+            label="Ship to Specific Countries"
             value={inputValue}
             placeholder="Search countries"
             verticalContent={verticalContentMarkup}
@@ -319,17 +365,21 @@ function Products() {
             });
             const dataToSubmit = {
                 ...formData,
-                country: selectedCountries,
+                countries: selectedCountries,
             };
             console.log(dataToSubmit)
-            const response = await axios.post(`${apiCommonURL}/api/mixMergeRate`, dataToSubmit, {
+            const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            setToastContent('Rate saved successfully');
+            setShowToast(true);
 
         } catch (error) {
             console.error('Error occurs', error);
+            setToastContent('Error occurred while saving data');
+            setShowToast(true);
 
         }
     }
@@ -348,10 +398,10 @@ function Products() {
                                     <FormLayout>
                                         <FormLayout.Group>
                                             <Select
-                                                label="Enabled"
-                                                options={Enabled}
-                                                onChange={handleSelectChange('enable')}
-                                                value={formData.enable}
+                                                label="enabledd"
+                                                options={enabledd}
+                                                onChange={(value) => handleSelectChange('enabled', parseInt(value))}
+                                                value={formData.enabled}
                                             />
                                             <TextField
                                                 type="text"
@@ -365,15 +415,15 @@ function Products() {
                                             <FormLayout.Group>
                                                 <Select
                                                     label="Shipping Rate"
-                                                    options={shippingRate}
-                                                    onChange={handleSelectChange('shippingRate')}
-                                                    value={formData.shippingRate}
+                                                    options={shipping_rate}
+                                                    onChange={(value) => handleSelectChange('shipping_rate', parseInt(value))}
+                                                    value={formData.shipping_rate}
                                                 />
                                                 <Select
                                                     label="Shipping Rate"
                                                     options={Ratecalculation}
-                                                    onChange={handleSelectChange('rate_calculation')}
-                                                    value={formData.rate_calculation}
+                                                    onChange={(value) => handleSelectChange('shipping_rate_calculation', parseInt(value))}
+                                                    value={formData.shipping_rate_calculation}
                                                 />
                                             </FormLayout.Group>
                                         </div>
@@ -383,14 +433,14 @@ function Products() {
                                                 <TextField
                                                     type="text"
                                                     label="Method Name	"
-                                                    value={formData.method}
-                                                    onChange={handleChange('method')}
+                                                    value={formData.method_name}
+                                                    onChange={handleChange('method_name')}
                                                 />
                                                 <Select
                                                     label="Default Product Shipping Cost"
-                                                    options={Enabled}
-                                                    onChange={handleSelectChange('productShippinCost')}
-                                                    value={formData.productShippinCost}
+                                                    options={enabledd}
+                                                    onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
+                                                    value={formData.product_shipping_cost}
                                                     helpText='If set to "Yes", the default rate per item will be used for all products.'
                                                 />
 
@@ -402,14 +452,14 @@ function Products() {
                                                 <TextField
                                                     type="text"
                                                     label="Default Rate Per Item"
-                                                    value={formData.ratePerItem}
-                                                    onChange={handleChange('ratePerItem')}
+                                                    value={formData.rate_per_item}
+                                                    onChange={handleChange('rate_per_item')}
                                                 />
                                                 <TextField
                                                     type="text"
                                                     label="Handling Fee"
-                                                    value={formData.handlingFee}
-                                                    onChange={handleChange('handlingFee')}
+                                                    value={formData.handling_fee}
+                                                    onChange={handleChange('handling_fee')}
                                                 />
                                             </FormLayout.Group>
                                         </div>
@@ -418,11 +468,11 @@ function Products() {
                                             <FormLayout.Group>
                                                 <Select
                                                     label="Ship to Applicable Countries"
-                                                    options={applicableCountries}
-                                                    onChange={handleSelectChange('applicableCountries')}
-                                                    value={formData.applicableCountries}
+                                                    options={applicable_countries}
+                                                    onChange={(value) => handleSelectChange('applicable_countries', parseInt(value))}
+                                                    value={formData.applicable_countries}
                                                 />
-                                                <div style={{ pointerEvents: formData.applicableCountries === 'all' ? 'none' : 'auto' }}>
+                                                <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto' }}>
                                                     <Autocomplete
                                                         allowMultiple
                                                         options={country}
@@ -436,28 +486,22 @@ function Products() {
                                         </div>
 
                                         <div style={{ marginTop: "0.3%" }}>
-                                            <TextField
-                                                type="text"
-                                                label="Displayed Error Message"
-                                                value={formData.errorMessage}
-                                                multiline={3}
-                                                onChange={handleChange('errorMessage')}
-                                            />
-                                        </div>
-
-                                        <div style={{ marginTop: "0.3%" }}>
                                             <FormLayout.Group>
+                                                {formData.applicable_countries === 1 && (
+                                                    <Select
+                                                        label="Show Method if Not Applicable"
+                                                        options={enabledd}
+                                                        onChange={(value) => handleSelectChange('method_if_not_applicable', parseInt(value))}
+                                                        value={formData.method_if_not_applicable}
+                                                    />
+                                                )}
+
                                                 <TextField
                                                     type="text"
-                                                    label="Sort Order"
-                                                    value={formData.sortOrder}
-                                                    onChange={handleChange('sortOrder')}
-                                                />
-                                                <Select
-                                                    label="Show Method only for Admin"
-                                                    options={Enabled}
-                                                    onChange={handleSelectChange('showMethod')}
-                                                    value={formData.showMethod}
+                                                    label="Displayed Error Message"
+                                                    value={formData.displayed_error_message}
+                                                    multiline={3}
+                                                    onChange={handleChange('displayed_error_message')}
                                                 />
                                             </FormLayout.Group>
                                         </div>
@@ -465,63 +509,82 @@ function Products() {
                                         <div style={{ marginTop: "0.3%" }}>
                                             <FormLayout.Group>
                                                 <TextField
-                                                    type="text"
+                                                    type="number"
+                                                    label="Sort Order"
+                                                    value={formData.sort_order}
+                                                    onChange={handleChange('sort_order')}
+                                                />
+                                                <Select
+                                                    label="Show Method only for Admin"
+                                                    options={enabledd}
+                                                    onChange={(value) => handleSelectChange('show_method_for_admin', parseInt(value))}
+                                                    value={formData.show_method_for_admin}
+                                                />
+                                            </FormLayout.Group>
+                                        </div>
+
+                                        <div style={{ marginTop: "0.3%" }}>
+                                            <FormLayout.Group>
+                                                <TextField
+                                                    type="number"
                                                     label="Minimum Order Amount"
-                                                    value={formData.minOrder}
-                                                    onChange={handleChange('minOrder')}
+                                                    value={formData.min_order_amount}
+                                                    onChange={handleChange('min_order_amount')}
                                                 />
                                                 <TextField
-                                                    type="text"
+                                                    type="number"
                                                     label="Maximum Order Amount"
-                                                    value={formData.maxOrder}
-                                                    onChange={handleChange('maxOrder')}
+                                                    value={formData.max_order_amount}
+                                                    onChange={handleChange('max_order_amount')}
                                                 />
                                             </FormLayout.Group>
                                         </div>
                                     </FormLayout>
                                 </div>
                             )}
+
+
                             {selected === 1 && (
                                 <div>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                         <Button variant="primary" onClick={saevConfig}>Save </Button>
                                     </div>
-                                    <div style={{marginTop:"2.5%"}}>
+                                    <div style={{ marginTop: "2.5%" }}>
 
-                                    <TextField
-                                    placeholder='search'
-                                    onChange={handleserchChange}
-                                    value={value}
-                                    type="text"
-                                    prefix={<Icon source={SearchIcon} color="inkLighter" />}
-                                    autoComplete="off"
-                                    clearButton
-                                    onClearButtonClick={handleClearButtonClick}
-                                />
-                                </div>
-                                <div style={{marginTop:"2%"}}>
-                                    <IndexTable
-                                        resourceName={resourceName}
-                                        itemCount={filteredProducts.length}
-                                        selectedItemsCount={
-                                            allResourcesSelected ? 'All' : selectedResources.length
-                                        }
-                                        onSelectionChange={handleSelectionChange}
-                                        headings={[
-                                            { title: 'Image' },
-                                            { title: 'Title' },
-                                            { title: 'Price' },
-                                            { title: 'Rate Price' },
-                                        ]}
-                                        pagination={{
-                                            hasNext: pageInfo.hasNextPage,
-                                            onNext: handleNextPage,
-                                            hasPrevious: pageInfo.hasPreviousPage,
-                                            onPrevious: handlePreviousPage,
-                                        }}
-                                    >
-                                        {rowMarkup}
-                                    </IndexTable>
+                                        <TextField
+                                            placeholder='search'
+                                            onChange={handleserchChange}
+                                            value={value}
+                                            type="text"
+                                            prefix={<Icon source={SearchIcon} color="inkLighter" />}
+                                            autoComplete="off"
+                                            clearButton
+                                            onClearButtonClick={handleClearButtonClick}
+                                        />
+                                    </div>
+                                    <div style={{ marginTop: "2%" }}>
+                                        <IndexTable
+                                            resourceName={resourceName}
+                                            itemCount={filteredProducts.length}
+                                            selectedItemsCount={
+                                                allResourcesSelected ? 'All' : selectedResources.length
+                                            }
+                                            onSelectionChange={handleSelectionChange}
+                                            headings={[
+                                                { title: 'Image' },
+                                                { title: 'Title' },
+                                                { title: 'Price' },
+                                                { title: 'Rate Price' },
+                                            ]}
+                                            pagination={{
+                                                hasNext: pageInfo.hasNextPage,
+                                                onNext: handleNextPage,
+                                                hasPrevious: pageInfo.hasPreviousPage,
+                                                onPrevious: handlePreviousPage,
+                                            }}
+                                        >
+                                            {rowMarkup}
+                                        </IndexTable>
                                     </div>
                                 </div>
                             )}
@@ -529,6 +592,9 @@ function Products() {
                     </LegacyTabs>
                 </LegacyCard>
             </div>
+            {showToast && (
+                <Toast content={toastContent} duration={toastDuration} onDismiss={() => setShowToast(false)} />
+            )}
         </Page >
     )
 }
