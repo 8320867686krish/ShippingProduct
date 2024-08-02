@@ -39,6 +39,7 @@ function Products() {
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 3000
+    const[uncheck,setUncheck] = useState([])
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -223,7 +224,8 @@ function Products() {
                 productdata: apiData.productdata,
 
             });
-            // setSelectedOptions(apiData.countries)
+            setSelectedOptions(apiData.countries)
+
         } catch (error) {
             console.error('Error occurs', error);
         }
@@ -273,6 +275,16 @@ function Products() {
             fetchProducts(pageInfo.startCursor, 'prev');
         }
     };
+
+    useEffect(() => {
+        const currentlySelected = new Set(selectedResources);
+        const unchecked = filteredProducts
+            .filter(({ id }) => !currentlySelected.has(id))
+            .map(({ id, title, price }) => ({ id, title, price }));
+        setUncheck(unchecked);
+    }, [selectedResources, filteredProducts]);
+    
+    
     const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => (
         <IndexTable.Row
             id={id}
