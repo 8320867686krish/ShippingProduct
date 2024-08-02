@@ -39,7 +39,7 @@ function Products() {
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 3000
-    const[uncheck,setUncheck] = useState([])
+    const [uncheck, setUncheck] = useState([])
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -81,7 +81,7 @@ function Products() {
         max_order_amount: 100,
         method_if_not_applicable: 0,
         productdata: [],
-        countries: []
+        countries: ''
     })
     const handleTabChange = useCallback((selectedTabIndex) => setSelected(selectedTabIndex), []);
     const tabs = [
@@ -198,12 +198,9 @@ function Products() {
                 }
             });
 
-            // Log the response data to check the structure
             console.log(response.data, 'Data received from API');
-
             const apiData = response.data.setting;
 
-            // Map the API response to the formData structure
             setFormData({
                 id: apiData.id,
                 enabled: apiData.enabled,
@@ -222,9 +219,9 @@ function Products() {
                 max_order_amount: apiData.max_order_amount,
                 method_if_not_applicable: apiData.method_if_not_applicable,
                 productdata: apiData.productdata,
-
             });
-            setSelectedOptions(apiData.countries)
+            // setSelectedOptions(apiData.countries)
+            
 
         } catch (error) {
             console.error('Error occurs', error);
@@ -235,90 +232,6 @@ function Products() {
         fetchProducts()
         settingData()
     }, [])
-
-
-    const handleserchChange = useCallback(
-        (newValue) => {
-            setValue(newValue);
-            if (newValue === '') {
-                setFilteredProducts(Product);
-            } else {
-                const lowerCaseValue = newValue.toLowerCase();
-                setFilteredProducts(Product.filter(product =>
-                    product.title.toLowerCase().includes(lowerCaseValue)
-                ));
-            }
-        },
-        [Product]
-    );
-
-    const handleClearButtonClick = useCallback(() => {
-        setValue('');
-        setFilteredProducts(Product);
-    }, [Product]);
-
-    const resourceName = {
-        singular: 'Products',
-        plural: 'Products',
-    };
-
-    const { selectedResources, allResourcesSelected, handleSelectionChange } =
-        useIndexResourceState(filteredProducts);
-
-    const handleNextPage = () => {
-        if (pageInfo.hasNextPage) {
-            fetchProducts(pageInfo.endCursor, 'next');
-        }
-    };
-    const handlePreviousPage = () => {
-        if (pageInfo.hasPreviousPage) {
-            fetchProducts(pageInfo.startCursor, 'prev');
-        }
-    };
-
-    useEffect(() => {
-        const currentlySelected = new Set(selectedResources);
-        const unchecked = filteredProducts
-            .filter(({ id }) => !currentlySelected.has(id))
-            .map(({ id, title, price }) => ({ id, title, price }));
-        setUncheck(unchecked);
-    }, [selectedResources, filteredProducts]);
-    
-    
-    const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => (
-        <IndexTable.Row
-            id={id}
-            key={id}
-            selected={selectedResources.includes(id)}
-            position={index}
-        >
-            <IndexTable.Cell>
-                <Thumbnail
-                    source={image}
-                    size="small"
-                    alt="Black choker necklace"
-                />
-            </IndexTable.Cell>
-            <IndexTable.Cell>
-                <Text fontWeight="bold" as="span">
-                    {title}
-                </Text>
-            </IndexTable.Cell>
-            <IndexTable.Cell>
-                {price}
-            </IndexTable.Cell>
-            <IndexTable.Cell>
-                <div style={{ width: "100px" }}>
-                    <TextField
-                        type='number'
-                        value={formData.productdata[index]?.value || ''}
-                        onChange={(value) => handleProductDataChange(index, 'value', value)}
-                        autoComplete="off"
-                    />
-                </div>
-            </IndexTable.Cell>
-        </IndexTable.Row>
-    ));
 
     const updateText = useCallback(
         (value) => {
@@ -360,14 +273,100 @@ function Products() {
     const textField = (
         <Autocomplete.TextField
             onChange={updateText}
-            label="Ship to Specific Countries"
+            label="Select Countries"
             value={inputValue}
             placeholder="Search countries"
             verticalContent={verticalContentMarkup}
-            // error={errors.selectedCountries}
+           
             autoComplete="off"
         />
     );
+
+
+    const handleserchChange = useCallback(
+        (newValue) => {
+            setValue(newValue);
+            if (newValue === '') {
+                setFilteredProducts(Product);
+            } else {
+                const lowerCaseValue = newValue.toLowerCase();
+                setFilteredProducts(Product.filter(product =>
+                    product.title.toLowerCase().includes(lowerCaseValue)
+                ));
+            }
+        },
+        [Product]
+    );
+
+    const handleClearButtonClick = useCallback(() => {
+        setValue('');
+        setFilteredProducts(Product);
+    }, [Product]);
+
+    const resourceName = {
+        singular: 'Products',
+        plural: 'Products',
+    };
+
+    const { selectedResources, allResourcesSelected, handleSelectionChange } =
+        useIndexResourceState(filteredProducts);
+
+    const handleNextPage = () => {
+        if (pageInfo.hasNextPage) {
+            fetchProducts(pageInfo.endCursor, 'next');
+        }
+    };
+    const handlePreviousPage = () => {
+        if (pageInfo.hasPreviousPage) {
+            fetchProducts(pageInfo.startCursor, 'prev');
+        }
+    };
+
+    // useEffect(() => {
+    //     const currentlySelected = new Set(selectedResources);
+    //     const unchecked = filteredProducts
+    //         .filter(({ id }) => !currentlySelected.has(id))
+    //         .map(({ id, title, price }) => ({ id, title, price }));
+    //     setUncheck(unchecked);
+    // }, [selectedResources, filteredProducts]);
+
+
+    const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => (
+        <IndexTable.Row
+            id={id}
+            key={id}
+            selected={selectedResources.includes(id)}
+            position={index}
+        >
+            <IndexTable.Cell>
+                <Thumbnail
+                    source={image}
+                    size="small"
+                    alt="Black choker necklace"
+                />
+            </IndexTable.Cell>
+            <IndexTable.Cell>
+                <Text fontWeight="bold" as="span">
+                    {title}
+                </Text>
+            </IndexTable.Cell>
+            <IndexTable.Cell>
+                {price}
+            </IndexTable.Cell>
+            <IndexTable.Cell>
+                <div style={{ width: "100px" }}>
+                    <TextField
+                        type='number'
+                        value={formData.productdata[index]?.value || ''}
+                        onChange={(value) => handleProductDataChange(index, 'value', value)}
+                        autoComplete="off"
+                    />
+                </div>
+            </IndexTable.Cell>
+        </IndexTable.Row>
+    ));
+
+
 
     const saevConfig = async () => {
         try {
@@ -376,16 +375,12 @@ function Products() {
                 host: new URLSearchParams(location.search).get("host"),
             });
             const token = await getSessionToken(app);
-            const selectedCountries = selectedOptions.map(option => {
-                const selectedCountry = country.find(country => country.value === option);
-                return {
-                    name: selectedCountry ? selectedCountry.label : '',
-                    code: option
-                };
-            });
+            const countriesString = selectedOptions.join(',');
+
+            // Update the dataToSubmit object
             const dataToSubmit = {
                 ...formData,
-                countries: selectedCountries,
+                countries: countriesString, // Use the comma-separated string
             };
             console.log(dataToSubmit)
             const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
