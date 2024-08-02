@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('setting_id');
             $table->foreign('setting_id')->references('id')->on('settings')->onDelete('cascade');
             $table->bigInteger('product_id');
-            $table->string('name');
+            $table->string('title');
             $table->decimal("shipping_price", 12, 2);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
