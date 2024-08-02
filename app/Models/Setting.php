@@ -11,20 +11,17 @@ class Setting extends Model
 
     protected $fillable = ["user_id", "enabled", "title", "shipping_rate", "shipping_rate_calculation", "method_name", "product_shipping_cost", "rate_per_item", "handling_fee", "applicable_countries", "countries", "method_if_not_applicable", "displayed_error_message", "show_method_for_admin", "min_order_amount", "max_order_amount", "sort_order"];
 
-    public function productdata(){
+    public function productdata()
+    {
         return $this->hasMany(Product::class);
     }
 
     public function setCountriesAttribute($value)
     {
-        if (!empty($value)) {
-            if (is_array($value) || is_object($value)) {
-                $this->attributes['countries'] = json_encode($value);
-            } else {
-                $this->attributes['countries'] = $value;
-            }
-        } else {
+        if (empty($value)) {
             $this->attributes['countries'] = null;
+        } else {
+            $this->attributes['countries'] = $value;
         }
     }
 
@@ -34,7 +31,6 @@ class Setting extends Model
             return null;
         }
 
-        return json_decode($value, true); // true to return as an associative array
+        return explode(",", $value); // true to return as an associative array
     }
-
 }
