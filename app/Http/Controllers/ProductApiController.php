@@ -87,7 +87,7 @@ class ProductApiController extends Controller
 
         $query = $this->buildGraphQLQuery($validated);
 
-        Log::info('query:', ['query' => $query]);
+        // Log::info('query:', ['query' => $query]);
 
         $response = Http::withHeaders([
             'X-Shopify-Access-Token' => $token,
