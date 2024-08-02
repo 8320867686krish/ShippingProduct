@@ -63,7 +63,7 @@ function Products() {
         { label: 'Minimum value', value: 3 },
     ]
     const [formData, setFormData] = useState({
-        id : 0,
+        id: 0,
         enabled: 1,
         title: 'Flat Rate Canada',
         shipping_rate: 1,
@@ -111,10 +111,11 @@ function Products() {
                 id: product.id,
                 title: product.title,
                 price: product.price,
-                value: ''
+                // value: 0
             };
         }
         updatedProductData[index][key] = value;
+        console.log(updatedProductData)
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
@@ -181,6 +182,7 @@ function Products() {
 
         }
     }
+
     const settingData = async () => {
         try {
             const app = createApp({
@@ -194,31 +196,38 @@ function Products() {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            console.log(response.data.settings,'data from api')
-            // setFormData(prevState => ({
-            //     ...prevState,
-            //     enabled: response.data.settings.enabled,
-            //     title: response.data.settings.title,
-            //     id: response.data.settings.id,
-            //     shipping_rate: response.data.settings.shipping_rate,
-            //     method_name: response.data.settings.method_name,
-            //     product_shipping_cost: response.data.settings.product_shipping_cost,
-            //     rate_per_item: response.data.settings.rate_per_item,
-            //     handling_fee: response.data.settings.handling_fee,
-            //     applicable_countries: response.data.settings.applicable_countries,
-            //     displayed_error_message: response.data.settings.displayed_error_message,
-            //     show_method_for_admin: response.data.settings.show_method_for_admin,
-            //     sort_order: response.data.settings.sort_order,
-            //     min_order_amount: response.data.settings.min_order_amount,
-            //     max_order_amount: response.data.settings.max_order_amount,
-            //     method_if_not_applicable: response.data.settings.method_if_not_applicable,
-            //     countries: response.data.settings.countries,
-            //   }));
+
+            // Log the response data to check the structure
+            console.log(response.data, 'Data received from API');
+
+            const apiData = response.data.setting;
+
+            // Map the API response to the formData structure
+            setFormData({
+                id: apiData.id,
+                enabled: apiData.enabled,
+                title: apiData.title,
+                shipping_rate: apiData.shipping_rate,
+                shipping_rate_calculation: apiData.shipping_rate_calculation,
+                method_name: apiData.method_name,
+                product_shipping_cost: apiData.product_shipping_cost,
+                rate_per_item: apiData.rate_per_item,
+                handling_fee: apiData.handling_fee,
+                applicable_countries: apiData.applicable_countries,
+                displayed_error_message: apiData.displayed_error_message,
+                show_method_for_admin: apiData.show_method_for_admin,
+                sort_order: apiData.sort_order,
+                min_order_amount: apiData.min_order_amount,
+                max_order_amount: apiData.max_order_amount,
+                method_if_not_applicable: apiData.method_if_not_applicable,
+                productdata: apiData.productdata,
+
+            });
+            // setSelectedOptions(apiData.countries)
         } catch (error) {
             console.error('Error occurs', error);
         }
-    }
-
+    };
     useEffect(() => {
         getCountry()
         fetchProducts()
@@ -257,13 +266,11 @@ function Products() {
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
             fetchProducts(pageInfo.endCursor, 'next');
-            console.log(pageInfo.endCursor, 'end cursor')
         }
     };
     const handlePreviousPage = () => {
         if (pageInfo.hasPreviousPage) {
             fetchProducts(pageInfo.startCursor, 'prev');
-            console.log(pageInfo.startCursor, 'start cursor')
         }
     };
     const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => (
@@ -272,12 +279,11 @@ function Products() {
             key={id}
             selected={selectedResources.includes(id)}
             position={index}
-
         >
             <IndexTable.Cell>
                 <Thumbnail
                     source={image}
-                    size="large"
+                    size="small"
                     alt="Black choker necklace"
                 />
             </IndexTable.Cell>
@@ -290,8 +296,9 @@ function Products() {
                 {price}
             </IndexTable.Cell>
             <IndexTable.Cell>
-                <div style={{ width: "50%" }}>
+                <div style={{ width: "100px" }}>
                     <TextField
+                        type='number'
                         value={formData.productdata[index]?.value || ''}
                         onChange={(value) => handleProductDataChange(index, 'value', value)}
                         autoComplete="off"
@@ -349,6 +356,7 @@ function Products() {
             autoComplete="off"
         />
     );
+
     const saevConfig = async () => {
         try {
             const app = createApp({
