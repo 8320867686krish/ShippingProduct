@@ -28,6 +28,10 @@ class HomeController extends Controller
             'X-Shopify-Access-Token' => $token['password'],
         ];
 
+        $this->mendatoryWebhook($shop);
+
+        // Log::info('input logs:', ['mendatoryWebhook' => $mendatoryWebhook]);
+
         $data = [
             'carrier_service' => [
                 'name' => 'Meetanshi Shipping Product',
@@ -91,5 +95,48 @@ class HomeController extends Controller
             'variables' => $variables,
         ]);
         return $response->json();
+    }
+
+    public function mendatoryWebhook($shopDetail)
+    {
+        // Log::info('input logs:', ['shopDetail' => $shopDetail]);
+
+        $token = User::where('name', $shopDetail)->first();
+
+        $topics = [
+            'customers/update',
+            'customers/delete',
+            'shop/update'
+        ];
+
+        $apiVersion = config('services.shopify.api_version');
+
+        $url = "https://{$shopDetail}/admin/api/{$apiVersion}/webhooks.json";
+
+        foreach ($topics as $topic) {
+            // Create a dynamic webhook address for each topic
+            $webhookAddress = "https://{$shopDetail}/{$topic}";
+
+            // Create HTTP request for each topic
+            $body = [
+                'webhook' => [
+                    'address' => $webhookAddress,
+                    'topic' => $topic,
+                    'format' => 'json'
+                ]
+            ];
+
+            // Make the HTTP request (you can use Laravel's HTTP client or other libraries)
+            $customHeaders = [
+                'X-Shopify-Access-Token' => $token['password'], // Replace with your actual authorization token
+            ];
+
+            // Send a cURL request to the GraphQL endpoint
+            $response = Http::withHeaders($customHeaders)->post($url, $body);
+            $jsonResponse = $response->json();
+
+            Log::info('input logs:', ['shopDetail' => $jsonResponse]);
+        }
+        return true;
     }
 }

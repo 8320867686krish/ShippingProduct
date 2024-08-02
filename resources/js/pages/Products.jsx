@@ -221,7 +221,7 @@ function Products() {
                 productdata: apiData.productdata,
             });
             // setSelectedOptions(apiData.countries)
-            
+
 
         } catch (error) {
             console.error('Error occurs', error);
@@ -277,7 +277,7 @@ function Products() {
             value={inputValue}
             placeholder="Search countries"
             verticalContent={verticalContentMarkup}
-           
+
             autoComplete="off"
         />
     );

@@ -27,45 +27,65 @@ class CarrierServiceCallbackController extends Controller
         $response = [];
 
         if ($setting->enabled) {
-            $items = collect($input['rate']['items']);
+
+            if ($setting->applicable_countries == 1) {
+                $destinationCountryName = $input['rate']['destination']['country'];
+                if(null !== $setting->countries){
+                    if (!in_array($destinationCountryName, $setting->countries)) {
+                        return response()->json($response);
+                    }
+                }
+            }
+
+            $items = $input['rate']['items'];
 
             $newIteam = [];
 
-            foreach ($setting->productdata as $product) {
-                $matchedItem = $items->firstWhere('product_id', $product['product_id']);
-                if ($matchedItem) {
-                    if (@$product['shipping_price']) {
-                        $price = $product['shipping_price'];
+            $settingProduct = collect($setting->productdata);
+
+            $itemIdArray = $settingProduct->pluck('product_id')->toArray();
+
+            Log::info('input logs:', ['settingProduct' => $itemIdArray]);
+
+            foreach ($items as $item) {
+                $matchedItem = $settingProduct->firstWhere('product_id', $item['product_id']);
+
+                if (in_array($item['product_id'], $itemIdArray) && $matchedItem) {
+                    if ($matchedItem['value'] != null) {
+                        $price = $matchedItem['value'];
                     } else {
                         $price = $setting['rate_per_item'];
                     }
-
-                    $quantity = $matchedItem['quantity'];
-
-                    if($setting->shipping_rate == 1){
-                        $sum = $quantity * $price;
-                    } elseif ($setting->shipping_rate == 2){
-                        $sum = $price;
-                    }
-
-                    $newIteam[] = $sum;
+                } else {
+                    $price = $setting['rate_per_item'];
                 }
+
+                $quantity = $item['quantity'];
+
+                if ($setting->shipping_rate == 1) {
+                    $sum = $quantity * $price;
+                } elseif ($setting->shipping_rate == 2) {
+                    $sum = $price;
+                }
+                $newIteam[] = $sum;
             }
 
             if ($setting->shipping_rate_calculation == 1) {
                 $totalSum = array_sum($newIteam);
-            } elseif($setting->shipping_rate_calculation == 2) {
+            } elseif ($setting->shipping_rate_calculation == 2) {
                 $totalSum = max($newIteam);
-            } elseif($setting->shipping_rate_calculation == 3) {
+            } elseif ($setting->shipping_rate_calculation == 3) {
                 $totalSum = min($newIteam);
             } else {
                 $totalSum = $setting->rate_per_item;
             }
 
+            $finalRatePrice = $totalSum + $setting->handling_fee ?? 0.00;
+
             $response['rates'] = [
                 'service_name' => $setting->title,
                 'service_code' => "RATE200",
-                'total_price' => $totalSum, // Convert to cents if needed
+                'total_price' => $finalRatePrice, // Convert to cents if needed
                 'description' => Carbon::now()->addDay(5)->format('l, d M'),
                 'currency' => "INR",
                 'min_delivery_date' => Carbon::now()->addDay(3)->toIso8601String(),
