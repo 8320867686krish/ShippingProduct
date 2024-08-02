@@ -132,13 +132,15 @@ class SettingsApiController extends Controller
             if(null !== $request->input('productdata')) {
                 $productData = [];
                 foreach($request->input('productdata') as $product){
-                    $productData[] = [
-                        "user_id" => $token,
-                        "setting_id" => $setting->id,
-                        "product_id" => $product['id'],
-                        "name" => $product['title'],
-                        "shipping_price" => $product['value']
-                    ];
+                    if(null !== $product){
+                        $productData[] = [
+                            "user_id" => $token,
+                            "setting_id" => $setting->id,
+                            "product_id" => $product['id'],
+                            "name" => $product['title'],
+                            "shipping_price" => $product['value']
+                        ];
+                    }
                 }
                 Product::where('setting_id', $setting->id)->delete();
                 Product::insert($productData);
