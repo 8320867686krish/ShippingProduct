@@ -17,7 +17,7 @@ import {
     Thumbnail,
     Icon,
     Toast,
-    Checkbox 
+    Checkbox
 } from '@shopify/polaris';
 import {
     SearchIcon,
@@ -40,7 +40,7 @@ function Products() {
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 3000
-    const [isHeaderChecked, setIsHeaderChecked] = useState(false);
+    const [selectAllChecked, setSelectAllChecked] = useState(false);
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -289,14 +289,8 @@ function Products() {
         singular: 'Products',
         plural: 'Products',
     };
-    const handleHeaderCheckboxChange = (newChecked) => {
-        const newProductData = formData.productdata.map(product => ({
-          ...product,
-          checked: newChecked,
-        }))
-        setIsHeaderChecked(newChecked);
-      };
-    const handleProductDataChange = (index, key, value,field) => {
+
+    const handleProductDataChange = (index, key, value, field) => {
         const updatedProductData = [...formData.productdata];
         const product = filteredProducts[index];
         if (!updatedProductData[index]) {
@@ -307,17 +301,27 @@ function Products() {
                 // value: 0
             };
         }
-
         const newProductData = [...formData.productdata];
         newProductData[index] = {
-          ...newProductData[index],
-          [field]: value,
+            ...newProductData[index],
+            [field]: value,
         };
         updatedProductData[index][key] = value;
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
         }));
+    };
+    const handleSelectAllChange = (newChecked) => {
+        const newProductData = formData.productdata.map(product => ({
+            ...product,
+            checked: newChecked,
+        }));
+        setFormData({
+            ...formData,
+            productdata: newProductData,
+        });
+        setSelectAllChecked(newChecked);
     };
     const selectedCount = formData.productdata.filter(product => product.checked).length;
 
@@ -602,18 +606,18 @@ function Products() {
 
                                             headings={[
                                                 {
-                                                    title: selectedCount > 0 
-                                                      ? `${selectedCount} Selected`
-                                                      : <Checkbox
-                                                          checked={isHeaderChecked}
-                                                          onChange={(newChecked) => handleHeaderCheckboxChange(newChecked)}
+                                                    title: selectedCount > 0
+                                                        ? `Selected ${selectedCount}`
+                                                        : <Checkbox
+                                                            checked={selectAllChecked}
+                                                            onChange={handleSelectAllChange}
                                                         />,
-                                                  },
+                                                },
                                                 { title: 'Image' },
                                                 { title: 'Title' },
                                                 { title: 'Price' },
                                                 { title: 'Rate Price' },
-                                              ]}
+                                            ]}
                                             selectable={false}
                                             pagination={{
                                                 hasNext: pageInfo.hasNextPage,
