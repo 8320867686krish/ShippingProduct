@@ -40,7 +40,7 @@ function Products() {
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 3000
-    const [isHeaderChecked, setIsHeaderChecked] = useState(false);
+    const [selectAllChecked, setSelectAllChecked] = useState(false);
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -289,13 +289,7 @@ function Products() {
         singular: 'Products',
         plural: 'Products',
     };
-    const handleHeaderCheckboxChange = (newChecked) => {
-        const newProductData = formData.productdata.map(product => ({
-            ...product,
-            checked: newChecked,
-        }))
-        setIsHeaderChecked(newChecked);
-    };
+
     const handleProductDataChange = (index, key, value, field) => {
         const updatedProductData = [...formData.productdata];
         const product = filteredProducts[index];
@@ -307,7 +301,6 @@ function Products() {
                 // value: 0
             };
         }
-
         const newProductData = [...formData.productdata];
         newProductData[index] = {
             ...newProductData[index],
@@ -318,6 +311,17 @@ function Products() {
             ...prevState,
             productdata: updatedProductData,
         }));
+    };
+    const handleSelectAllChange = (newChecked) => {
+        const newProductData = formData.productdata.map(product => ({
+            ...product,
+            checked: newChecked,
+        }));
+        setFormData({
+            ...formData,
+            productdata: newProductData,
+        });
+        setSelectAllChecked(newChecked);
     };
     const selectedCount = formData.productdata.filter(product => product.checked).length;
 
@@ -603,10 +607,10 @@ function Products() {
                                             headings={[
                                                 {
                                                     title: selectedCount > 0
-                                                        ? `${selectedCount} Selected`
+                                                        ? `Selected ${selectedCount}`
                                                         : <Checkbox
-                                                            checked={isHeaderChecked}
-                                                            onChange={(newChecked) => handleHeaderCheckboxChange(newChecked)}
+                                                            checked={selectAllChecked}
+                                                            onChange={handleSelectAllChange}
                                                         />,
                                                 },
                                                 { title: 'Image' },
