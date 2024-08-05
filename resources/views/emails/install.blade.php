@@ -1,16 +1,3 @@
-{{-- <!DOCTYPE html>
-<html>
-<head>
-    <title>Account Uninstall Notification</title>
-</head>
-<body>
-    <h1>Hi {{ $name }},</h1>
-    <p>This is to notify you that your account associated with {{ $shopDomain }} has been uninstalled.</p>
-    <p>If you have any questions, feel free to contact us.</p>
-    <p>Thank you!</p>
-</body>
-</html> --}}
-
 <!doctype html>
 <html lang="en-US">
 
@@ -62,21 +49,27 @@
                                     <td style="padding:0 35px; text-align: left;">
                                         <p style="color:#455056; font-size:15px;line-height:24px; margin:0;">
                                         <p>Hi {{ $name }},</p>
-                                        <p>We noticed you uninstalled our Meetanshi AI Content Generator in your store.
-                                            But we want to make sure that it\'s not a Goodbye!</p>
-                                        <p>Let us know the reason, and our team will certainly take your opinion into
-                                            consideration.</p>
-                                        <p>Just reply to us with the applicable number:</p>
-                                        <ol>
-                                            <li>App is not working as expected</li>
-                                            <li>It is too complex to understand</li>
-                                            <li>The User Interface is not good</li>
-                                            <li>Found a better alternative</li>
-                                            <li>Other (Please Specify)</li>
-                                        </ol>
-                                        <p>Hoping that our paths will cross again in the future! :)</p>
-                                        <p>Happy Selling 🤞</p>
+                                        <p>Thank you for installing Meetanshi AI Content Generator for Shopify.</p>
+                                        <p>Team Meetanshi is delighted to have you as one of our valuable customers. If
+                                            you need help getting started or want to customize the app, please <a
+                                                href="https://meetanshi.com/contacts" target="_blank">contact us</a>. We
+                                            are always ready to help you!</p>
+                                        <p>Meetanshi is a leading Shopify solutions provider for growing businesses. You
+                                            can consider us for any type of Shopify development, customization, or
+                                            marketing solutions.</p>
+                                        <p><strong>Shopify Business Growth Offerings:</strong></p>
+                                        <ul>
+                                            <li><a href="https://meetanshi.com/shopify-store-development-services.html"
+                                                    target="_blank">Development &amp; Customization</a></li>
+                                            <li><a href="https://meetanshi.com/shopify-seo-services.html"
+                                                    target="_blank">Search Engine Optimization</a></li>
+                                            <li><a href="https://meetanshi.com/shopify-support-and-maintenance-services.html"
+                                                    target="_blank">Store Support &amp; Regular Maintenance</a></li>
+                                        </ul>
+                                        <p>Feel free to contact us for any assistance, we\'re happy to help you!</p>
+                                        <p>Happy Selling ðŸ¤ž</p>
                                         <p>Regards,<br>Team Meetanshi</p>
+                                        </p>
                                     </td>
                                 </tr>
                                 <tr>
