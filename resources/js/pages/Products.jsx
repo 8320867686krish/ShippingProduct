@@ -40,7 +40,7 @@ function Products() {
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 3000
-    const [selectAllChecked, setSelectAllChecked] = useState(false);
+    const [uncheck, setUncheck] = useState([])
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -291,8 +291,11 @@ function Products() {
     };
 
     const handleProductDataChange = (index, key, value, field) => {
+        console.log(value);
         const updatedProductData = [...formData.productdata];
         const product = filteredProducts[index];
+        const type = (value == false ? 'remove' : 'add');
+
         if (!updatedProductData[index]) {
             updatedProductData[index] = {
                 product_id: product.id,
@@ -305,6 +308,7 @@ function Products() {
         newProductData[index] = {
             ...newProductData[index],
             [field]: value,
+   
         };
         updatedProductData[index][key] = value;
         setFormData((prevState) => ({
@@ -312,18 +316,8 @@ function Products() {
             productdata: updatedProductData,
         }));
     };
-    const handleSelectAllChange = (newChecked) => {
-        const newProductData = formData.productdata.map(product => ({
-            ...product,
-            checked: newChecked,
-        }));
-        setFormData({
-            ...formData,
-            productdata: newProductData,
-        });
-        setSelectAllChecked(newChecked);
-    };
     const selectedCount = formData.productdata.filter(product => product.checked).length;
+    console.log(formData.productdata);
 
 
     // const { selectedResources, allResourcesSelected, handleSelectionChange } =
@@ -609,8 +603,17 @@ function Products() {
                                                     title: selectedCount > 0
                                                         ? `Selected ${selectedCount}`
                                                         : <Checkbox
-                                                            checked={selectAllChecked}
-                                                            onChange={handleSelectAllChange}
+                                                            checked={false}
+                                                            onChange={(newChecked) => {
+                                                                const newProductData = formData.productdata.map(product => ({
+                                                                    ...product,
+                                                                    checked: newChecked,
+                                                                }));
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    productdata: newProductData,
+                                                                });
+                                                            }}
                                                         />,
                                                 },
                                                 { title: 'Image' },
