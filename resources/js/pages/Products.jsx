@@ -17,7 +17,7 @@ import {
     Thumbnail,
     Icon,
     Toast,
-    Checkbox 
+    Checkbox
 } from '@shopify/polaris';
 import {
     SearchIcon,
@@ -291,12 +291,12 @@ function Products() {
     };
     const handleHeaderCheckboxChange = (newChecked) => {
         const newProductData = formData.productdata.map(product => ({
-          ...product,
-          checked: newChecked,
+            ...product,
+            checked: newChecked,
         }))
         setIsHeaderChecked(newChecked);
-      };
-    const handleProductDataChange = (index, key, value,field) => {
+    };
+    const handleProductDataChange = (index, key, value, field) => {
         const updatedProductData = [...formData.productdata];
         const product = filteredProducts[index];
         if (!updatedProductData[index]) {
@@ -310,8 +310,8 @@ function Products() {
 
         const newProductData = [...formData.productdata];
         newProductData[index] = {
-          ...newProductData[index],
-          [field]: value,
+            ...newProductData[index],
+            [field]: value,
         };
         updatedProductData[index][key] = value;
         setFormData((prevState) => ({
@@ -602,18 +602,18 @@ function Products() {
 
                                             headings={[
                                                 {
-                                                    title: selectedCount > 0 
-                                                      ? `${selectedCount} Selected`
-                                                      : <Checkbox
-                                                          checked={isHeaderChecked}
-                                                          onChange={(newChecked) => handleHeaderCheckboxChange(newChecked)}
+                                                    title: selectedCount > 0
+                                                        ? `${selectedCount} Selected`
+                                                        : <Checkbox
+                                                            checked={isHeaderChecked}
+                                                            onChange={(newChecked) => handleHeaderCheckboxChange(newChecked)}
                                                         />,
-                                                  },
+                                                },
                                                 { title: 'Image' },
                                                 { title: 'Title' },
                                                 { title: 'Price' },
                                                 { title: 'Rate Price' },
-                                              ]}
+                                            ]}
                                             selectable={false}
                                             pagination={{
                                                 hasNext: pageInfo.hasNextPage,
