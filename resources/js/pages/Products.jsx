@@ -238,7 +238,6 @@ function Products() {
         [selectedOptions],
     );
 
-
     const verticalContentMarkup =
         selectedOptions && selectedOptions.length > 0 ? (
             <LegacyStack spacing="extraTight" alignment="center">
@@ -252,7 +251,6 @@ function Products() {
                 })}
             </LegacyStack>
         ) : null;
-
 
 
     const textField = (
@@ -294,15 +292,15 @@ function Products() {
     };
 
     const handleProductDataChange = (index, key, value, field) => {
-                const updatedProductData = [...formData.productdata];
+        const updatedProductData = [...formData.productdata];
         const product = filteredProducts[index];
-
+ 
         if (!updatedProductData[index]) {
             updatedProductData[index] = {
                 product_id: product.id,
                 title: product.title,
                 price: product.price,
-                // value: 0
+                // checked : value
             };
         }
         const newProductData = [...formData.productdata];
@@ -317,8 +315,9 @@ function Products() {
             productdata: updatedProductData,
         }));
     };
+console.log(formData.productdata)
     const selectedCount = formData.productdata.filter(product => product.checked).length;
-  
+
 
 
     // const { selectedResources, allResourcesSelected, handleSelectionChange } =
@@ -334,15 +333,6 @@ function Products() {
             fetchProducts(pageInfo.startCursor, 'prev');
         }
     };
-
-    // useEffect(() => {
-    //     const currentlySelected = new Set(selectedResources);
-    //     const unchecked = filteredProducts
-    //         .filter(({ id }) => !currentlySelected.has(id))
-    //         .map(({ id, title, price }) => ({ id, title, price }));
-    //     setUncheck(unchecked);
-    // }, [selectedResources, filteredProducts]);
-
 
     const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => (
         <IndexTable.Row
