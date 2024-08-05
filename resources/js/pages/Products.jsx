@@ -16,7 +16,8 @@ import {
     IndexTable,
     Thumbnail,
     Icon,
-    Toast
+    Toast,
+    Checkbox 
 } from '@shopify/polaris';
 import {
     SearchIcon,
@@ -39,7 +40,7 @@ function Products() {
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 3000
-    const [uncheck, setUncheck] = useState([])
+    const [isHeaderChecked, setIsHeaderChecked] = useState(false);
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -101,25 +102,6 @@ function Products() {
         setFormData((prevState) => ({
             ...prevState,
             [field]: value,
-        }));
-    };
-
-    const handleProductDataChange = (index, key, value) => {
-        const updatedProductData = [...formData.productdata];
-        const product = filteredProducts[index];
-        if (!updatedProductData[index]) {
-            updatedProductData[index] = {
-                id: product.id,
-                title: product.title,
-                price: product.price,
-                // value: 0
-            };
-        }
-        updatedProductData[index][key] = value;
-        console.log(updatedProductData)
-        setFormData((prevState) => ({
-            ...prevState,
-            productdata: updatedProductData,
         }));
     };
 
@@ -220,7 +202,7 @@ function Products() {
                 method_if_not_applicable: apiData.method_if_not_applicable,
                 productdata: apiData.productdata,
             });
-            // setSelectedOptions(apiData.countries)
+            setSelectedOptions(apiData.countries)
 
 
         } catch (error) {
@@ -307,9 +289,41 @@ function Products() {
         singular: 'Products',
         plural: 'Products',
     };
+    const handleHeaderCheckboxChange = (newChecked) => {
+        const newProductData = formData.productdata.map(product => ({
+          ...product,
+          checked: newChecked,
+        }))
+        setIsHeaderChecked(newChecked);
+      };
+    const handleProductDataChange = (index, key, value,field) => {
+        const updatedProductData = [...formData.productdata];
+        const product = filteredProducts[index];
+        if (!updatedProductData[index]) {
+            updatedProductData[index] = {
+                product_id: product.id,
+                title: product.title,
+                price: product.price,
+                // value: 0
+            };
+        }
 
-    const { selectedResources, allResourcesSelected, handleSelectionChange } =
-        useIndexResourceState(filteredProducts);
+        const newProductData = [...formData.productdata];
+        newProductData[index] = {
+          ...newProductData[index],
+          [field]: value,
+        };
+        updatedProductData[index][key] = value;
+        setFormData((prevState) => ({
+            ...prevState,
+            productdata: updatedProductData,
+        }));
+    };
+    const selectedCount = formData.productdata.filter(product => product.checked).length;
+
+
+    // const { selectedResources, allResourcesSelected, handleSelectionChange } =
+    //     useIndexResourceState(filteredProducts);
 
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
@@ -335,9 +349,14 @@ function Products() {
         <IndexTable.Row
             id={id}
             key={id}
-            selected={selectedResources.includes(id)}
             position={index}
         >
+            <IndexTable.Cell>
+                <Checkbox
+                    checked={formData.productdata[index]?.checked || false}
+                    onChange={(checked) => handleProductDataChange(index, 'checked', checked)}
+                />
+            </IndexTable.Cell>
             <IndexTable.Cell>
                 <Thumbnail
                     source={image}
@@ -365,7 +384,6 @@ function Products() {
             </IndexTable.Cell>
         </IndexTable.Row>
     ));
-
 
 
     const saevConfig = async () => {
@@ -581,16 +599,22 @@ function Products() {
                                         <IndexTable
                                             resourceName={resourceName}
                                             itemCount={filteredProducts.length}
-                                            selectedItemsCount={
-                                                allResourcesSelected ? 'All' : selectedResources.length
-                                            }
-                                            onSelectionChange={handleSelectionChange}
+
                                             headings={[
+                                                {
+                                                    title: selectedCount > 0 
+                                                      ? `${selectedCount} Selected`
+                                                      : <Checkbox
+                                                          checked={isHeaderChecked}
+                                                          onChange={(newChecked) => handleHeaderCheckboxChange(newChecked)}
+                                                        />,
+                                                  },
                                                 { title: 'Image' },
                                                 { title: 'Title' },
                                                 { title: 'Price' },
                                                 { title: 'Rate Price' },
-                                            ]}
+                                              ]}
+                                            selectable={false}
                                             pagination={{
                                                 hasNext: pageInfo.hasNextPage,
                                                 onNext: handleNextPage,
