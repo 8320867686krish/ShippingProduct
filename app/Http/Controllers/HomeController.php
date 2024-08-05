@@ -189,7 +189,7 @@ class HomeController extends Controller
                 $name = $data['shop']['shop_owner'];
                 $shopDomain = $data['shop']['domain'];
 
-                Mail::to($storeOwnerEmail)->send(new InstallMail($name, $shopDomain));
+                // Mail::to($storeOwnerEmail)->send(new InstallMail($name, $shopDomain));
 
                 return true;
             }
