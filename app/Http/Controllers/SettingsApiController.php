@@ -179,7 +179,8 @@ class SettingsApiController extends Controller
                                 "setting_id" => $setting->id,
                                 "product_id" => $product['product_id'],
                                 "title" => $product['title'],
-                                "value" => $product['value']
+                                "value" => $product['value'],
+                                "checked" => $product['checked']
                             ];
                             Product::updateOrCreate(['product_id' => $product['product_id'], 'setting_id' => $setting->id], $productData);
                             $productValue = $product['value'];
