@@ -82,7 +82,7 @@ function Products() {
         max_order_amount: 100,
         method_if_not_applicable: 0,
         productdata: [],
-        countries: ''
+        countries: ' '
     })
     const handleTabChange = useCallback((selectedTabIndex) => setSelected(selectedTabIndex), []);
     const tabs = [
@@ -202,8 +202,7 @@ function Products() {
                 method_if_not_applicable: apiData.method_if_not_applicable,
                 productdata: apiData.productdata,
             });
-            setSelectedOptions(apiData.countries)
-
+            setSelectedOptions(Array.isArray(apiData.countries) ? apiData.countries : []);
 
         } catch (error) {
             console.error('Error occurs', error);
@@ -238,8 +237,10 @@ function Products() {
         },
         [selectedOptions],
     );
+
+
     const verticalContentMarkup =
-        selectedOptions.length > 0 ? (
+        selectedOptions && selectedOptions.length > 0 ? (
             <LegacyStack spacing="extraTight" alignment="center">
                 {selectedOptions.map((option) => {
                     const tagLabel = country.find(opt => opt.value === option)?.label || option;
@@ -251,6 +252,8 @@ function Products() {
                 })}
             </LegacyStack>
         ) : null;
+
+
 
     const textField = (
         <Autocomplete.TextField
@@ -291,10 +294,8 @@ function Products() {
     };
 
     const handleProductDataChange = (index, key, value, field) => {
-        console.log(value);
-        const updatedProductData = [...formData.productdata];
+                const updatedProductData = [...formData.productdata];
         const product = filteredProducts[index];
-        const type = (value == false ? 'remove' : 'add');
 
         if (!updatedProductData[index]) {
             updatedProductData[index] = {
@@ -308,7 +309,7 @@ function Products() {
         newProductData[index] = {
             ...newProductData[index],
             [field]: value,
-   
+
         };
         updatedProductData[index][key] = value;
         setFormData((prevState) => ({
@@ -317,7 +318,7 @@ function Products() {
         }));
     };
     const selectedCount = formData.productdata.filter(product => product.checked).length;
-    console.log(formData.productdata);
+  
 
 
     // const { selectedResources, allResourcesSelected, handleSelectionChange } =
@@ -509,7 +510,9 @@ function Products() {
                                                         options={country}
                                                         selected={selectedOptions}
                                                         textField={textField}
-                                                        onSelect={setSelectedOptions}
+                                                        onSelect={(selected) => {
+                                                            setSelectedOptions(selected);
+                                                        }}
                                                         listTitle="Suggested Countries"
                                                     />
                                                 </div>
