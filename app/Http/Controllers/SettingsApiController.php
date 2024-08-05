@@ -170,22 +170,27 @@ class SettingsApiController extends Controller
             $setting = Setting::updateOrCreate(['user_id' => $token['id']], $post);
 
             if (null !== $request->input('productdata')) {
-                $productData = [];
+                $productValue = 0;
                 foreach ($request->input('productdata') as $product) {
                     if (null !== $product) {
-                        $productData[] = [
-                            "user_id" => $token['id'],
-                            "setting_id" => $setting->id,
-                            "product_id" => $product['product_id'] ?? $product['id'],
-                            "title" => $product['title'],
-                            "value" => $product['value']
-                        ];
-
-                        $this->setMetafield($product['value'], $product['product_id'], $token['password'], $shop);
+                        if($product['checked']){
+                            $productData = [
+                                "user_id" => $token['id'],
+                                "setting_id" => $setting->id,
+                                "product_id" => $product['product_id'],
+                                "title" => $product['title'],
+                                "value" => $product['value']
+                            ];
+                            Product::updateOrCreate(['product_id' => $product['product_id'], 'setting_id' => $setting->id], $productData);
+                            $productValue = $product['value'];
+                        } else {
+                            Product::where('product_id', $product['product_id'])->where('setting_id', $setting->id)->delete();
+                            $productValue = "0";
+                        }
+                        Log::info('input logs:', ['productValue' => $productValue]);
+                        $this->setMetafield($productValue, $product['product_id'], $token['password'], $shop);
                     }
                 }
-                Product::where('setting_id', $setting->id)->delete();
-                Product::insert($productData);
             }
 
             if ($setting->wasRecentlyCreated) {
