@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductApiController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\WebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,8 +24,6 @@ Route::get('/{path?}', [HomeController::class, 'common'])
     ->where('path', '.*')
     ->fallback();
 
-
-    
-
-    
-
+Route::post('customers/update', [WebhookController::class, 'customersUpdate']);
+Route::post('customers/delete', [webhookController::class, 'customersDelete']);
+Route::post('shop/update', [webhookController::class, 'shopUpdate']);
