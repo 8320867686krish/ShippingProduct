@@ -19,7 +19,8 @@ return new class extends Migration
             $table->foreign('setting_id')->references('id')->on('settings')->onDelete('cascade');
             $table->bigInteger('product_id');
             $table->string('title');
-            $table->decimal("value", 12, 2);
+            $table->decimal("value", 12, 2)->default(0.00);
+            $table->boolean("checked");
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
