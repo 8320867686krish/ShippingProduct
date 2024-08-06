@@ -35,7 +35,6 @@ function Products() {
     const [selectedOptions, setSelectedOptions] = useState([]);
     const [allCountries, setAllCountries] = useState([]);
     const [inputValue, setInputValue] = useState('');
-
     const [Product, setProduct] = useState([])
     const [value, setValue] = useState('');
     const [filteredProducts, setFilteredProducts] = useState([]);
@@ -249,12 +248,10 @@ function Products() {
     };
     useEffect(() => {
         getCountry()
-
+        fetchProducts()
+        // if(formData.id){
 
         settingData()
-        fetchProducts()
-
-
         // }
     }, [])
 
@@ -334,22 +331,22 @@ function Products() {
     };
 
     const handleProductDataChange = (key, value, productId) => {
-        const product2 = Product.find(p => p.product_id == productId);
-        console.log("new", product2);
+        const product2 = filteredProducts.find(p => p.id === productId);
+    
         const updatedProductData = [...formData.productdata];
-        const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
-
+        const productIndex = updatedProductData.findIndex(p => p.product_id === productId);
+    
         if (productIndex === -1) {
             updatedProductData.push({
-                product_id: product2.product_id,
+                product_id: product2.id,
                 title: product2.title,
                 price: product2.price,
-                value: value,
+                [key]: value,
             });
         } else {
             updatedProductData[productIndex][key] = value;
         }
-
+    
         console.log(updatedProductData);
         setFormData((prevState) => ({
             ...prevState,
@@ -368,15 +365,24 @@ function Products() {
             fetchProducts(pageInfo.startCursor, 'prev');
         }
     };
+    const selectedCount = formData.productdata.filter(p => p.checked).length;
 
-    const rowMarkup = filteredProducts.map(({ product_id, title, image, price }, index) => {
+
+    const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => {
+      
 
         return (
             <IndexTable.Row
-                id={product_id}
-                key={product_id}
-                position={product_id}
+                id={id}
+                key={id}
+                position={id}
             >
+                 {/* <IndexTable.Cell>
+                <Checkbox
+                    checked={formData.productdata.find(p => p.product_id === id)?.checked || false}
+                    onChange={(checked) => handleProductDataChange('checked', checked, id)}
+                />
+            </IndexTable.Cell> */}
                 <IndexTable.Cell>
                     <Thumbnail
                         source={image}
@@ -396,8 +402,8 @@ function Products() {
                     <div style={{ width: "100px" }}>
                         <TextField
                             type='number'
-                            value={formData.productdata.find(p => p.product_id == product_id)?.value || ''}
-                            onChange={(value) => handleProductDataChange('value', value, product_id)}
+                            value={formData.productdata.find(p => p.product_id == id)?.value || ''}
+                            onChange={(value) => handleProductDataChange('value', value, id)}
                             autoComplete="off"
                         />
                     </div>
@@ -577,8 +583,8 @@ function Products() {
                                 </div>
                             )}
 
-                            {selected === 1 ? <>
-                                <div >
+                            {selected === 1 && (
+                                <div>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                         <Button variant="primary" onClick={saevConfig}>Save </Button>
                                     </div>
@@ -601,7 +607,7 @@ function Products() {
                                             itemCount={filteredProducts.length}
 
                                             headings={[
-
+                                                // { title: `Selected (${selectedCount})` },
                                                 { title: 'Image' },
                                                 { title: 'Title' },
                                                 { title: 'Price' },
@@ -619,13 +625,11 @@ function Products() {
                                         </IndexTable>
                                     </div>
                                 </div>
-                            </> : <></>
-                            }
+                            )}
                         </LegacyCard.Section>
                     </LegacyTabs>
                 </LegacyCard>
             </div>
-
             {showToast && (
                 <Toast content={toastContent} duration={toastDuration} onDismiss={() => setShowToast(false)} />
             )}
