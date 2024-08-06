@@ -35,6 +35,7 @@ function Products() {
     const [selectedOptions, setSelectedOptions] = useState([]);
     const [allCountries, setAllCountries] = useState([]);
     const [inputValue, setInputValue] = useState('');
+
     const [Product, setProduct] = useState([])
     const [value, setValue] = useState('');
     const [filteredProducts, setFilteredProducts] = useState([]);
@@ -248,10 +249,12 @@ function Products() {
     };
     useEffect(() => {
         getCountry()
-        fetchProducts()
-        // if(formData.id){
+
 
         settingData()
+        fetchProducts()
+
+
         // }
     }, [])
 
@@ -331,17 +334,17 @@ function Products() {
     };
 
     const handleProductDataChange = (key, value, productId) => {
-        const product2 = Product.find(p => p.id === productId);
-
+        const product2 = Product.find(p => p.product_id == productId);
+        console.log("new", product2);
         const updatedProductData = [...formData.productdata];
-        const productIndex = updatedProductData.findIndex(p => p.product_id === productId);
+        const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
 
         if (productIndex === -1) {
             updatedProductData.push({
-                product_id: product2.id,
+                product_id: product2.product_id,
                 title: product2.title,
                 price: product2.price,
-                [key]: value,
+                value: value,
             });
         } else {
             updatedProductData[productIndex][key] = value;
@@ -366,14 +369,13 @@ function Products() {
         }
     };
 
-    const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => {
-        const globalIndex = startIndex + index;
+    const rowMarkup = filteredProducts.map(({ product_id, title, image, price }, index) => {
 
         return (
             <IndexTable.Row
-                id={id}
-                key={id}
-                position={id}
+                id={product_id}
+                key={product_id}
+                position={product_id}
             >
                 <IndexTable.Cell>
                     <Thumbnail
@@ -394,8 +396,8 @@ function Products() {
                     <div style={{ width: "100px" }}>
                         <TextField
                             type='number'
-                            value={formData.productdata.find(p => p.product_id === id)?.value || ''}
-                            onChange={(value) => handleProductDataChange('value', value, id)}
+                            value={formData.productdata.find(p => p.product_id == product_id)?.value || ''}
+                            onChange={(value) => handleProductDataChange('value', value, product_id)}
                             autoComplete="off"
                         />
                     </div>
@@ -575,8 +577,8 @@ function Products() {
                                 </div>
                             )}
 
-                            {selected === 1 && (
-                                <div>
+                            {selected === 1 ? <>
+                                <div >
                                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                         <Button variant="primary" onClick={saevConfig}>Save </Button>
                                     </div>
@@ -617,11 +619,13 @@ function Products() {
                                         </IndexTable>
                                     </div>
                                 </div>
-                            )}
+                            </> : <></>
+                            }
                         </LegacyCard.Section>
                     </LegacyTabs>
                 </LegacyCard>
             </div>
+
             {showToast && (
                 <Toast content={toastContent} duration={toastDuration} onDismiss={() => setShowToast(false)} />
             )}
