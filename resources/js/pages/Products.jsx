@@ -17,7 +17,8 @@ import {
     Thumbnail,
     Icon,
     Toast,
-    Checkbox
+    Checkbox,
+    SkeletonTabs
 } from '@shopify/polaris';
 import {
     SearchIcon,
@@ -29,7 +30,7 @@ const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
 const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
 
 function Products() {
-    const [selected, setSelected] = useState(0);
+    const [selected, setSelected] = useState(1);
     const [country, setCountry] = useState([])
     const [selectedOptions, setSelectedOptions] = useState([]);
     const [allCountries, setAllCountries] = useState([]);
@@ -40,7 +41,9 @@ function Products() {
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 3000
-    const [uncheck, setUncheck] = useState([])
+    const [startIndex, setStartIndex] = useState(0);
+
+    const [loading, setLoading] = useState(true)
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -82,7 +85,7 @@ function Products() {
         max_order_amount: 100,
         method_if_not_applicable: 0,
         productdata: [],
-        countries: ' '
+        countries: ''
     })
     const handleTabChange = useCallback((selectedTabIndex) => setSelected(selectedTabIndex), []);
     const tabs = [
@@ -112,6 +115,37 @@ function Products() {
         }));
     };
 
+    const saevConfig = async () => {
+
+        try {
+            const app = createApp({
+                apiKey: SHOPIFY_API_KEY,
+                host: new URLSearchParams(location.search).get("host"),
+            });
+            const token = await getSessionToken(app);
+            const countriesString = selectedOptions.join(',');
+
+            const dataToSubmit = {
+                ...formData,
+                countries: countriesString,
+            };
+            console.log(dataToSubmit)
+            const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setToastContent('Rate saved successfully');
+            setShowToast(true);
+            window.location.reload();
+
+        } catch (error) {
+            console.error('Error occurs', error);
+            setToastContent('Error occurred while saving data');
+            setShowToast(true);
+
+        }
+    }
 
     const getCountry = async () => {
         try {
@@ -138,19 +172,21 @@ function Products() {
         }
     }
 
-    const fetchProducts = async () => {
+    const fetchProducts = async (cursor, direction) => {
         try {
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
             });
             const token = await getSessionToken(app);
-            // console.log(token);
-            const response = await axios.post(`${apiCommonURL}/api/products`, pageInfo, {
+            const payload = direction === 'next' ? { endCursor: cursor } : { startCursor: cursor };
+
+            const response = await axios.post(`${apiCommonURL}/api/products`, payload, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
+
             const productData = response.data;
             setProduct(productData.products);
             setFilteredProducts(productData.products);
@@ -160,11 +196,11 @@ function Products() {
                 hasNextPage: productData.hasNextPage,
                 hasPreviousPage: productData.hasPreviousPage,
             });
+
         } catch (error) {
             console.error('Error occurs', error);
-
         }
-    }
+    };
 
     const settingData = async () => {
         try {
@@ -174,6 +210,8 @@ function Products() {
             });
 
             const token = await getSessionToken(app);
+
+
             const response = await axios.get(`${apiCommonURL}/api/setting`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -211,7 +249,10 @@ function Products() {
     useEffect(() => {
         getCountry()
         fetchProducts()
+        // if(formData.id){
+
         settingData()
+        // }
     }, [])
 
     const updateText = useCallback(
@@ -252,7 +293,6 @@ function Products() {
             </LegacyStack>
         ) : null;
 
-
     const textField = (
         <Autocomplete.TextField
             onChange={updateText}
@@ -264,7 +304,6 @@ function Products() {
             autoComplete="off"
         />
     );
-
 
     const handleserchChange = useCallback(
         (newValue) => {
@@ -291,37 +330,30 @@ function Products() {
         plural: 'Products',
     };
 
-    const handleProductDataChange = (index, key, value, field) => {
-        const updatedProductData = [...formData.productdata];
-        const product = filteredProducts[index];
- 
-        if (!updatedProductData[index]) {
-            updatedProductData[index] = {
-                product_id: product.id,
-                title: product.title,
-                price: product.price,
-                // checked : value
-            };
-        }
-        const newProductData = [...formData.productdata];
-        newProductData[index] = {
-            ...newProductData[index],
-            [field]: value,
+    const handleProductDataChange = (key, value, productId) => {
+        const product2 = Product.find(p => p.id === productId);
 
-        };
-        updatedProductData[index][key] = value;
+        const updatedProductData = [...formData.productdata];
+        const productIndex = updatedProductData.findIndex(p => p.product_id === productId);
+
+        if (productIndex === -1) {
+            updatedProductData.push({
+                product_id: product2.id,
+                title: product2.title,
+                price: product2.price,
+                [key]: value,
+            });
+        } else {
+            updatedProductData[productIndex][key] = value;
+        }
+
+        console.log(updatedProductData);
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
         }));
     };
-console.log(formData.productdata)
-    const selectedCount = formData.productdata.filter(product => product.checked).length;
-
-
-
-    // const { selectedResources, allResourcesSelected, handleSelectionChange } =
-    //     useIndexResourceState(filteredProducts);
+    console.log(formData.productdata)
 
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
@@ -334,76 +366,52 @@ console.log(formData.productdata)
         }
     };
 
-    const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => (
-        <IndexTable.Row
-            id={id}
-            key={id}
-            position={index}
-        >
-            <IndexTable.Cell>
-                <Checkbox
-                    checked={formData.productdata[index]?.checked || false}
-                    onChange={(checked) => handleProductDataChange(index, 'checked', checked)}
-                />
-            </IndexTable.Cell>
-            <IndexTable.Cell>
-                <Thumbnail
-                    source={image}
-                    size="small"
-                    alt="Black choker necklace"
-                />
-            </IndexTable.Cell>
-            <IndexTable.Cell>
-                <Text fontWeight="bold" as="span">
-                    {title}
-                </Text>
-            </IndexTable.Cell>
-            <IndexTable.Cell>
-                {price}
-            </IndexTable.Cell>
-            <IndexTable.Cell>
-                <div style={{ width: "100px" }}>
-                    <TextField
-                        type='number'
-                        value={formData.productdata[index]?.value || ''}
-                        onChange={(value) => handleProductDataChange(index, 'value', value)}
-                        autoComplete="off"
+    const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => {
+        const globalIndex = startIndex + index;
+
+        return (
+            <IndexTable.Row
+                id={id}
+                key={id}
+                position={id}
+            >
+                <IndexTable.Cell>
+                    <Thumbnail
+                        source={image}
+                        size="small"
+                        alt="Product Image"
                     />
-                </div>
-            </IndexTable.Cell>
-        </IndexTable.Row>
-    ));
+                </IndexTable.Cell>
+                <IndexTable.Cell>
+                    <Text fontWeight="bold" as="span">
+                        {title}
+                    </Text>
+                </IndexTable.Cell>
+                <IndexTable.Cell>
+                    {price}
+                </IndexTable.Cell>
+                <IndexTable.Cell>
+                    <div style={{ width: "100px" }}>
+                        <TextField
+                            type='number'
+                            value={formData.productdata.find(p => p.product_id === id)?.value || ''}
+                            onChange={(value) => handleProductDataChange('value', value, id)}
+                            autoComplete="off"
+                        />
+                    </div>
+                </IndexTable.Cell>
+            </IndexTable.Row>
+        );
+    });
 
-
-    const saevConfig = async () => {
-        try {
-            const app = createApp({
-                apiKey: SHOPIFY_API_KEY,
-                host: new URLSearchParams(location.search).get("host"),
-            });
-            const token = await getSessionToken(app);
-            const countriesString = selectedOptions.join(',');
-
-            // Update the dataToSubmit object
-            const dataToSubmit = {
-                ...formData,
-                countries: countriesString, // Use the comma-separated string
-            };
-            console.log(dataToSubmit)
-            const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            setToastContent('Rate saved successfully');
-            setShowToast(true);
-
-        } catch (error) {
-            console.error('Error occurs', error);
-            setToastContent('Error occurred while saving data');
-            setShowToast(true);
-
-        }
+    if (loading) {
+        <Page title="Configuration And Products">
+            <div style={{ marginTop: "3%" }}>
+                <LegacyCard>
+                    <SkeletonTabs />
+                </LegacyCard>
+            </div>
+        </Page>
     }
 
     return (
@@ -567,7 +575,6 @@ console.log(formData.productdata)
                                 </div>
                             )}
 
-
                             {selected === 1 && (
                                 <div>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -592,23 +599,7 @@ console.log(formData.productdata)
                                             itemCount={filteredProducts.length}
 
                                             headings={[
-                                                {
-                                                    title: selectedCount > 0
-                                                        ? `Selected ${selectedCount}`
-                                                        : <Checkbox
-                                                            checked={false}
-                                                            onChange={(newChecked) => {
-                                                                const newProductData = formData.productdata.map(product => ({
-                                                                    ...product,
-                                                                    checked: newChecked,
-                                                                }));
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    productdata: newProductData,
-                                                                });
-                                                            }}
-                                                        />,
-                                                },
+
                                                 { title: 'Image' },
                                                 { title: 'Title' },
                                                 { title: 'Price' },
