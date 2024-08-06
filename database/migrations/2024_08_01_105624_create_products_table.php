@@ -20,6 +20,7 @@ return new class extends Migration
             $table->bigInteger('product_id');
             $table->string('title');
             $table->decimal("value", 12, 2)->default(0.00);
+            $table->boolean("checked", )->default(0);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });

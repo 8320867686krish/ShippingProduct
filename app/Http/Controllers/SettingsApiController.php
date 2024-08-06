@@ -173,13 +173,14 @@ class SettingsApiController extends Controller
                 $productValue = 0;
                 foreach ($request->input('productdata') as $product) {
                     if (null !== $product) {
-                        if(!empty($product['value'])){
+                        if($product['checked']){
                             $productData = [
                                 "user_id" => $token['id'],
                                 "setting_id" => $setting->id,
                                 "product_id" => $product['product_id'],
                                 "title" => $product['title'],
-                                "value" => $product['value']
+                                "value" => $product['value'],
+                                "checked" => $product['checked']
                             ];
                             Product::updateOrCreate(['product_id' => $product['product_id'], 'setting_id' => $setting->id], $productData);
                             $productValue = $product['value'];
