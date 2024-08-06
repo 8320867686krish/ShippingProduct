@@ -89,7 +89,7 @@ class CarrierServiceCallbackController extends Controller
                 'description' => Carbon::now()->addDay(5)->format('l, d M'),
                 'currency' => "INR",
                 'min_delivery_date' => Carbon::now()->addDay(3)->toIso8601String(),
-                'max_delivery_date' => Carbon::now()->addDay(3)->toIso8601String(),
+                'max_delivery_date' => Carbon::now()->addDay(5)->toIso8601String(),
             ];
         }
 
