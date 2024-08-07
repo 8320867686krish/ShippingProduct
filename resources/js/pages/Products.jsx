@@ -229,7 +229,7 @@ function Products() {
             setSelectedOptions(Array.isArray(apiData.countries) ? apiData.countries : []);
 
         } catch (error) {
-            console.error('Error occurs', error);
+            // console.error('Error occurs', error);
         }
     };
 
@@ -260,7 +260,6 @@ function Products() {
                 ...formData,
                 countries: countriesString,
             };
-            console.log(dataToSubmit)
             const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -282,6 +281,7 @@ function Products() {
     useEffect(() => {
         getCountry()
         fetchProducts()
+        console.log(formData.id)
         // if(formData.id){
 
         settingData()
@@ -377,7 +377,7 @@ function Products() {
             };
 
             if (key === 'value' && value) {
-                newProductData['checked'] = true; // Automatically check the checkbox if value is entered
+                newProductData['checked'] = true;
             }
 
             updatedProductData.push(newProductData);
@@ -385,13 +385,12 @@ function Products() {
             updatedProductData[productIndex][key] = value;
 
             if (key === 'value' && value) {
-                updatedProductData[productIndex]['checked'] = true; // Automatically check the checkbox if value is entered
+                updatedProductData[productIndex]['checked'] = true; 
             } else if (key === 'checked' && !value) {
-                updatedProductData[productIndex]['value'] = ''; // Clear the value if unchecked
+                updatedProductData[productIndex]['value'] = '';
             }
         }
 
-        console.log(updatedProductData);
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
