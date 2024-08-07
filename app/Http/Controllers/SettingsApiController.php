@@ -126,6 +126,11 @@ class SettingsApiController extends Controller
                 'show_method_for_admin' => 'required|boolean',
                 'min_order_amount' => 'nullable|numeric',
                 'max_order_amount' => 'nullable|numeric',
+                'productdata.*.checked' => 'boolean',
+                'productdata.*.price' => 'required_if:productdata.*.checked,true',
+                'productdata.*.product_id' => 'required_if:productdata.*.checked,true',
+                'productdata.*.title' => 'required_if:productdata.*.checked,true',
+                'productdata.*.value' => 'required_if:productdata.*.checked,true',
             ], [
                 'enabled.required' => 'The enabled field is required.',
                 'enabled.boolean' => 'The enabled field must be true or false.',
@@ -157,6 +162,12 @@ class SettingsApiController extends Controller
                 'min_order_amount.numeric' => 'The minimum order amount must be a number.',
                 'max_order_amount.required' => 'The maximum order amount is required.',
                 'max_order_amount.numeric' => 'The maximum order amount must be a number.',
+                'productdata.array' => 'The product data must be an array.',
+                'productdata.*.checked.boolean' => 'The checked value must be true or false.',
+                'productdata.*.price.required_if' => 'The price is required when the product is checked.',
+                'productdata.*.product_id.required_if' => 'The product ID is required when the product is checked.',
+                'productdata.*.title.required_if' => 'The title is required when the product is checked.',
+                'productdata.*.value.required_if' => 'The value is required when the product is checked.',
             ]);
 
             if ($validator->fails()) {
@@ -173,7 +184,7 @@ class SettingsApiController extends Controller
                 $productValue = 0;
                 foreach ($request->input('productdata') as $product) {
                     if (null !== $product) {
-                        if($product['checked']){
+                        if ($product['checked']) {
                             $productData = [
                                 "user_id" => $token['id'],
                                 "setting_id" => $setting->id,

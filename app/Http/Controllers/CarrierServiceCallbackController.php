@@ -22,6 +22,13 @@ class CarrierServiceCallbackController extends Controller
 
         $userId = User::where('name', $shopDomain)->value('id');
 
+        $items = $input['rate']['items'];
+
+        $totalPrice = array_reduce($items, function ($carry, $item) {
+            $itemTotal = ($item['price'] * $item['quantity']) / 100;
+            return $carry + $itemTotal;
+        }, 0);
+
         $setting = Setting::with('productdata')->where('user_id', $userId)->first();
 
         $response = [];
@@ -62,7 +69,7 @@ class CarrierServiceCallbackController extends Controller
             foreach ($items as $item) {
                 $matchedItem = $settingProduct->firstWhere('product_id', $item['product_id']);
 
-                if($setting->product_shipping_cost){
+                if ($setting->product_shipping_cost) {
                     $price = $setting['rate_per_item'];
                 } else {
                     if (in_array($item['product_id'], $itemIdArray) && $matchedItem) {
@@ -96,7 +103,20 @@ class CarrierServiceCallbackController extends Controller
                 $totalSum = $setting->rate_per_item;
             }
             Log::info('input logs:', ['totalSum' => $totalSum]);
-            $finalRatePrice = $totalSum + $setting->handling_fee ?? 0.00;
+
+            $finalRatePrice = $totalSum + ($setting->handling_fee ?? 0.00);
+
+            if (!is_null($setting->min_order_amount) && !is_null($setting->max_order_amount) && $setting->min_order_amount != 0 && $setting->max_order_amount != 0) {
+                $isWithinOrderRange = $setting->min_order_amount <= $totalPrice && $totalPrice <= $setting->max_order_amount;
+
+                Log::info('input logs:', ['isWithinOrderRange' => $isWithinOrderRange]);
+                Log::info('input logs:', ['totalPrice' => $totalPrice]);
+
+                if(!$isWithinOrderRange){
+                    return response()->json($response);
+                }
+            }
+
             Log::info('input logs:', ['finalRatePrice' => $finalRatePrice]);
 
             $response['rates'] = [
