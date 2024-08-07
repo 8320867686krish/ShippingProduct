@@ -12,7 +12,8 @@
         "kyon147/laravel-shopify": "^21.1",
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.2",
-        "laravel/tinker": "^2.8"
+        "laravel/tinker": "^2.8",
+        "mgcodeur/laravel-currency-converter": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

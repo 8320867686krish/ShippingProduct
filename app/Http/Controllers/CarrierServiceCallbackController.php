@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Mgcodeur\CurrencyConverter\Facades\CurrencyConverter;
 
 class CarrierServiceCallbackController extends Controller
 {
@@ -82,6 +83,7 @@ class CarrierServiceCallbackController extends Controller
                         $price = $setting['rate_per_item'];
                     }
                 }
+
                 Log::info('input logs:', ['price' => $price]);
                 $quantity = $item['quantity'];
 
@@ -119,12 +121,18 @@ class CarrierServiceCallbackController extends Controller
 
             Log::info('input logs:', ['finalRatePrice' => $finalRatePrice]);
 
+            $convertedAmount = CurrencyConverter::convert($finalRatePrice)->from('INR')->to($currencyCode)->get();
+
+            Log::info('input logs:', ['convertedAmount' => $convertedAmount]);
+
+            // dd($convertedAmount);
+
             $response['rates'] = [
                 'service_name' => $setting->title,
                 'service_code' => "RATE200",
-                'total_price' => $finalRatePrice * 100, // Convert to cents if needed
+                'total_price' => $convertedAmount * 100, // Convert to cents if needed
                 'description' => $setting->method_name,
-                'currency' => "INR",
+                'currency' => $currencyCode,
                 // 'currency' => $currencyCode,
                 // 'min_delivery_date' => Carbon::now()->addDay(3)->toIso8601String(),
                 // 'max_delivery_date' => Carbon::now()->addDay(5)->toIso8601String(),
