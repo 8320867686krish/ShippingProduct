@@ -124,8 +124,8 @@ class SettingsApiController extends Controller
                 'method_if_not_applicable' => 'nullable|boolean',
                 'displayed_error_message' => 'nullable|string',
                 'show_method_for_admin' => 'required|boolean',
-                'min_order_amount' => 'required|numeric',
-                'max_order_amount' => 'required|numeric',
+                'min_order_amount' => 'nullable|numeric',
+                'max_order_amount' => 'nullable|numeric',
             ], [
                 'enabled.required' => 'The enabled field is required.',
                 'enabled.boolean' => 'The enabled field must be true or false.',

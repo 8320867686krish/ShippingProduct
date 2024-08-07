@@ -62,16 +62,20 @@ class CarrierServiceCallbackController extends Controller
             foreach ($items as $item) {
                 $matchedItem = $settingProduct->firstWhere('product_id', $item['product_id']);
 
-                if (in_array($item['product_id'], $itemIdArray) && $matchedItem) {
-                    if ($matchedItem['value'] != null) {
-                        $price = $matchedItem['value'];
+                if($setting->product_shipping_cost){
+                    $price = $setting['rate_per_item'];
+                } else {
+                    if (in_array($item['product_id'], $itemIdArray) && $matchedItem) {
+                        if ($matchedItem['value'] != null) {
+                            $price = $matchedItem['value'];
+                        } else {
+                            $price = $setting['rate_per_item'];
+                        }
                     } else {
                         $price = $setting['rate_per_item'];
                     }
-                } else {
-                    $price = $setting['rate_per_item'];
                 }
-
+                Log::info('input logs:', ['price' => $price]);
                 $quantity = $item['quantity'];
 
                 if ($setting->shipping_rate == 1) {
@@ -81,7 +85,7 @@ class CarrierServiceCallbackController extends Controller
                 }
                 $newIteam[] = $sum;
             }
-
+            Log::info('input logs:', ['newIteam' => $newIteam]);
             if ($setting->shipping_rate_calculation == 1) {
                 $totalSum = array_sum($newIteam);
             } elseif ($setting->shipping_rate_calculation == 2) {
@@ -91,8 +95,9 @@ class CarrierServiceCallbackController extends Controller
             } else {
                 $totalSum = $setting->rate_per_item;
             }
-
+            Log::info('input logs:', ['totalSum' => $totalSum]);
             $finalRatePrice = $totalSum + $setting->handling_fee ?? 0.00;
+            Log::info('input logs:', ['finalRatePrice' => $finalRatePrice]);
 
             $response['rates'] = [
                 'service_name' => $setting->title,
