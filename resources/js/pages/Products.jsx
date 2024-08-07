@@ -74,15 +74,15 @@ function Products() {
     const [formData, setFormData] = useState({
         id: 0,
         enabled: 1,
-        title: 'Flat Rate Canada',
+        title: '',
         shipping_rate: 1,
         shipping_rate_calculation: 2,
-        method_name: "Test",
+        method_name: "",
         product_shipping_cost: 0,
         rate_per_item: 10,
         handling_fee: 0,
         applicable_countries: 0,
-        displayed_error_message: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
+        displayed_error_message: "",
         show_method_for_admin: 0,
         sort_order: 1,
         min_order_amount: 1,
@@ -622,12 +622,12 @@ function Products() {
                                                 <Button variant="primary" onClick={saevConfig}>Save</Button>
                                             </div>
                                             <div style={{ display: 'flex', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Enabled
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <Select
                                                         options={enabledd}
                                                         onChange={(value) => handleSelectChange('enabled', parseInt(value))}
@@ -636,12 +636,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Title
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="text"
                                                         value={formData.title}
@@ -650,12 +650,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Shipping Rate
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <Select
                                                         options={shipping_rate}
                                                         onChange={(value) => handleSelectChange('shipping_rate', parseInt(value))}
@@ -664,12 +664,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Shipping Rate Calculation
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <Select
                                                         options={Ratecalculation}
                                                         onChange={(value) => handleSelectChange('shipping_rate_calculation', parseInt(value))}
@@ -678,12 +678,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Method Name
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="text"
                                                         value={formData.method_name}
@@ -692,12 +692,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%", }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Default Product Shipping Cost
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <Select
                                                         options={enabledd}
                                                         onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
@@ -707,12 +707,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Default Rate Per Item
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="text"
                                                         value={formData.rate_per_item}
@@ -721,12 +721,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Handling Fee
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="text"
                                                         value={formData.handling_fee}
@@ -735,12 +735,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Ship to Applicable Countries
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <Select
                                                         options={applicable_countries}
                                                         onChange={(value) => handleSelectChange('applicable_countries', parseInt(value))}
@@ -749,12 +749,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Ship to Specific Countries
                                                     </Text>
                                                 </div>
-                                                <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto' ,width: "80%"}}>
+                                                <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto' ,width: "70%"}}>
                                                     <Autocomplete
                                                         allowMultiple
                                                         options={country}
@@ -769,12 +769,12 @@ function Products() {
                                             </div>
                                             {formData.applicable_countries === 1 && (
                                                 <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                    <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                         <Text variant="headingSm" as="h6">
                                                             Show Method if Not Applicable
                                                         </Text>
                                                     </div>
-                                                    <div style={{ flex: 1, width: "60%" }}>
+                                                    <div style={{ flex: 1, width: "70%" }}>
                                                         <Select
                                                             options={enabledd}
                                                             onChange={(value) => handleSelectChange('method_if_not_applicable', parseInt(value))}
@@ -785,12 +785,12 @@ function Products() {
                                             )}
 
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Displayed Error Message
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="text"
                                                         value={formData.displayed_error_message}
@@ -800,12 +800,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Minimum Order Amount
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="number"
                                                         value={formData.min_order_amount}
@@ -814,12 +814,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Maximum Order Amount
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="number"
                                                         value={formData.max_order_amount}
@@ -828,12 +828,12 @@ function Products() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'left', paddingRight: '10px' }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Sort Order
                                                     </Text>
                                                 </div>
-                                                <div style={{ flex: 1, width: "60%" }}>
+                                                <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="number"
                                                         value={formData.sort_order}
@@ -842,104 +842,6 @@ function Products() {
                                                 </div>
                                             </div>
 
-
-                                            {/* <Grid>
-                                                <Grid.Cell columnSpan={{ xs: 1, sm: 3, md: 3, lg: 1, xl: 1 }}></Grid.Cell>
-                                                <Grid.Cell columnSpan={{ xs: 10, sm: 3, md: 3, lg: 10, xl: 10 }}>
-                                                    
-                                            <div style={{ display: 'flex', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'right', paddingRight: '10px' }}>
-                                                    <Text variant="bodyMd" as="label">
-                                                        Enabled
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width:"60%" }}>
-                                                    <TextField
-                                                        labelHidden
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '200px', textAlign: 'right', paddingRight: '10px' }}>
-                                                    <Text variant="bodyMd" as="label">
-                                                        Title
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1 , width:"60%"}}>
-                                                    <TextField
-                                                        labelHidden
-                                                        type="text"
-                                                        autoComplete="off"
-                                                       
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{width: '200px', textAlign: 'right', paddingRight: '10px' }}>
-                                                    <Text variant="bodyMd" as="label">
-                                                        Shipping Rate
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1,  width:"60%" }}>
-                                                    <TextField
-                                                        labelHidden
-                                                        type="text"
-                                                        autoComplete="off"
-                                                       
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{width: '200px', textAlign: 'right', paddingRight: '10px' }}>
-                                                    <Text variant="bodyMd" as="label">
-                                                    Shipping Rate Calculation
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1 , width:"60%"}}>
-                                                    <TextField
-                                                        labelHidden
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{width: '200px', textAlign: 'right', paddingRight: '10px' }}>
-                                                    <Text variant="bodyMd" as="label">
-                                                    Method Name
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width:"60%" }}>
-                                                    <TextField
-                                                        labelHidden
-                                                        type="text"
-                                                        autoComplete="off"
-                                                      
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%",marginBottom:"2%" }}>
-                                                <div style={{width: '200px', textAlign: 'right', paddingRight: '10px' }}>
-                                                    <Text variant="bodyMd" as="label">
-                                                    Default Product Shipping Cost
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1 , width:"60%"}}>
-                                                    <TextField
-                                                        labelHidden
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        
-                                                    />
-                                                </div>
-                                            </div>
-                                                </Grid.Cell>
-                                                <Grid.Cell columnSpan={{ xs: 1, sm: 3, md: 3, lg: 1, xl: 1 }}></Grid.Cell>
-                                            </Grid> */}
                                         </div>
 
 
