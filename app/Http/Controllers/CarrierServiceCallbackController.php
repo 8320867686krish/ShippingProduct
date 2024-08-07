@@ -122,11 +122,12 @@ class CarrierServiceCallbackController extends Controller
             $response['rates'] = [
                 'service_name' => $setting->title,
                 'service_code' => "RATE200",
-                'total_price' => $finalRatePrice, // Convert to cents if needed
-                'description' => Carbon::now()->addDay(5)->format('l, d M'),
-                'currency' => $currencyCode,
-                'min_delivery_date' => Carbon::now()->addDay(3)->toIso8601String(),
-                'max_delivery_date' => Carbon::now()->addDay(5)->toIso8601String(),
+                'total_price' => $finalRatePrice * 100, // Convert to cents if needed
+                'description' => $setting->method_name,
+                'currency' => "INR",
+                // 'currency' => $currencyCode,
+                // 'min_delivery_date' => Carbon::now()->addDay(3)->toIso8601String(),
+                // 'max_delivery_date' => Carbon::now()->addDay(5)->toIso8601String(),
             ];
         }
 
