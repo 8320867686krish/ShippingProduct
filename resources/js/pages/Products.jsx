@@ -45,7 +45,8 @@ function Products() {
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 3000
-
+    const [errors, setErrors] = useState({});
+    const [errorToast, setErroToast] = useState(false)
 
     const [loading, setLoading] = useState(false)
     const [pageInfo, setPageInfo] = useState({
@@ -74,20 +75,20 @@ function Products() {
     const [formData, setFormData] = useState({
         id: 0,
         enabled: 1,
-        title: '',
+        title: 'Flat Rate Canada',
         shipping_rate: 1,
         shipping_rate_calculation: 2,
-        method_name: "",
+        method_name: "Test",
         product_shipping_cost: 0,
         rate_per_item: 10,
         handling_fee: 0,
         applicable_countries: 0,
-        displayed_error_message: "",
+        // displayed_error_message: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
         show_method_for_admin: 0,
         sort_order: 1,
         min_order_amount: 1,
         max_order_amount: 100,
-        method_if_not_applicable: 0,
+        // method_if_not_applicable: 0,
         productdata: [],
         countries: ''
     })
@@ -120,43 +121,14 @@ function Products() {
     };
 
     const handleSelectChange = (field, value) => {
+        if (field === 'applicable_countries' && value === 0) {
+            setSelectedOptions([]);
+        }
         setFormData(prevState => ({
             ...prevState,
             [field]: value
         }));
     };
-
-    const saevConfig = async () => {
-
-        try {
-            const app = createApp({
-                apiKey: SHOPIFY_API_KEY,
-                host: new URLSearchParams(location.search).get("host"),
-            });
-            const token = await getSessionToken(app);
-            const countriesString = selectedOptions.join(',');
-
-            const dataToSubmit = {
-                ...formData,
-                countries: countriesString,
-            };
-            console.log(dataToSubmit)
-            const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            setToastContent('Rate saved successfully');
-            setShowToast(true);
-            // window.location.reload();
-
-        } catch (error) {
-            console.error('Error occurs', error);
-            setToastContent('Error occurred while saving data');
-            setShowToast(true);
-
-        }
-    }
 
     const getCountry = async () => {
         try {
@@ -260,6 +232,53 @@ function Products() {
             console.error('Error occurs', error);
         }
     };
+
+    const saevConfig = async () => {
+        try {
+            const newErrors = {};
+            const maxOrderAmount = Number(formData.max_order_amount);
+            const minOrderAmount = Number(formData.min_order_amount);
+            if (maxOrderAmount <= minOrderAmount) {
+                newErrors.max_order_amount = 'Maximum Order Amount cannot be less than Minimum Order Amount';
+            }
+
+            if (Object.keys(newErrors).length > 0) {
+                setErrors(newErrors);
+                setToastContent('Sorry. Couldn’t be saved. Please try again.');
+                setErroToast(true);
+                return;
+            }
+
+            const app = createApp({
+                apiKey: SHOPIFY_API_KEY,
+                host: new URLSearchParams(location.search).get("host"),
+            });
+            const token = await getSessionToken(app);
+            const countriesString = selectedOptions.join(',');
+
+            const dataToSubmit = {
+                ...formData,
+                countries: countriesString,
+            };
+            console.log(dataToSubmit)
+            const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setErrors({});
+            setShowToast(true);
+            setToastContent('Rate saved successfully');
+            settingData()
+            // setLoading(false)
+
+        } catch (error) {
+            console.error('Error occurs', error);
+            setToastContent('Error occurred while saving data');
+            setShowToast(true);
+
+        }
+    }
     useEffect(() => {
         getCountry()
         fetchProducts()
@@ -310,7 +329,7 @@ function Products() {
     const textField = (
         <Autocomplete.TextField
             onChange={updateText}
-            
+
             value={inputValue}
             placeholder="Search countries"
             verticalContent={verticalContentMarkup}
@@ -343,7 +362,6 @@ function Products() {
         singular: 'Products',
         plural: 'Products',
     };
-
     const handleProductDataChange = (key, value, productId) => {
         const product2 = filteredProducts.find(p => p.id == productId);
 
@@ -351,14 +369,26 @@ function Products() {
         const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
 
         if (productIndex === -1) {
-            updatedProductData.push({
+            const newProductData = {
                 product_id: product2.id,
                 title: product2.title,
                 price: product2.price,
                 [key]: value,
-            });
+            };
+
+            if (key === 'value' && value) {
+                newProductData['checked'] = true; // Automatically check the checkbox if value is entered
+            }
+
+            updatedProductData.push(newProductData);
         } else {
             updatedProductData[productIndex][key] = value;
+
+            if (key === 'value' && value) {
+                updatedProductData[productIndex]['checked'] = true; // Automatically check the checkbox if value is entered
+            } else if (key === 'checked' && !value) {
+                updatedProductData[productIndex]['value'] = ''; // Clear the value if unchecked
+            }
         }
 
         console.log(updatedProductData);
@@ -367,7 +397,7 @@ function Products() {
             productdata: updatedProductData,
         }));
     };
-    console.log(formData.productdata)
+
 
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
@@ -383,15 +413,9 @@ function Products() {
 
 
     const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => {
-
         const productData55 = formData.productdata.find(p => p.product_id == id);
-        const isChecked = productData55 ? productData55 : false;
-
-        const handleTextFieldChange = (value) => {
-            // Set the checkbox to checked when the text field value changes
-            handleProductDataChange('checked', true, id);
-            handleProductDataChange('value', value, id);
-        };
+        const isChecked = productData55 ? productData55.checked : false;
+        const productValue = productData55 ? productData55.value : '';
 
         return (
             <IndexTable.Row
@@ -401,7 +425,7 @@ function Products() {
             >
                 <IndexTable.Cell>
                     <Checkbox
-                        checked={isChecked ? isChecked.checked : false}
+                        checked={isChecked}
                         onChange={(checked) => handleProductDataChange('checked', checked, id)}
                     />
                 </IndexTable.Cell>
@@ -424,8 +448,8 @@ function Products() {
                     <div style={{ width: "100px" }}>
                         <TextField
                             type='number'
-                            value={isChecked ? isChecked.value : ''}
-                            onChange={(value) => handleTextFieldChange(value)}
+                            value={productValue}
+                            onChange={(value) => handleProductDataChange('value', value, id)}
                             autoComplete="off"
                         />
                     </div>
@@ -433,6 +457,7 @@ function Products() {
             </IndexTable.Row>
         );
     });
+
 
 
     if (loading) {
@@ -456,7 +481,6 @@ function Products() {
                 <Card>
                     <LegacyTabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
                         <LegacyCard.Section>
-
                             {loading ? (
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                                     <Spinner accessibilityLabel="Loading" size="large" />
@@ -464,163 +488,11 @@ function Products() {
                             ) : (
                                 <>
                                     {selected === 0 && (
-                                        // <div>
-                                        //     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                        //         <Button variant="primary" onClick={saevConfig}>Save</Button>
-                                        //     </div>
-                                        //     <FormLayout>
-                                        //         <FormLayout.Group>
-                                        //             <Select
-                                        //                 label="enabled"
-                                        //                 options={enabledd}
-                                        //                 onChange={(value) => handleSelectChange('enabled', parseInt(value))}
-                                        //                 value={formData.enabled}
-                                        //             />
-                                        //             <TextField
-                                        //                 type="text"
-                                        //                 label="Title"
-                                        //                 value={formData.title}
-                                        //                 onChange={handleChange('title')}
-                                        //             />
-                                        //         </FormLayout.Group>
-
-                                        //         <div style={{ marginTop: "0.3%" }}>
-                                        //             <FormLayout.Group>
-                                        //                 <Select
-                                        //                     label="Shipping Rate"
-                                        //                     options={shipping_rate}
-                                        //                     onChange={(value) => handleSelectChange('shipping_rate', parseInt(value))}
-                                        //                     value={formData.shipping_rate}
-                                        //                 />
-                                        //                 <Select
-                                        //                     label="Shipping Rate Calculation"
-                                        //                     options={Ratecalculation}
-                                        //                     onChange={(value) => handleSelectChange('shipping_rate_calculation', parseInt(value))}
-                                        //                     value={formData.shipping_rate_calculation}
-                                        //                 />
-                                        //             </FormLayout.Group>
-                                        //         </div>
-
-                                        //         <div style={{ marginTop: "0.3%" }}>
-                                        //             <FormLayout.Group>
-                                        //                 <TextField
-                                        //                     type="text"
-                                        //                     label="Method Name	"
-                                        //                     value={formData.method_name}
-                                        //                     onChange={handleChange('method_name')}
-                                        //                 />
-                                        //                 <Select
-                                        //                     label="Default Product Shipping Cost"
-                                        //                     options={enabledd}
-                                        //                     onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
-                                        //                     value={formData.product_shipping_cost}
-                                        //                     helpText='If set to "Yes", the default rate per item will be used for all products.'
-                                        //                 />
-
-                                        //             </FormLayout.Group>
-                                        //         </div>
-
-                                        //         <div style={{ marginTop: "0.3%" }}>
-                                        //             <FormLayout.Group>
-                                        //                 <TextField
-                                        //                     type="text"
-                                        //                     label="Default Rate Per Item"
-                                        //                     value={formData.rate_per_item}
-                                        //                     onChange={handleChange('rate_per_item')}
-                                        //                 />
-                                        //                 <TextField
-                                        //                     type="text"
-                                        //                     label="Handling Fee"
-                                        //                     value={formData.handling_fee}
-                                        //                     onChange={handleChange('handling_fee')}
-                                        //                 />
-                                        //             </FormLayout.Group>
-                                        //         </div>
-
-                                        //         <div style={{ marginTop: "0.3%" }} >
-                                        //             <FormLayout.Group>
-                                        //                 <Select
-                                        //                     label="Ship to Applicable Countries"
-                                        //                     options={applicable_countries}
-                                        //                     onChange={(value) => handleSelectChange('applicable_countries', parseInt(value))}
-                                        //                     value={formData.applicable_countries}
-                                        //                 />
-                                        //                 <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto' }}>
-                                        //                     <Autocomplete
-                                        //                         allowMultiple
-                                        //                         options={country}
-                                        //                         selected={selectedOptions}
-                                        //                         textField={textField}
-                                        //                         onSelect={(selected) => {
-                                        //                             setSelectedOptions(selected);
-                                        //                         }}
-                                        //                         listTitle="Suggested Countries"
-                                        //                     />
-                                        //                 </div>
-                                        //             </FormLayout.Group>
-                                        //         </div>
-
-                                        //         <div style={{ marginTop: "0.3%" }}>
-                                        //             <FormLayout.Group>
-                                        //                 {formData.applicable_countries === 1 && (
-                                        //                     <Select
-                                        //                         label="Show Method if Not Applicable"
-                                        //                         options={enabledd}
-                                        //                         onChange={(value) => handleSelectChange('method_if_not_applicable', parseInt(value))}
-                                        //                         value={formData.method_if_not_applicable}
-                                        //                     />
-                                        //                 )}
-
-                                        //                 <TextField
-                                        //                     type="text"
-                                        //                     label="Displayed Error Message"
-                                        //                     value={formData.displayed_error_message}
-                                        //                     multiline={3}
-                                        //                     onChange={handleChange('displayed_error_message')}
-                                        //                 />
-                                        //             </FormLayout.Group>
-                                        //         </div>
-
-                                        //         <div style={{ marginTop: "0.3%" }}>
-                                        //             <FormLayout.Group>
-                                        //                 <TextField
-                                        //                     type="number"
-                                        //                     label="Sort Order"
-                                        //                     value={formData.sort_order}
-                                        //                     onChange={handleChange('sort_order')}
-                                        //                 />
-                                        //                 <Select
-                                        //                     label="Show Method only for Admin"
-                                        //                     options={enabledd}
-                                        //                     onChange={(value) => handleSelectChange('show_method_for_admin', parseInt(value))}
-                                        //                     value={formData.show_method_for_admin}
-                                        //                 />
-                                        //             </FormLayout.Group>
-                                        //         </div>
-
-                                        //         <div style={{ marginTop: "0.3%" }}>
-                                        //             <FormLayout.Group>
-                                        //                 <TextField
-                                        //                     type="number"
-                                        //                     label="Minimum Order Amount"
-                                        //                     value={formData.min_order_amount}
-                                        //                     onChange={handleChange('min_order_amount')}
-                                        //                 />
-                                        //                 <TextField
-                                        //                     type="number"
-                                        //                     label="Maximum Order Amount"
-                                        //                     value={formData.max_order_amount}
-                                        //                     onChange={handleChange('max_order_amount')}
-                                        //                 />
-                                        //             </FormLayout.Group>
-                                        //         </div>
-                                        //     </FormLayout>
-                                        // </div>
-
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: "1%" }}>
                                                 <Button variant="primary" onClick={saevConfig}>Save</Button>
                                             </div>
+
                                             <div style={{ display: 'flex', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -635,6 +507,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -649,6 +522,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -663,6 +537,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -677,6 +552,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -691,6 +567,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%", }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -702,10 +579,11 @@ function Products() {
                                                         options={enabledd}
                                                         onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
                                                         value={formData.product_shipping_cost}
-                                                        // helpText='If set to "Yes", the default rate per item will be used for all products.'
+                                                    // helpText='If set to "Yes", the default rate per item will be used for all products.'
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -720,6 +598,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -734,6 +613,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -748,13 +628,14 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Ship to Specific Countries
                                                     </Text>
                                                 </div>
-                                                <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto' ,width: "70%"}}>
+                                                <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto', width: "70%" }}>
                                                     <Autocomplete
                                                         allowMultiple
                                                         options={country}
@@ -767,7 +648,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
-                                            {formData.applicable_countries === 1 && (
+                                            {/* {formData.applicable_countries === 1 && (
                                                 <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                     <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                         <Text variant="headingSm" as="h6">
@@ -782,9 +663,9 @@ function Products() {
                                                         />
                                                     </div>
                                                 </div>
-                                            )}
+                                            )} */}
 
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                            {/* <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Displayed Error Message
@@ -798,7 +679,7 @@ function Products() {
                                                         onChange={handleChange('displayed_error_message')}
                                                     />
                                                 </div>
-                                            </div>
+                                            </div> */}
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
@@ -824,6 +705,7 @@ function Products() {
                                                         type="number"
                                                         value={formData.max_order_amount}
                                                         onChange={handleChange('max_order_amount')}
+                                                        error={errors.max_order_amount}
                                                     />
                                                 </div>
                                             </div>
@@ -843,8 +725,6 @@ function Products() {
                                             </div>
 
                                         </div>
-
-
                                     )}
 
                                     {selected === 1 && (
@@ -871,7 +751,7 @@ function Products() {
                                                     itemCount={filteredProducts.length}
 
                                                     headings={[
-                                                        { title: `Selected (${selectedCount})` },
+                                                        { title: `${selectedCount} Selected` },
                                                         { title: 'Image' },
                                                         { title: 'Title' },
                                                         { title: 'Price' },
@@ -898,6 +778,9 @@ function Products() {
             </div>
             {showToast && (
                 <Toast content={toastContent} duration={toastDuration} onDismiss={() => setShowToast(false)} />
+            )}
+            {errorToast && (
+                <Toast content={toastContent} error duration={toastDuration} onDismiss={() => setErroToast(false)} />
             )}
         </Page >
     )
