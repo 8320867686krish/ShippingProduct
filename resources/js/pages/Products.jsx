@@ -75,10 +75,10 @@ function Products() {
     const [formData, setFormData] = useState({
         id: 0,
         enabled: 1,
-        title: 'Flat Rate Canada',
+        title: 'Flat Rate',
         shipping_rate: 1,
         shipping_rate_calculation: 2,
-        method_name: "Test",
+        method_name: "2 , 5",
         product_shipping_cost: 0,
         rate_per_item: 10,
         handling_fee: 0,
@@ -235,11 +235,15 @@ function Products() {
 
     const saevConfig = async () => {
         try {
+            setLoading(true)
             const newErrors = {};
             const maxOrderAmount = Number(formData.max_order_amount);
             const minOrderAmount = Number(formData.min_order_amount);
-            if (maxOrderAmount <= minOrderAmount) {
-                newErrors.max_order_amount = 'Maximum Order Amount cannot be less than Minimum Order Amount';
+
+            if (!(maxOrderAmount === 0 && minOrderAmount === 0)) {
+                if (maxOrderAmount <= minOrderAmount) {
+                    newErrors.max_order_amount = 'Maximum Order Amount cannot be less than Minimum Order Amount';
+                }
             }
 
             if (Object.keys(newErrors).length > 0) {
@@ -268,16 +272,16 @@ function Products() {
             setErrors({});
             setShowToast(true);
             setToastContent('Rate saved successfully');
-            settingData()
-            // setLoading(false)
+            settingData();
+            setLoading(false)
 
         } catch (error) {
             console.error('Error occurs', error);
             setToastContent('Error occurred while saving data');
             setShowToast(true);
-
         }
     }
+
     useEffect(() => {
         getCountry()
         fetchProducts()
@@ -385,7 +389,7 @@ function Products() {
             updatedProductData[productIndex][key] = value;
 
             if (key === 'value' && value) {
-                updatedProductData[productIndex]['checked'] = true; 
+                updatedProductData[productIndex]['checked'] = true;
             } else if (key === 'checked' && !value) {
                 updatedProductData[productIndex]['value'] = '';
             }
@@ -396,7 +400,6 @@ function Products() {
             productdata: updatedProductData,
         }));
     };
-
 
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
@@ -409,7 +412,6 @@ function Products() {
         }
     };
     const selectedCount = formData.productdata.filter(p => p.checked).length;
-
 
     const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => {
         const productData55 = formData.productdata.find(p => p.product_id == id);
@@ -456,8 +458,6 @@ function Products() {
             </IndexTable.Row>
         );
     });
-
-
 
     if (loading) {
         <Page title="Configuration And Products">
@@ -555,7 +555,7 @@ function Products() {
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
-                                                        Method Name
+                                                        Description
                                                     </Text>
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
@@ -563,6 +563,7 @@ function Products() {
                                                         type="text"
                                                         value={formData.method_name}
                                                         onChange={handleChange('method_name')}
+                                                        helpText=''
                                                     />
                                                 </div>
                                             </div>
