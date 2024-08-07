@@ -44,7 +44,7 @@ function Products() {
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
-    const toastDuration = 3000
+    const toastDuration = 1000
     const [errors, setErrors] = useState({});
     const [errorToast, setErroToast] = useState(false)
 
@@ -233,54 +233,63 @@ function Products() {
         }
     };
 
-    const saevConfig = async () => {
+    const saveConfig = async () => {
         try {
-            setLoading(true)
             const newErrors = {};
             const maxOrderAmount = Number(formData.max_order_amount);
             const minOrderAmount = Number(formData.min_order_amount);
-
+    
             if (!(maxOrderAmount === 0 && minOrderAmount === 0)) {
                 if (maxOrderAmount <= minOrderAmount) {
                     newErrors.max_order_amount = 'Maximum Order Amount cannot be less than Minimum Order Amount';
                 }
             }
-
+                formData.productdata.forEach((product, index) => {
+                if (product.checked && !product.value) {
+                    newErrors[`productdata.${index}.value`] = 'Value is required';
+                }
+            });
+    
             if (Object.keys(newErrors).length > 0) {
                 setErrors(newErrors);
                 setToastContent('Sorry. Couldn’t be saved. Please try again.');
                 setErroToast(true);
                 return;
             }
-
+    
+            setLoading(true);
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
             });
             const token = await getSessionToken(app);
             const countriesString = selectedOptions.join(',');
-
+    
             const dataToSubmit = {
                 ...formData,
                 countries: countriesString,
             };
+    
             const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
+    
             setErrors({});
             setShowToast(true);
             setToastContent('Rate saved successfully');
             settingData();
-            setLoading(false)
-
+            setLoading(false);
+    
         } catch (error) {
             console.error('Error occurs', error);
             setToastContent('Error occurred while saving data');
             setShowToast(true);
+            setLoading(false);
         }
     }
+    
 
     useEffect(() => {
         getCountry()
@@ -368,10 +377,10 @@ function Products() {
     };
     const handleProductDataChange = (key, value, productId) => {
         const product2 = filteredProducts.find(p => p.id == productId);
-
+    
         const updatedProductData = [...formData.productdata];
         const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
-
+    
         if (productIndex === -1) {
             const newProductData = {
                 product_id: product2.id,
@@ -379,27 +388,40 @@ function Products() {
                 price: product2.price,
                 [key]: value,
             };
-
+    
             if (key === 'value' && value) {
                 newProductData['checked'] = true;
             }
-
+    
             updatedProductData.push(newProductData);
         } else {
             updatedProductData[productIndex][key] = value;
-
-            if (key === 'value' && value) {
-                updatedProductData[productIndex]['checked'] = true;
+    
+            if (key === 'value') {
+                if (value) {
+                    updatedProductData[productIndex]['checked'] = true;
+                    // Clear the error when a value is entered
+                    setErrors((prevErrors) => {
+                        const newErrors = { ...prevErrors };
+                        delete newErrors[`productdata.${productIndex}.value`];
+                        return newErrors;
+                    });
+                } else {
+                    updatedProductData[productIndex]['checked'] = false;
+                }
             } else if (key === 'checked' && !value) {
                 updatedProductData[productIndex]['value'] = '';
             }
         }
-
+    
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
         }));
     };
+    
+    
+    
 
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
@@ -452,6 +474,7 @@ function Products() {
                             value={productValue}
                             onChange={(value) => handleProductDataChange('value', value, id)}
                             autoComplete="off"
+                            error={errors[`productdata.${index}.value`]}
                         />
                     </div>
                 </IndexTable.Cell>
@@ -481,7 +504,7 @@ function Products() {
                     <LegacyTabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
                         <LegacyCard.Section>
                             {loading ? (
-                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' , marginTop:"5%"}}>
                                     <Spinner accessibilityLabel="Loading" size="large" />
                                 </div>
                             ) : (
@@ -489,7 +512,7 @@ function Products() {
                                     {selected === 0 && (
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: "1%" }}>
-                                                <Button variant="primary" onClick={saevConfig}>Save</Button>
+                                                <Button variant="primary" onClick={saveConfig}>Save</Button>
                                             </div>
 
                                             <div style={{ display: 'flex', marginTop: "2%" }}>
@@ -643,6 +666,8 @@ function Products() {
                                                         textField={textField}
                                                         onSelect={(selected) => {
                                                             setSelectedOptions(selected);
+                                                            setInputValue('');
+                                                            setCountry(allCountries);
                                                         }}
                                                         listTitle="Suggested Countries"
                                                     />
@@ -730,7 +755,7 @@ function Products() {
                                     {selected === 1 && (
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                <Button variant="primary" onClick={saevConfig}>Save </Button>
+                                                <Button variant="primary" onClick={saveConfig}>Save </Button>
                                             </div>
                                             <div style={{ marginTop: "2.5%" }}>
 
