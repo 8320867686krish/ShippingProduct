@@ -443,7 +443,7 @@ function Products() {
     };
     const selectedCount = formData.productdata.filter(p => p.checked).length;
     const rowMarkup = Product.map(({ id, title, image, price }, index) => {
-        const productData = formData.productdata.find(p => p.product_id === id);
+        const productData = formData.productdata.find(p => p.product_id == id);
         const isChecked = productData ? productData.checked : false;
         const productValue = productData ? productData.value : '';
 
