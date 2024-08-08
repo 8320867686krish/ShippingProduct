@@ -389,6 +389,10 @@ return [
             'topic' => env('SHOPIFY_WEBHOOK_2_TOPIC', 'customers/update'),
             'address' => env('SHOPIFY_WEBHOOK_2_ADDRESS', env('VITE_COMMON_API_URL') . '/webhook/customers-update')
         ],
+        [
+            'topic' => env('SHOPIFY_WEBHOOK_3_TOPIC', 'app_subscriptions/update'),
+            'address' => env('SHOPIFY_WEBHOOK_3_ADDRESS', env('VITE_COMMON_API_URL') . "/webhooks/app_subscriptions")
+        ],
         /*
             [
                 'topic' => env('SHOPIFY_WEBHOOK_1_TOPIC', 'ORDERS_CREATE'),
