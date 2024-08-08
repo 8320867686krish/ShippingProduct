@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\RecurringChargeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,6 +16,7 @@ use App\Http\Controllers\WebhookController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge'])->middleware(['verify.shop']);
 
 
 Route::get('/', [HomeController::class, 'index'])->middleware(['verify.shop', 'verify.shopify'])->name('home');
