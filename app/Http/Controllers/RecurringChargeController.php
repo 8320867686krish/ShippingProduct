@@ -173,7 +173,7 @@ class RecurringChargeController extends Controller
 
             $redirect_url = "https://{$shop['name']}/admin/apps/kaushik-test";
 
-            return redirect()->route($redirect_url)->with('success', 'Recurring charge accepted.');
+            return redirect()->route('home')->with('success', 'Recurring charge accepted.');
         // }
 
         // return redirect()->route('home')->with('error', 'Recurring charge was not accepted.');
