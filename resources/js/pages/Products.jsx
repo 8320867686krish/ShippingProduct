@@ -41,7 +41,8 @@ function Products() {
     const [inputValue, setInputValue] = useState('');
     const [Product, setProduct] = useState([])
     const [value, setValue] = useState('');
-    const [filteredProducts, setFilteredProducts] = useState([]);
+    // const [filteredProducts, setFilteredProducts] = useState([]);
+    const [textFieldValue, setTextFieldValue] = useState("");
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
     const toastDuration = 1000
@@ -157,15 +158,24 @@ function Products() {
         }
     }
 
-    const fetchProducts = async (cursor, direction) => {
-        try {
+    console.log('Received textFieldValue:', textFieldValue);
 
+    const fetchProducts = async (cursor, direction, textFieldValue = '') => {
+        try {
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
             });
             const token = await getSessionToken(app);
-            const payload = direction === 'next' ? { endCursor: cursor } : { startCursor: cursor };
+
+            const query = textFieldValue ? textFieldValue.trim() : '';
+
+            const payload = {
+                endCursor: direction === 'next' ? cursor : undefined,
+                startCursor: direction === 'previous' ? cursor : undefined,
+                query: query,
+            };
+            console.log(payload);
 
             const response = await axios.post(`${apiCommonURL}/api/products`, payload, {
                 headers: {
@@ -175,7 +185,7 @@ function Products() {
 
             const productData = response.data;
             setProduct(productData.products);
-            setFilteredProducts(productData.products);
+            // setFilteredProducts(productData.products);
             setPageInfo({
                 startCursor: productData.startCursor,
                 endCursor: productData.endCursor,
@@ -184,9 +194,10 @@ function Products() {
             });
 
         } catch (error) {
-            console.error('Error occurs', error);
+            console.error('Error occurs:', error.response ? error.response.data : error.message);
         }
     };
+
 
     const settingData = async () => {
         try {
@@ -238,25 +249,25 @@ function Products() {
             const newErrors = {};
             const maxOrderAmount = Number(formData.max_order_amount);
             const minOrderAmount = Number(formData.min_order_amount);
-    
+
             if (!(maxOrderAmount === 0 && minOrderAmount === 0)) {
                 if (maxOrderAmount <= minOrderAmount) {
                     newErrors.max_order_amount = 'Maximum Order Amount cannot be less than Minimum Order Amount';
                 }
             }
-                formData.productdata.forEach((product, index) => {
+            formData.productdata.forEach((product, index) => {
                 if (product.checked && !product.value) {
                     newErrors[`productdata.${index}.value`] = 'Value is required';
                 }
             });
-    
+
             if (Object.keys(newErrors).length > 0) {
                 setErrors(newErrors);
                 setToastContent('Sorry. Couldn’t be saved. Please try again.');
                 setErroToast(true);
                 return;
             }
-    
+
             setLoading(true);
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
@@ -264,24 +275,24 @@ function Products() {
             });
             const token = await getSessionToken(app);
             const countriesString = selectedOptions.join(',');
-    
+
             const dataToSubmit = {
                 ...formData,
                 countries: countriesString,
             };
-    
+
             const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-    
+
             setErrors({});
             setShowToast(true);
             setToastContent('Rate saved successfully');
             settingData();
             setLoading(false);
-    
+
         } catch (error) {
             console.error('Error occurs', error);
             setToastContent('Error occurred while saving data');
@@ -289,7 +300,7 @@ function Products() {
             setLoading(false);
         }
     }
-    
+
 
     useEffect(() => {
         getCountry()
@@ -351,77 +362,81 @@ function Products() {
         />
     );
 
-    const handleserchChange = useCallback(
-        (newValue) => {
-            setValue(newValue);
-            if (newValue === '') {
-                setFilteredProducts(Product);
-            } else {
-                const lowerCaseValue = newValue.toLowerCase();
-                setFilteredProducts(Product.filter(product =>
-                    product.title.toLowerCase().includes(lowerCaseValue)
-                ));
-            }
-        },
-        [Product]
-    );
-
-    const handleClearButtonClick = useCallback(() => {
-        setValue('');
-        setFilteredProducts(Product);
-    }, [Product]);
-
     const resourceName = {
         singular: 'Products',
         plural: 'Products',
     };
     const handleProductDataChange = (key, value, productId) => {
-        const product2 = filteredProducts.find(p => p.id == productId);
-    
+        const product2 = Product.find(p => p.id == productId);
+
         const updatedProductData = [...formData.productdata];
         const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
-    
-        if (productIndex === -1) {
-            const newProductData = {
-                product_id: product2.id,
-                title: product2.title,
-                price: product2.price,
-                [key]: value,
-            };
-    
-            if (key === 'value' && value) {
-                newProductData['checked'] = true;
-            }
-    
-            updatedProductData.push(newProductData);
-        } else {
-            updatedProductData[productIndex][key] = value;
-    
-            if (key === 'value') {
-                if (value) {
-                    updatedProductData[productIndex]['checked'] = true;
-                    // Clear the error when a value is entered
-                    setErrors((prevErrors) => {
-                        const newErrors = { ...prevErrors };
-                        delete newErrors[`productdata.${productIndex}.value`];
-                        return newErrors;
-                    });
-                } else {
+
+        const errorKey = `productdata.${productIndex}.${key}`;
+
+        if (key === 'value') {
+            if (value < 0) {
+                setErrors((prevErrors) => ({
+                    ...prevErrors,
+                    [errorKey]: 'negative Value.',
+                }));
+                if (productIndex !== -1) {
                     updatedProductData[productIndex]['checked'] = false;
                 }
-            } else if (key === 'checked' && !value) {
+            } else {
+                setErrors((prevErrors) => {
+                    const newErrors = { ...prevErrors };
+                    delete newErrors[errorKey];
+                    return newErrors;
+                });
+
+                if (productIndex === -1) {
+                    // Add new product data
+                    const newProductData = {
+                        product_id: product2.id,
+                        title: product2.title,
+                        price: product2.price,
+                        [key]: value,
+                    };
+                    if (value) {
+                        newProductData['checked'] = true;
+                    }
+                    updatedProductData.push(newProductData);
+                } else {
+                    // Update existing product data
+                    updatedProductData[productIndex][key] = value;
+                    updatedProductData[productIndex]['checked'] = value ? true : false;
+                }
+            }
+        } else if (key === 'checked' && !value) {
+            // Clear value if checked is false
+            if (productIndex !== -1) {
                 updatedProductData[productIndex]['value'] = '';
             }
+        } else {
+            // Handle other keys
+            if (productIndex === -1) {
+                const newProductData = {
+                    product_id: product2.id,
+                    title: product2.title,
+                    price: product2.price,
+                    [key]: value,
+                };
+                updatedProductData.push(newProductData);
+            } else {
+                updatedProductData[productIndex][key] = value;
+            }
         }
-    
+
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
         }));
     };
-    
-    
-    
+
+
+
+
 
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
@@ -434,11 +449,13 @@ function Products() {
         }
     };
     const selectedCount = formData.productdata.filter(p => p.checked).length;
-
-    const rowMarkup = filteredProducts.map(({ id, title, image, price }, index) => {
-        const productData55 = formData.productdata.find(p => p.product_id == id);
-        const isChecked = productData55 ? productData55.checked : false;
-        const productValue = productData55 ? productData55.value : '';
+    const filteredProductsList = Product.filter(product =>
+        product.title.toLowerCase().includes(textFieldValue.toLowerCase())
+    );
+    const rowMarkup = Product.map(({ id, title, image, price }, index) => {
+        const productData = formData.productdata.find(p => p.product_id === id);
+        const isChecked = productData ? productData.checked : false;
+        const productValue = productData ? productData.value : '';
 
         return (
             <IndexTable.Row
@@ -482,6 +499,12 @@ function Products() {
         );
     });
 
+    // Handle text field change
+    const handleTextFieldChange = useCallback(
+        (value) => setTextFieldValue(value),
+        [],
+    );
+
     if (loading) {
         <Page title="Configuration And Products">
             <div style={{ marginTop: "3%" }}>
@@ -504,7 +527,7 @@ function Products() {
                     <LegacyTabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
                         <LegacyCard.Section>
                             {loading ? (
-                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' , marginTop:"5%"}}>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', marginTop: "5%" }}>
                                     <Spinner accessibilityLabel="Loading" size="large" />
                                 </div>
                             ) : (
@@ -760,21 +783,18 @@ function Products() {
                                             <div style={{ marginTop: "2.5%" }}>
 
                                                 <TextField
-                                                    placeholder='search'
-                                                    onChange={handleserchChange}
-                                                    value={value}
                                                     type="text"
-                                                    prefix={<Icon source={SearchIcon} color="inkLighter" />}
+                                                    value={textFieldValue}
+                                                    placeholder="Search by name..."
+                                                    onChange={handleTextFieldChange}
+                                                    prefix={<Icon source={SearchIcon} />}
                                                     autoComplete="off"
-                                                    clearButton
-                                                    onClearButtonClick={handleClearButtonClick}
                                                 />
                                             </div>
                                             <div style={{ marginTop: "2%" }}>
                                                 <IndexTable
                                                     resourceName={resourceName}
-                                                    itemCount={filteredProducts.length}
-
+                                                    itemCount={Product.length}
                                                     headings={[
                                                         { title: `${selectedCount} Selected` },
                                                         { title: 'Image' },
