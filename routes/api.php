@@ -33,5 +33,4 @@ Route::middleware(['check.token'])->group(function () {
     Route::resource('setting', SettingsApiController::class);
 
     Route::get('recurring/create', [RecurringChargeController::class, 'createRecurringCharge']);
-    Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge']);
 });
