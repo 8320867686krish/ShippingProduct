@@ -5,29 +5,21 @@ import {
     LegacyTabs,
     Page,
     TextField,
-    FormLayout,
     Select,
     Text,
     Button,
     Autocomplete,
     LegacyStack,
     Tag,
-    SkeletonBodyText,
     IndexTable,
     Thumbnail,
     Icon,
     Toast,
     Checkbox,
-    SkeletonTabs,
     Spinner,
-    Grid,
     Card
-
 } from '@shopify/polaris';
-import {
-    SearchIcon,
-    PlusIcon
-} from '@shopify/polaris-icons';
+import {  SearchIcon } from '@shopify/polaris-icons';
 import createApp from '@shopify/app-bridge';
 import { getSessionToken } from "@shopify/app-bridge-utils";
 const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
@@ -40,8 +32,7 @@ function Products() {
     const [allCountries, setAllCountries] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [Product, setProduct] = useState([])
-    const [value, setValue] = useState('');
-    // const [filteredProducts, setFilteredProducts] = useState([]);
+    const [formSave, setFormSave] = useState(false);
     const [textFieldValue, setTextFieldValue] = useState("");
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
@@ -79,14 +70,14 @@ function Products() {
         title: 'Flat Rate',
         shipping_rate: 1,
         shipping_rate_calculation: 2,
-        method_name: "2 , 5",
+        method_name: "3 to 4 business day",
         product_shipping_cost: 0,
         rate_per_item: 10,
         handling_fee: 0,
         applicable_countries: 0,
         // displayed_error_message: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
-        show_method_for_admin: 0,
-        sort_order: 1,
+        // show_method_for_admin: 0,
+        // sort_order: 1,
         min_order_amount: 1,
         max_order_amount: 100,
         // method_if_not_applicable: 0,
@@ -158,23 +149,21 @@ function Products() {
         }
     }
 
-    console.log('Received textFieldValue:', textFieldValue);
 
-    const fetchProducts = async (cursor, direction, textFieldValue = '') => {
+    const fetchProducts = async (cursor, direction) => {
         try {
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
             });
             const token = await getSessionToken(app);
-
-            const query = textFieldValue ? textFieldValue.trim() : '';
+            console.log(token)
 
             const payload = {
-                endCursor: direction === 'next' ? cursor : undefined,
-                startCursor: direction === 'previous' ? cursor : undefined,
-                query: query,
+                ...(direction === 'next' ? { endCursor: cursor } : { startCursor: cursor }),
+                query: textFieldValue,
             };
+
             console.log(payload);
 
             const response = await axios.post(`${apiCommonURL}/api/products`, payload, {
@@ -197,8 +186,14 @@ function Products() {
             console.error('Error occurs:', error.response ? error.response.data : error.message);
         }
     };
-
-
+    const handleTextFieldChange = useCallback((value) => {
+        setTextFieldValue(value);
+        fetchProducts();
+    });
+    const handleClearButtonClick = () => {
+        setTextFieldValue('');
+        fetchProducts();
+    };
     const settingData = async () => {
         try {
             const app = createApp({
@@ -207,8 +202,6 @@ function Products() {
             });
 
             const token = await getSessionToken(app);
-
-
             const response = await axios.get(`${apiCommonURL}/api/setting`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -229,12 +222,12 @@ function Products() {
                 rate_per_item: apiData.rate_per_item,
                 handling_fee: apiData.handling_fee,
                 applicable_countries: apiData.applicable_countries,
-                displayed_error_message: apiData.displayed_error_message,
-                show_method_for_admin: apiData.show_method_for_admin,
-                sort_order: apiData.sort_order,
+                // displayed_error_message: apiData.displayed_error_message,
+                // show_method_for_admin: apiData.show_method_for_admin,
+                // sort_order: apiData.sort_order,
                 min_order_amount: apiData.min_order_amount,
                 max_order_amount: apiData.max_order_amount,
-                method_if_not_applicable: apiData.method_if_not_applicable,
+                // method_if_not_applicable: apiData.method_if_not_applicable,
                 productdata: apiData.productdata,
             });
             setSelectedOptions(Array.isArray(apiData.countries) ? apiData.countries : []);
@@ -268,7 +261,7 @@ function Products() {
                 return;
             }
 
-            setLoading(true);
+            setFormSave(true);
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
@@ -289,18 +282,17 @@ function Products() {
 
             setErrors({});
             setShowToast(true);
-            setToastContent('Rate saved successfully');
+            setToastContent('Data saved successfully');
             settingData();
-            setLoading(false);
+            setFormSave(false);
 
         } catch (error) {
             console.error('Error occurs', error);
             setToastContent('Error occurred while saving data');
             setShowToast(true);
-            setLoading(false);
+            setFormSave(false);
         }
     }
-
 
     useEffect(() => {
         getCountry()
@@ -366,65 +358,58 @@ function Products() {
         singular: 'Products',
         plural: 'Products',
     };
+    const [toastActive, setToastActive] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+
+    const toggleToastActive = useCallback(() => setToastActive((active) => !active), []);
+
     const handleProductDataChange = (key, value, productId) => {
         const product2 = Product.find(p => p.id == productId);
 
         const updatedProductData = [...formData.productdata];
         const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
 
-        const errorKey = `productdata.${productIndex}.${key}`;
+        // Check for negative value
+        if (key === 'value' && value < 0) {
+            setToastMessage('Value cannot be negative');
+            setToastActive(true);
+            // setErrors((prevErrors) => ({
+            //     ...prevErrors,
+            //     [`productdata.${productIndex}.value`]: 'Value cannot be negative'
+            // }));
+            return; // Exit the function early if the value is negative
+        }
 
-        if (key === 'value') {
-            if (value < 0) {
-                setErrors((prevErrors) => ({
-                    ...prevErrors,
-                    [errorKey]: 'negative Value.',
-                }));
-                if (productIndex !== -1) {
+        if (productIndex === -1) {
+            const newProductData = {
+                product_id: product2.id,
+                title: product2.title,
+                price: product2.price,
+                [key]: value,
+            };
+
+            if (key === 'value' && value) {
+                newProductData['checked'] = true;
+            }
+
+            updatedProductData.push(newProductData);
+        } else {
+            updatedProductData[productIndex][key] = value;
+
+            if (key === 'value') {
+                if (value) {
+                    updatedProductData[productIndex]['checked'] = true;
+                    // Clear the error when a value is entered
+                    setErrors((prevErrors) => {
+                        const newErrors = { ...prevErrors };
+                        delete newErrors[`productdata.${productIndex}.value`];
+                        return newErrors;
+                    });
+                } else {
                     updatedProductData[productIndex]['checked'] = false;
                 }
-            } else {
-                setErrors((prevErrors) => {
-                    const newErrors = { ...prevErrors };
-                    delete newErrors[errorKey];
-                    return newErrors;
-                });
-
-                if (productIndex === -1) {
-                    // Add new product data
-                    const newProductData = {
-                        product_id: product2.id,
-                        title: product2.title,
-                        price: product2.price,
-                        [key]: value,
-                    };
-                    if (value) {
-                        newProductData['checked'] = true;
-                    }
-                    updatedProductData.push(newProductData);
-                } else {
-                    // Update existing product data
-                    updatedProductData[productIndex][key] = value;
-                    updatedProductData[productIndex]['checked'] = value ? true : false;
-                }
-            }
-        } else if (key === 'checked' && !value) {
-            // Clear value if checked is false
-            if (productIndex !== -1) {
+            } else if (key === 'checked' && !value) {
                 updatedProductData[productIndex]['value'] = '';
-            }
-        } else {
-            // Handle other keys
-            if (productIndex === -1) {
-                const newProductData = {
-                    product_id: product2.id,
-                    title: product2.title,
-                    price: product2.price,
-                    [key]: value,
-                };
-                updatedProductData.push(newProductData);
-            } else {
-                updatedProductData[productIndex][key] = value;
             }
         }
 
@@ -434,9 +419,9 @@ function Products() {
         }));
     };
 
-
-
-
+    const toastMarkup = toastActive ? (
+        <Toast content={toastMessage} onDismiss={toggleToastActive} />
+    ) : null;
 
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
@@ -449,9 +434,6 @@ function Products() {
         }
     };
     const selectedCount = formData.productdata.filter(p => p.checked).length;
-    const filteredProductsList = Product.filter(product =>
-        product.title.toLowerCase().includes(textFieldValue.toLowerCase())
-    );
     const rowMarkup = Product.map(({ id, title, image, price }, index) => {
         const productData = formData.productdata.find(p => p.product_id === id);
         const isChecked = productData ? productData.checked : false;
@@ -498,28 +480,6 @@ function Products() {
             </IndexTable.Row>
         );
     });
-
-    // Handle text field change
-    const handleTextFieldChange = useCallback(
-        (value) => setTextFieldValue(value),
-        [],
-    );
-
-    if (loading) {
-        <Page title="Configuration And Products">
-            <div style={{ marginTop: "3%" }}>
-                <LegacyCard>
-                    <SkeletonTabs count={4} />
-                    <div>
-                        <SkeletonBodyText />
-                        <SkeletonBodyText />
-                        <SkeletonBodyText />
-                    </div>
-                </LegacyCard>
-            </div>
-        </Page>
-    }
-
     return (
         <Page title="Configuration And Products">
             <div style={{ marginBottom: "3%" }}>
@@ -532,6 +492,24 @@ function Products() {
                                 </div>
                             ) : (
                                 <>
+                                    {formSave &&(
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            zIndex: 9999
+                                        }}>
+                                            <Spinner accessibilityLabel="Loading" size="large" />
+                                        </div>
+                                    )}
+
+                                    <div style={formSave ? { filter: 'blur(1px)', pointerEvents: 'none' } : {}}>
                                     {selected === 0 && (
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: "1%" }}>
@@ -571,6 +549,22 @@ function Products() {
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
+                                                        Description
+                                                    </Text>
+                                                </div>
+                                                <div style={{ flex: 1, width: "70%" }}>
+                                                    <TextField
+                                                        type="text"
+                                                        value={formData.method_name}
+                                                        onChange={handleChange('method_name')}
+                                                        helpText=''
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                    <Text variant="headingSm" as="h6">
                                                         Shipping Rate
                                                     </Text>
                                                 </div>
@@ -598,21 +592,6 @@ function Products() {
                                                 </div>
                                             </div>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Description
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <TextField
-                                                        type="text"
-                                                        value={formData.method_name}
-                                                        onChange={handleChange('method_name')}
-                                                        helpText=''
-                                                    />
-                                                </div>
-                                            </div>
 
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%", }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
@@ -757,7 +736,7 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                            {/* <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Sort Order
@@ -770,7 +749,7 @@ function Products() {
                                                         onChange={handleChange('sort_order')}
                                                     />
                                                 </div>
-                                            </div>
+                                            </div> */}
 
                                         </div>
                                     )}
@@ -789,6 +768,8 @@ function Products() {
                                                     onChange={handleTextFieldChange}
                                                     prefix={<Icon source={SearchIcon} />}
                                                     autoComplete="off"
+                                                    clearButton
+                                                    onClearButtonClick={handleClearButtonClick}
                                                 />
                                             </div>
                                             <div style={{ marginTop: "2%" }}>
@@ -815,6 +796,7 @@ function Products() {
                                             </div>
                                         </div>
                                     )}
+                                    </div>
                                 </>
                             )}
                         </LegacyCard.Section>
@@ -827,6 +809,7 @@ function Products() {
             {errorToast && (
                 <Toast content={toastContent} error duration={toastDuration} onDismiss={() => setErroToast(false)} />
             )}
+            {toastMarkup}
         </Page >
     )
 }
