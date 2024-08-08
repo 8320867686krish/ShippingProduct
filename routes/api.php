@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CarrierServiceCallbackController;
 use App\Http\Controllers\ProductApiController;
+use App\Http\Controllers\RecurringChargeController;
 use App\Http\Controllers\SettingsApiController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Http\Request;
@@ -30,4 +31,7 @@ Route::middleware(['check.token'])->group(function () {
     Route::post('settings/save', [SettingsApiController::class, 'store']);
     Route::get('settingBasedToken', [SettingsApiController::class, 'settingBasedToken']);
     Route::resource('setting', SettingsApiController::class);
+
+    Route::get('recurring/create', [RecurringChargeController::class, 'createRecurringCharge']);
+    Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge']);
 });
