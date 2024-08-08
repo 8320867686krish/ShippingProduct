@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import axios from 'axios';
+import debounce from 'lodash.debounce';
 import {
     LegacyCard,
     LegacyTabs,
@@ -190,6 +191,13 @@ function Products() {
         setTextFieldValue(value);
         fetchProducts();
     });
+    // const handleTextFieldChange = useCallback(
+    //     debounce((value) => {
+    //         setTextFieldValue(value);
+    //         fetchProducts(); // Fetch products when the search text changes
+    //     }, 300), // Debounce delay in milliseconds
+    //     []
+    // );
     const handleClearButtonClick = () => {
         setTextFieldValue('');
         fetchProducts();
@@ -764,7 +772,7 @@ function Products() {
                                                 <TextField
                                                     type="text"
                                                     value={textFieldValue}
-                                                    placeholder="Search by name..."
+                                                    placeholder="Search by Title..."
                                                     onChange={handleTextFieldChange}
                                                     prefix={<Icon source={SearchIcon} />}
                                                     autoComplete="off"
