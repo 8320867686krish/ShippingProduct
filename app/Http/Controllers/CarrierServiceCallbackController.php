@@ -17,11 +17,13 @@ class CarrierServiceCallbackController extends Controller
     {
         $input = $request->input();
 
-        // Log::info('input logs:', ['CallbackInput' => $input]);
+        Log::info('input logs:', ['CallbackInput' => $input]);
 
         $shopDomain = $request->header()['x-shopify-shop-domain'][0];
 
         $userId = User::where('name', $shopDomain)->value('id');
+
+        $reqCurrency = $input['rate']['currency'];
 
         $items = $input['rate']['items'];
 
@@ -121,7 +123,7 @@ class CarrierServiceCallbackController extends Controller
 
             Log::info('input logs:', ['finalRatePrice' => $finalRatePrice]);
 
-            $convertedAmount = CurrencyConverter::convert($finalRatePrice)->from('INR')->to($currencyCode)->get();
+            $convertedAmount = CurrencyConverter::convert($finalRatePrice)->from($reqCurrency)->to($currencyCode)->get();
 
             Log::info('input logs:', ['convertedAmount' => $convertedAmount]);
 
@@ -132,8 +134,7 @@ class CarrierServiceCallbackController extends Controller
                 'service_code' => "RATE200",
                 'total_price' => $convertedAmount * 100, // Convert to cents if needed
                 'description' => $setting->method_name,
-                'currency' => $currencyCode,
-                // 'currency' => $currencyCode,
+                'currency' => $currencyCode
                 // 'min_delivery_date' => Carbon::now()->addDay(3)->toIso8601String(),
                 // 'max_delivery_date' => Carbon::now()->addDay(5)->toIso8601String(),
             ];
