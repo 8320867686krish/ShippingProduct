@@ -79,10 +79,12 @@ class CarrierServiceCallbackController extends Controller
                         if ($matchedItem['value'] != null) {
                             $price = $matchedItem['value'];
                         } else {
-                            $price = $setting['rate_per_item'];
+                            // $price = $setting['rate_per_item'];
+                            $price = 0;
                         }
                     } else {
-                        $price = $setting['rate_per_item'];
+                        $price = 0;
+                        // $price = $setting['rate_per_item'];
                     }
                 }
 
