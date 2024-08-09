@@ -51,7 +51,6 @@ class WebhookController extends Controller
 
     public function shopUpdate(Request $request)
     {
-
         $hmacHeader = $request->header('X-Shopify-Hmac-Sha256');
         $data = $request->getContent();
         $utf8 = utf8_encode($data);
@@ -66,5 +65,9 @@ class WebhookController extends Controller
             Log::info("shop update fail request");
             return response()->json(['status' => 'error'], 401);
         }
+    }
+
+    public function handleAppSubscriptions(Request $request){
+        Log::info('Received app_subscriptions webhook', $request->all());
     }
 }
