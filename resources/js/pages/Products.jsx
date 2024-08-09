@@ -605,7 +605,7 @@ function Products() {
                                                             options={enabledd}
                                                             onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
                                                             value={formData.product_shipping_cost}
-                                                        // helpText='If set to "Yes", the default rate per item will be used for all products.'
+                                                        helpText='If set to "Yes", the default rate per item will be used for all products.'
                                                         />
                                                     </div>
                                                 </div>
