@@ -233,6 +233,7 @@ function Products() {
             // console.error('Error occurs', error);
         }
     };
+    const [textFieldError, setTextFieldError] = useState('');
 
     const saveConfig = async () => {
         try {
@@ -259,6 +260,12 @@ function Products() {
                     return productWithoutError;
                 }
             });
+            if (formData.applicable_countries === 1 && selectedOptions.length === 0) {
+                newErrors.selectedOptions = 'Please select at least one country';
+                setTextFieldError('Please select at least one country');
+            } else {
+                setTextFieldError(''); // Clear error if condition is met
+            }
 
             if (Object.keys(newErrors).length > 0 || hasProductError) {
                 setFormData(prevState => ({
@@ -349,15 +356,17 @@ function Products() {
             </LegacyStack>
         ) : null;
 
-    const textField = (
-        <Autocomplete.TextField
-            onChange={updateText}
-            value={inputValue}
-            placeholder="Search countries"
-            verticalContent={verticalContentMarkup}
-            autoComplete="off"
-        />
-    );
+        const textField = (
+            <Autocomplete.TextField
+                onChange={updateText}
+                value={inputValue}
+                placeholder="Search countries"
+                verticalContent={verticalContentMarkup}
+                autoComplete="off"
+                error={textFieldError} // Show error message
+            />
+        );
+        
 
     const resourceName = {
         singular: 'Products',
@@ -605,7 +614,7 @@ function Products() {
                                                             options={enabledd}
                                                             onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
                                                             value={formData.product_shipping_cost}
-                                                        // helpText='If set to "Yes", the default rate per item will be used for all products.'
+                                                        helpText='If set to "Yes", the default rate per item will be used for all products.'
                                                         />
                                                     </div>
                                                 </div>
@@ -671,6 +680,7 @@ function Products() {
                                                                 setSelectedOptions(selected);
                                                                 setInputValue('');
                                                                 setCountry(allCountries);
+                                                                setTextFieldError('');
                                                             }}
                                                             listTitle="Suggested Countries"
                                                         />
