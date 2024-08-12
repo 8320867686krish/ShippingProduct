@@ -125,7 +125,7 @@ class ProductApiController extends Controller
                     if (isset($product['variants']['edges'][0]['node']['price'])) {
                         $price = $product['variants']['edges'][0]['node']['price'];
                     }
-                    if(isset($product['metafields']['edges'][0]['node']['value'])){
+                    if (isset($product['metafields']['edges'][0]['node']['value'])) {
                         $metafields = $product['metafields']['edges'][0]['node']['value'];
                         $checked = 1;
                     }
@@ -182,28 +182,52 @@ class ProductApiController extends Controller
 
             $apiVersion = config('services.shopify.api_version');
 
-            $graphqlEndpoint = "https://$shop/admin/api/$apiVersion/countries.json";
+            $query = <<<'GRAPHQL'
+                query AllMarkets {
+                    markets(first: 250) {
+                        edges {
+                            node {
+                                id
+                                name
+                                regions(first: 250) {
+                                    edges {
+                                        node {
+                                            ... on MarketRegionCountry {
+                                                code
+                                                name
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                GRAPHQL;
 
             $customHeaders = [
                 'X-Shopify-Access-Token' => $token,
             ];
 
-            // Make HTTP POST request to Shopify GraphQL endpoint
-            $response = Http::withHeaders($customHeaders)->get($graphqlEndpoint);
-            // Parse the JSON response
-            $countriesArray = $response->json()['countries'];
+            $graphqlEndpoint = "https://{$shop}/admin/api/{$apiVersion}/graphql.json";
 
-            // $countriesArray = CountryState::getCountries();
-            // Initialize an empty array to hold the formatted data
+            $response = Http::withHeaders($customHeaders)->post($graphqlEndpoint, ['query' => $query]);
+
+            $countriesArray = $response->json();
+
             $countries = [];
 
             // Iterate over the associative array and format it into an array of objects
-            foreach ($countriesArray as $name) {
-                $countries[] = (object) [
-                    'code' => $name['code'],
-                    'name' => $name['name']
-                    // 'nameCode' => $name . " " . "(" . $isoCode . ")"
-                ];
+            foreach ($countriesArray['data']['markets']['edges'] as $market) {
+                foreach ($market['node']['regions']['edges'] as $region) {
+                    $country = $region['node'];
+                    if (isset($country['code']) && isset($country['name'])) {
+                        $countries[] = [
+                            'code' => $country['code'],
+                            'name' => $country['name']
+                        ];
+                    }
+                }
             }
 
             return response()->json(['status' => true, 'message' => 'countries list retrieved successfully.', 'countries' => $countries]);

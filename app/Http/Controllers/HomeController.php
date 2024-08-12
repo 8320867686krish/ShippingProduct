@@ -19,7 +19,6 @@ class HomeController extends Controller
 
         $shopName = $post['shop'];
         $token = User::where('name', $shopName)->first();
-        $this->setMetaFiled($token);
 
         $apiVersion = config('services.shopify.api_version');
 
@@ -32,6 +31,7 @@ class HomeController extends Controller
 
         $this->mendatoryWebhook($shop);
         $this->getStoreOwnerEmail($shop);
+        $this->setMetaFiled($token);
 
         // Log::info('input logs:', ['mendatoryWebhook' => $mendatoryWebhook]);
 
@@ -62,7 +62,7 @@ class HomeController extends Controller
         return view('welcome', compact('shop', 'host'));
     }
 
-    public function setMetaFiled($shop)
+    private function setMetaFiled($shop)
     {
         $url = "https://" . $shop['name'] . "/admin/api/2021-10/graphql.json";
         $query = 'mutation MetafieldDefinitionCreateMutation($input: MetafieldDefinitionInput!) {
@@ -71,11 +71,10 @@ class HomeController extends Controller
                     code
                     message
                     field
-                    typename
                 }
-                typename
             }
         }';
+
         $variables = [
             'input' => [
                 'ownerType' => 'PRODUCT',
@@ -97,10 +96,17 @@ class HomeController extends Controller
             'query' => $query,
             'variables' => $variables,
         ]);
-        return $response->json();
+
+        if ($response->successful()) {
+            $data = $response->json();
+        } else {
+            $data  = $response->json();
+        }
+
+        return $data;
     }
 
-    public function mendatoryWebhook($shopDetail)
+    private function mendatoryWebhook($shopDetail)
     {
         // Log::info('input logs:', ['shopDetail' => $shopDetail]);
 
@@ -145,7 +151,7 @@ class HomeController extends Controller
         return true;
     }
 
-    protected function getStoreOwnerEmail($shop)
+    private function getStoreOwnerEmail($shop)
     {
         $user = User::where('name', $shop)->pluck('password')->first();
         $apiVersion = config('services.shopify.api_version');

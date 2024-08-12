@@ -30,7 +30,7 @@
                     <tr>
                         <td style="text-align:center;">
                             <a href="https://meetanshi.com" title="meetanshi" target="_blank">
-                                <img src="https://meetanshi.org/shopify/balvant/meetanshi.png" title="meetanshi"
+                                <img src="https://meetanshi.com/media/logo/stores/1/logo.png" title="meetanshi"
                                     alt="meetanshi_logo">
                             </a>
                         </td>

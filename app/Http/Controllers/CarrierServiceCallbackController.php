@@ -112,7 +112,7 @@ class CarrierServiceCallbackController extends Controller
 
             $finalRatePrice = $totalSum + ($setting->handling_fee ?? 0.00);
 
-            if (!is_null($setting->min_order_amount) && !is_null($setting->max_order_amount) && $setting->min_order_amount != 0 && $setting->max_order_amount != 0) {
+            if (!is_null($setting->min_order_amount) && !is_null($setting->max_order_amount) && $setting->max_order_amount != 0) {
                 $isWithinOrderRange = $setting->min_order_amount <= $totalPrice && $totalPrice <= $setting->max_order_amount;
 
                 Log::info('input logs:', ['isWithinOrderRange' => $isWithinOrderRange]);
@@ -125,7 +125,10 @@ class CarrierServiceCallbackController extends Controller
 
             Log::info('input logs:', ['finalRatePrice' => $finalRatePrice]);
 
-            $convertedAmount = CurrencyConverter::convert($finalRatePrice)->from($reqCurrency)->to($currencyCode)->get();
+            $convertedAmount = 0;
+            if($finalRatePrice > 0){
+                $convertedAmount = CurrencyConverter::convert($finalRatePrice)->from($reqCurrency)->to($currencyCode)->get();
+            }
 
             Log::info('input logs:', ['convertedAmount' => $convertedAmount]);
 
