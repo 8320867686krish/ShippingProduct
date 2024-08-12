@@ -86,7 +86,6 @@ function Products() {
         productdata: [],
         countries: ''
     })
-
     const handleTabChange = useCallback((selectedTabIndex) => {
         setLoading(true);
         setSelected(selectedTabIndex);
@@ -94,6 +93,7 @@ function Products() {
             return setLoading(false);
         }, 500);
     }, []);
+
     const tabs = [
         {
             id: 'all-customers-1',
@@ -110,18 +110,17 @@ function Products() {
 
     const handleChange = (field) => (value) => {
         const numericValue = Number(value);
-
         if (numericValue < 0) {
             setNegativeValueToastMessage('Negative values are not allowed.');
             setNegativeValueToastVisible(true);
             return;
         }
-
         setFormData((prevState) => ({
             ...prevState,
             [field]: value,
         }));
-    };
+    }
+
     const toast = negativeValueToastVisible ? (
         <Toast
             duration={toastDuration}
@@ -129,7 +128,6 @@ function Products() {
             onDismiss={() => setNegativeValueToastVisible(false)}
         />
     ) : null;
-
 
     const handleSelectChange = (field, value) => {
         if (field === 'applicable_countries' && value === 0) {
@@ -181,13 +179,11 @@ function Products() {
                 ...(direction === 'next' ? { endCursor: cursor } : { startCursor: cursor }),
                 ...(textFieldValue ? { query: textFieldValue } : {}),
             };
-
             const response = await axios.post(`${apiCommonURL}/api/products`, payload, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-
             const productData = response.data;
             setProduct(productData.products);
             setPageInfo({
@@ -216,7 +212,6 @@ function Products() {
     //     }, 300), // Debounce delay in milliseconds
     //     []
     // );
-
     const settingData = async () => {
         try {
             const app = createApp({
@@ -230,7 +225,6 @@ function Products() {
                 }
             });
             const apiData = response.data.setting;
-
             setFormData({
                 id: apiData.id,
                 enabled: apiData.enabled,
@@ -263,13 +257,11 @@ function Products() {
             const maxOrderAmount = Number(formData.max_order_amount);
             const minOrderAmount = Number(formData.min_order_amount);
             let hasProductError = false;
-
             if (!(maxOrderAmount === 0 && minOrderAmount === 0)) {
                 if (maxOrderAmount <= minOrderAmount) {
                     newErrors.max_order_amount = 'Maximum Order Amount cannot be less than Minimum Order Amount';
                 }
             }
-
             const updatedProductData = formData.productdata.map(product => {
                 if (product.checked && !product.value) {
                     hasProductError = true;
@@ -282,15 +274,12 @@ function Products() {
                     return productWithoutError;
                 }
             });
-
             if (formData.applicable_countries === 1 && selectedOptions.length === 0) {
                 newErrors.selectedOptions = 'Please select at least one country';
                 setTextFieldError('Please select at least one country');
             } else {
                 setTextFieldError('');
             }
-
-
             if (Object.keys(newErrors).length > 0 || hasProductError) {
                 setFormData(prevState => ({
                     ...prevState,
@@ -301,7 +290,6 @@ function Products() {
                 setErroToast(true);
                 return;
             }
-
             setFormSave(true);
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
@@ -313,13 +301,11 @@ function Products() {
                 ...formData,
                 countries: countriesString,
             };
-
             const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-
             setErrors({});
             setShowToast(true);
             setToastContent('Data saved successfully');
@@ -332,8 +318,6 @@ function Products() {
             setFormSave(false);
         }
     };
-
-    console.log(formData.productdata)
     useEffect(() => {
         getCountry()
         fetchProducts()
@@ -387,10 +371,9 @@ function Products() {
             placeholder="Search countries"
             verticalContent={verticalContentMarkup}
             autoComplete="off"
-            error={textFieldError} // Show error message
+            error={textFieldError}
         />
     );
-
 
     const resourceName = {
         singular: 'Products',
@@ -404,13 +387,11 @@ function Products() {
         const product2 = Product.find(p => p.id == productId);
         const updatedProductData = [...formData.productdata];
         const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
-
         if (key === 'value' && value < 0) {
             setToastMessage('Value cannot be negative');
             setToastActive(true);
             return;
         }
-
         if (productIndex === -1) {
             const newProductData = {
                 product_id: product2.id,
@@ -418,7 +399,6 @@ function Products() {
                 price: product2.price,
                 [key]: value,
             };
-
             if (key === 'value' && value) {
                 newProductData['checked'] = true;
                 newProductData['error'] = '';
@@ -426,7 +406,6 @@ function Products() {
             updatedProductData.push(newProductData);
         } else {
             updatedProductData[productIndex][key] = value;
-
             if (key === 'value') {
                 if (value) {
                     updatedProductData[productIndex]['checked'] = true;
@@ -442,7 +421,6 @@ function Products() {
                 }
             }
         }
-
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
@@ -470,7 +448,6 @@ function Products() {
         const isChecked = productData ? productData.checked : false;
         const productValue = productData ? productData.value : '';
         const productError = productData ? productData.error : '';
-
         return (
             <IndexTable.Row
                 id={id}
@@ -516,7 +493,7 @@ function Products() {
 
     return (
         <Page title="Configuration And Products">
-            <div style={{ marginBottom: "3%" }}>
+            <div style={{ marginBottom: "1%" }}>
                 <Card>
                     <LegacyTabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
                         <LegacyCard.Section>
@@ -785,7 +762,6 @@ function Products() {
                                                     />
                                                 </div>
                                             </div> */}
-
                                             </div>
                                         )}
 
@@ -802,8 +778,8 @@ function Products() {
                                                         onChange={handleTextFieldChange}
                                                         prefix={<Icon source={SearchIcon} />}
                                                         autoComplete="off"
-                                                    // clearButton
-                                                    // onClearButtonClick={handleClearButtonClick}
+                                                        // clearButton
+                                                        // onClearButtonClick={handleClearButtonClick}
                                                     />
                                                 </div>
                                                 <div style={{ marginTop: "2%" }}>
