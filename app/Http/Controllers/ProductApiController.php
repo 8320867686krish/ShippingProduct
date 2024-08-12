@@ -62,6 +62,14 @@ class ProductApiController extends Controller
                         node {
                             id
                             title
+                            metafields(namespace: "custom", first: 1) {
+                                edges {
+                                    node {
+                                        key
+                                        value
+                                    }
+                                }
+                            }
                             variants(first: 1) {
                                 edges {
                                     node {
@@ -74,7 +82,6 @@ class ProductApiController extends Controller
                                 edges {
                                     node {
                                         originalSrc
-                                        altText
                                     }
                                 }
                             }
@@ -113,14 +120,23 @@ class ProductApiController extends Controller
                     $product = $value['node'];
                     // Fetch the first variant's price
                     $price = null;
+                    $metafields = "0.00";
+                    $checked = 0;
                     if (isset($product['variants']['edges'][0]['node']['price'])) {
                         $price = $product['variants']['edges'][0]['node']['price'];
                     }
+                    if(isset($product['metafields']['edges'][0]['node']['value'])){
+                        $metafields = $product['metafields']['edges'][0]['node']['value'];
+                        $checked = 1;
+                    }
+
                     $itemArray = [
                         'id' => str_replace('gid://shopify/Product/', '', $product['id']),
                         'title' => ucfirst($product['title']),
                         'image' => isset($product['images']['edges'][0]['node']['originalSrc']) ? $product['images']['edges'][0]['node']['originalSrc'] : null,
-                        'price' => $price
+                        'price' => $price,
+                        'value' => $metafields,
+                        'checked' => $checked
                     ];
                     $collectionsArray[] = $itemArray;
                 }
