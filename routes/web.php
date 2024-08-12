@@ -16,8 +16,8 @@ use App\Http\Controllers\RecurringChargeController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge'])->middleware(['verify.shop']);
-
+Route::get('recurring/create', [RecurringChargeController::class, 'createRecurringCharge']);
+Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge']);
 
 Route::get('/', [HomeController::class, 'index'])->middleware(['verify.shop', 'verify.shopify'])->name('home');
 Route::get('/{path?}', [HomeController::class, 'common'])
@@ -29,3 +29,6 @@ Route::get('/{path?}', [HomeController::class, 'common'])
 Route::post('customers/update', [WebhookController::class, 'customersUpdate']);
 Route::post('customers/delete', [webhookController::class, 'customersDelete']);
 Route::post('shop/update', [webhookController::class, 'shopUpdate']);
+
+Route::post('/webhooks/app_subscriptions', [WebhookController::class, 'handleAppSubscriptions']);
+
