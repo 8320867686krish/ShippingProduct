@@ -105,16 +105,24 @@ function Products() {
             panelID: 'accepts-marketing-content-1',
         },
     ];
-    const handleChange = (field) => (value) => {
-        setFormData((prevState) => ({
-            ...prevState,
-            [field]: value,
-        }));
-    };
 
+    const handleChange = (field) => (value) => {
+        const numericValue = Number(value);
+    
+        if (numericValue >= 0 || value === '') {
+            setFormData((prevState) => ({
+                ...prevState,
+                [field]: value,
+            }));
+        }
+    };
+    
     const handleSelectChange = (field, value) => {
         if (field === 'applicable_countries' && value === 0) {
             setSelectedOptions([]);
+        }
+        if (field === 'applicable_countries' && value === 0) {
+            setTextFieldError('');
         }
         setFormData(prevState => ({
             ...prevState,
@@ -241,13 +249,13 @@ function Products() {
             const maxOrderAmount = Number(formData.max_order_amount);
             const minOrderAmount = Number(formData.min_order_amount);
             let hasProductError = false;
-
+    
             if (!(maxOrderAmount === 0 && minOrderAmount === 0)) {
                 if (maxOrderAmount <= minOrderAmount) {
                     newErrors.max_order_amount = 'Maximum Order Amount cannot be less than Minimum Order Amount';
                 }
             }
-
+    
             const updatedProductData = formData.productdata.map(product => {
                 if (product.checked && !product.value) {
                     hasProductError = true;
@@ -260,13 +268,15 @@ function Products() {
                     return productWithoutError;
                 }
             });
+    
             if (formData.applicable_countries === 1 && selectedOptions.length === 0) {
                 newErrors.selectedOptions = 'Please select at least one country';
                 setTextFieldError('Please select at least one country');
             } else {
-                setTextFieldError(''); // Clear error if condition is met
+                setTextFieldError('');
             }
-
+           
+    
             if (Object.keys(newErrors).length > 0 || hasProductError) {
                 setFormData(prevState => ({
                     ...prevState,
@@ -277,7 +287,8 @@ function Products() {
                 setErroToast(true);
                 return;
             }
-            setFormSave(true)
+    
+            setFormSave(true);
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
@@ -288,13 +299,13 @@ function Products() {
                 ...formData,
                 countries: countriesString,
             };
-
+    
             const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-
+    
             setErrors({});
             setShowToast(true);
             setToastContent('Data saved successfully');
@@ -307,8 +318,7 @@ function Products() {
             setFormSave(false);
         }
     };
-
-
+    
     console.log(formData.productdata)
     useEffect(() => {
         getCountry()
