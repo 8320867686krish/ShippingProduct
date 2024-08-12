@@ -37,10 +37,12 @@ function Products() {
     const [textFieldValue, setTextFieldValue] = useState("");
     const [toastContent, setToastContent] = useState("");
     const [showToast, setShowToast] = useState(false);
-    const toastDuration = 1000
+    const toastDuration = 3000
     const [errors, setErrors] = useState({});
     const [errorToast, setErroToast] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [negativeValueToastVisible, setNegativeValueToastVisible] = useState(false);
+    const [negativeValueToastMessage, setNegativeValueToastMessage] = useState('');
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -108,15 +110,27 @@ function Products() {
 
     const handleChange = (field) => (value) => {
         const numericValue = Number(value);
-    
-        if (numericValue >= 0 || value === '') {
-            setFormData((prevState) => ({
-                ...prevState,
-                [field]: value,
-            }));
+
+        if (numericValue < 0) {
+            setNegativeValueToastMessage('Negative values are not allowed.');
+            setNegativeValueToastVisible(true);
+            return;
         }
+
+        setFormData((prevState) => ({
+            ...prevState,
+            [field]: value,
+        }));
     };
-    
+    const toast = negativeValueToastVisible ? (
+        <Toast
+            duration={toastDuration}
+            content={negativeValueToastMessage}
+            onDismiss={() => setNegativeValueToastVisible(false)}
+        />
+    ) : null;
+
+
     const handleSelectChange = (field, value) => {
         if (field === 'applicable_countries' && value === 0) {
             setSelectedOptions([]);
@@ -249,13 +263,13 @@ function Products() {
             const maxOrderAmount = Number(formData.max_order_amount);
             const minOrderAmount = Number(formData.min_order_amount);
             let hasProductError = false;
-    
+
             if (!(maxOrderAmount === 0 && minOrderAmount === 0)) {
                 if (maxOrderAmount <= minOrderAmount) {
                     newErrors.max_order_amount = 'Maximum Order Amount cannot be less than Minimum Order Amount';
                 }
             }
-    
+
             const updatedProductData = formData.productdata.map(product => {
                 if (product.checked && !product.value) {
                     hasProductError = true;
@@ -268,15 +282,15 @@ function Products() {
                     return productWithoutError;
                 }
             });
-    
+
             if (formData.applicable_countries === 1 && selectedOptions.length === 0) {
                 newErrors.selectedOptions = 'Please select at least one country';
                 setTextFieldError('Please select at least one country');
             } else {
                 setTextFieldError('');
             }
-           
-    
+
+
             if (Object.keys(newErrors).length > 0 || hasProductError) {
                 setFormData(prevState => ({
                     ...prevState,
@@ -287,7 +301,7 @@ function Products() {
                 setErroToast(true);
                 return;
             }
-    
+
             setFormSave(true);
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
@@ -299,13 +313,13 @@ function Products() {
                 ...formData,
                 countries: countriesString,
             };
-    
+
             const response = await axios.post(`${apiCommonURL}/api/settings/save`, dataToSubmit, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-    
+
             setErrors({});
             setShowToast(true);
             setToastContent('Data saved successfully');
@@ -318,7 +332,7 @@ function Products() {
             setFormSave(false);
         }
     };
-    
+
     console.log(formData.productdata)
     useEffect(() => {
         getCountry()
@@ -366,17 +380,17 @@ function Products() {
             </LegacyStack>
         ) : null;
 
-        const textField = (
-            <Autocomplete.TextField
-                onChange={updateText}
-                value={inputValue}
-                placeholder="Search countries"
-                verticalContent={verticalContentMarkup}
-                autoComplete="off"
-                error={textFieldError} // Show error message
-            />
-        );
-        
+    const textField = (
+        <Autocomplete.TextField
+            onChange={updateText}
+            value={inputValue}
+            placeholder="Search countries"
+            verticalContent={verticalContentMarkup}
+            autoComplete="off"
+            error={textFieldError} // Show error message
+        />
+    );
+
 
     const resourceName = {
         singular: 'Products',
@@ -488,6 +502,7 @@ function Products() {
                     <div style={{ width: "100px" }}>
                         <TextField
                             type='number'
+                            // placeholder='0.00'
                             value={productValue}
                             onChange={(value) => handleProductDataChange('value', value, id)}
                             error={productError}
@@ -498,8 +513,6 @@ function Products() {
             </IndexTable.Row>
         );
     });
-
-
 
     return (
         <Page title="Configuration And Products">
@@ -624,7 +637,7 @@ function Products() {
                                                             options={enabledd}
                                                             onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
                                                             value={formData.product_shipping_cost}
-                                                        helpText='If set to "Yes", the default rate per item will be used for all products.'
+                                                            helpText='If set to "Yes", the default rate per item will be used for all products.'
                                                         />
                                                     </div>
                                                 </div>
@@ -824,6 +837,7 @@ function Products() {
                     </LegacyTabs>
                 </Card>
             </div>
+            {toast}
             {showToast && (
                 <Toast content={toastContent} duration={toastDuration} onDismiss={() => setShowToast(false)} />
             )}
