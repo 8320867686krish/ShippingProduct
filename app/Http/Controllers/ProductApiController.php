@@ -183,25 +183,35 @@ class ProductApiController extends Controller
             $apiVersion = config('services.shopify.api_version');
 
             $query = <<<'GRAPHQL'
-                query AllMarkets {
-                    markets(first: 250) {
+                query AllMarkets($after: String) {
+                    markets(first: 250, after: $after) {
                         edges {
                             node {
-                                id
-                                name
-                                regions(first: 250) {
-                                    edges {
-                                        node {
-                                            ... on MarketRegionCountry {
-                                                code
-                                                name
-                                            }
-                                        }
-                                    }
-                                }
+                                ...MarketSummary
                             }
                         }
                     }
+                    }
+
+                    fragment MarketSummary on Market {
+                    id
+                    name
+                    handle
+                    active: enabled
+                    primary
+                    regions(first: 250) {
+                        edges {
+                        node {
+                            id
+                            name
+                            ... on MarketRegionCountry {
+                            code
+
+                            }
+                        }
+                        }
+                    }
+                    __typename
                 }
                 GRAPHQL;
 
@@ -219,13 +229,15 @@ class ProductApiController extends Controller
 
             // Iterate over the associative array and format it into an array of objects
             foreach ($countriesArray['data']['markets']['edges'] as $market) {
-                foreach ($market['node']['regions']['edges'] as $region) {
-                    $country = $region['node'];
-                    if (isset($country['code']) && isset($country['name'])) {
-                        $countries[] = [
-                            'code' => $country['code'],
-                            'name' => $country['name']
-                        ];
+                if($market['node']['active']){
+                    foreach ($market['node']['regions']['edges'] as $region) {
+                        $country = $region['node'];
+                        if (isset($country['code']) && isset($country['name'])) {
+                            $countries[] = [
+                                'code' => $country['code'],
+                                'name' => $country['name']
+                            ];
+                        }
                     }
                 }
             }
