@@ -62,7 +62,7 @@
                                     <td style="padding:0 35px; text-align: left;">
                                         <p style="color:#455056; font-size:15px;line-height:24px; margin:0;">
                                         <p>Hi {{ $name }},</p>
-                                        <p>We noticed you uninstalled our Meetanshi AI Content Generator in your store.
+                                        <p>We noticed you uninstalled our Meetanshi Shipping Per Product in your store.
                                             But we want to make sure that it\'s not a Goodbye!</p>
                                         <p>Let us know the reason, and our team will certainly take your opinion into
                                             consideration.</p>
