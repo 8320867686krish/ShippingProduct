@@ -49,7 +49,7 @@
                                     <td style="padding:0 35px; text-align: left;">
                                         <p style="color:#455056; font-size:15px;line-height:24px; margin:0;">
                                         <p>Hi {{ $name }},</p>
-                                        <p>Thank you for installing Meetanshi AI Content Generator for Shopify.</p>
+                                        <p>Thank you for installing Meetanshi Shipping Per Product for Shopify.</p>
                                         <p>Team Meetanshi is delighted to have you as one of our valuable customers. If
                                             you need help getting started or want to customize the app, please <a
                                                 href="https://meetanshi.com/contacts" target="_blank">contact us</a>. We
@@ -67,7 +67,7 @@
                                                     target="_blank">Store Support &amp; Regular Maintenance</a></li>
                                         </ul>
                                         <p>Feel free to contact us for any assistance, we\'re happy to help you!</p>
-                                        <p>Happy Selling ðŸ¤ž</p>
+                                        <p>Happy Selling 🤞</p>
                                         <p>Regards,<br>Team Meetanshi</p>
                                         </p>
                                     </td>
