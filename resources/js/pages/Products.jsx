@@ -168,8 +168,9 @@ function Products() {
         }
     }
 
-    const fetchProducts = async (cursor, direction) => {
+    const fetchProducts = async (value=null,cursor, direction) => {
         try {
+            console.log("textFieldValue : ", value);
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
@@ -177,7 +178,7 @@ function Products() {
             const token = await getSessionToken(app);
             const payload = {
                 ...(direction === 'next' ? { endCursor: cursor } : { startCursor: cursor }),
-                ...(textFieldValue ? { query: textFieldValue } : {}),
+                ...(value ? { query: value } : {}),
             };
             const response = await axios.post(`${apiCommonURL}/api/products`, payload, {
                 headers: {
@@ -197,21 +198,23 @@ function Products() {
         }
     };
 
-    const handleTextFieldChange = useCallback((value) => {
-        setTextFieldValue(value);
-        fetchProducts();
-        if (textFieldValue == '') {
-            fetchProducts();
-        }
-    }, [textFieldValue]);
+    
+    const debouncedFetchProducts = useCallback(
+        debounce((value) => {
+            console.log('Fetching products with value:', value);
+            fetchProducts(value, null, null); 
+        }, 1000), 
+        []
+    );
 
-    // const handleTextFieldChange = useCallback(
-    //     debounce((value) => {
-    //         setTextFieldValue(value);
-    //         fetchProducts(); // Fetch products when the search text changes
-    //     }, 300), // Debounce delay in milliseconds
-    //     []
-    // );
+    const handleTextFieldChange = useCallback(
+        (value) => {
+            setTextFieldValue(value);
+            debouncedFetchProducts(value); 
+        },
+        [debouncedFetchProducts]
+    );
+    
     const settingData = async () => {
         try {
             const app = createApp({
@@ -387,27 +390,32 @@ function Products() {
         const product2 = Product.find(p => p.id == productId);
         const updatedProductData = [...formData.productdata];
         const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
-        if (key === 'value' && value < 0) {
+
+        
+        const numericValue = Number(value);
+
+        if (key === 'value' && numericValue < 0) {
             setToastMessage('Value cannot be negative');
             setToastActive(true);
             return;
         }
+
         if (productIndex === -1) {
             const newProductData = {
                 product_id: product2.id,
                 title: product2.title,
                 price: product2.price,
-                [key]: value,
+                [key]: numericValue,
             };
-            if (key === 'value' && value) {
+            if (key === 'value' && numericValue) {
                 newProductData['checked'] = true;
                 newProductData['error'] = '';
             }
             updatedProductData.push(newProductData);
         } else {
-            updatedProductData[productIndex][key] = value;
+            updatedProductData[productIndex][key] = numericValue;
             if (key === 'value') {
-                if (value) {
+                if (numericValue) {
                     updatedProductData[productIndex]['checked'] = true;
                     updatedProductData[productIndex]['error'] = '';
                 } else {
@@ -415,7 +423,7 @@ function Products() {
                     updatedProductData[productIndex]['checked'] = false;
                 }
             } else if (key === 'checked') {
-                if (!value) {
+                if (!numericValue) {
                     updatedProductData[productIndex]['value'] = '';
                     updatedProductData[productIndex]['error'] = '';
                 }
@@ -427,26 +435,27 @@ function Products() {
         }));
     };
 
+
     const toastMarkup = toastActive ? (
         <Toast content={toastMessage} onDismiss={toggleToastActive} />
     ) : null;
 
     const handleNextPage = () => {
         if (pageInfo.hasNextPage) {
-            fetchProducts(pageInfo.endCursor, 'next');
+            fetchProducts(null,pageInfo.endCursor, 'next');
         }
     };
     const handlePreviousPage = () => {
         if (pageInfo.hasPreviousPage) {
-            fetchProducts(pageInfo.startCursor, 'prev');
+            fetchProducts(null,pageInfo.startCursor, 'prev');
         }
     };
     const selectedCount = formData.productdata.filter(p => p.checked).length;
 
-    const rowMarkup = Product.map(({ id, title, image, price }) => {
+    const rowMarkup = Product.map(({ id, title, image, price , value, checked}) => {
         const productData = formData.productdata.find(p => p.product_id == id);
-        const isChecked = productData ? productData.checked : false;
-        const productValue = productData ? productData.value : '';
+        const isChecked = productData ? productData.checked : checked;
+        const productValue = productData ? productData.value : value;
         const productError = productData ? productData.error : '';
         return (
             <IndexTable.Row
@@ -479,7 +488,6 @@ function Products() {
                     <div style={{ width: "100px" }}>
                         <TextField
                             type='number'
-                            // placeholder='0.00'
                             value={productValue}
                             onChange={(value) => handleProductDataChange('value', value, id)}
                             error={productError}
@@ -778,8 +786,8 @@ function Products() {
                                                         onChange={handleTextFieldChange}
                                                         prefix={<Icon source={SearchIcon} />}
                                                         autoComplete="off"
-                                                        // clearButton
-                                                        // onClearButtonClick={handleClearButtonClick}
+                                                    // clearButton
+                                                    // onClearButtonClick={handleClearButtonClick}
                                                     />
                                                 </div>
                                                 <div style={{ marginTop: "2%" }}>
