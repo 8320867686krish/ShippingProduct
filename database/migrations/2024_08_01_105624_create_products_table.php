@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->unsignedBigInteger('setting_id');
-            $table->foreign('setting_id')->references('id')->on('settings')->onDelete('cascade');
-            $table->bigInteger('product_id');
-            $table->string('title');
-            $table->decimal("value", 12, 2)->default(0.00);
-            $table->boolean("checked", )->default(0);
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-        });
+        if (!Schema::hasTable('products')) {
+            Schema::create('products', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('user_id');
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+                $table->unsignedBigInteger('setting_id');
+                $table->foreign('setting_id')->references('id')->on('settings')->onDelete('cascade');
+                $table->bigInteger('product_id');
+                $table->string('title');
+                $table->decimal("value", 12, 2)->default(0.00);
+                $table->boolean("checked",)->default(0);
+                $table->timestamp('created_at')->useCurrent();
+                $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            });
+        }
     }
 
     /**

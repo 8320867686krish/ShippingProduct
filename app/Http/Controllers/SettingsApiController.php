@@ -52,6 +52,7 @@ class SettingsApiController extends Controller
 
     private function setMetafield($value, $ownerId, $password, $shop)
     {
+        Log::info("updadeted metafield", ["ownerId"=>$ownerId]);
         $response = Http::withHeaders([
             'X-Shopify-Access-Token' => $password,
             'Content-Type' => 'application/json',
@@ -85,6 +86,7 @@ class SettingsApiController extends Controller
             ]
         ]);
 
+        Log::info("updadeted metafield", ['response'=>$response->json()]);
         return $response->json();
     }
 
@@ -194,12 +196,12 @@ class SettingsApiController extends Controller
                                 "checked" => $product['checked']
                             ];
                             Product::updateOrCreate(['product_id' => $product['product_id'], 'setting_id' => $setting->id], $productData);
-                            $productValue = $product['value'];
+                            $productValue = "{$product['value']}";
                         } else {
                             Product::where('product_id', $product['product_id'])->where('setting_id', $setting->id)->delete();
-                            $productValue = "0";
+                            $productValue = "0.00";
                         }
-                        Log::info('input logs:', ['productValue' => $productValue]);
+                        Log::info('input logs:', [$product['product_id'] => $productValue]);
                         $this->setMetafield($productValue, $product['product_id'], $token['password'], $shop);
                     }
                 }

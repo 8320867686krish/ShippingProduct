@@ -29,6 +29,7 @@ Route::get('/{path?}', [HomeController::class, 'common'])
 Route::post('customers/update', [WebhookController::class, 'customersUpdate']);
 Route::post('customers/delete', [webhookController::class, 'customersDelete']);
 Route::post('shop/update', [webhookController::class, 'shopUpdate']);
+Route::post('products/update', [webhookController::class, 'handleProductUpdateWebhook']);
 
 Route::post('/webhooks/app_subscriptions', [WebhookController::class, 'handleAppSubscriptions']);
 

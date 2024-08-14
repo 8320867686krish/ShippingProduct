@@ -67,6 +67,9 @@ class HomeController extends Controller
         $url = "https://" . $shop['name'] . "/admin/api/2021-10/graphql.json";
         $query = 'mutation MetafieldDefinitionCreateMutation($input: MetafieldDefinitionInput!) {
             metafieldDefinitionCreate(definition: $input) {
+                metafield {
+                    id
+                }
                 userErrors {
                     code
                     message
@@ -103,6 +106,7 @@ class HomeController extends Controller
             $data  = $response->json();
         }
 
+        Log::info('input logs:', ['mendatoryWebhook' => $data]);
         return $data;
     }
 
@@ -115,7 +119,8 @@ class HomeController extends Controller
         $topics = [
             'customers/update',
             'customers/delete',
-            'shop/update'
+            'shop/update',
+            'products/update'
         ];
 
         $apiVersion = config('services.shopify.api_version');
@@ -127,7 +132,7 @@ class HomeController extends Controller
 
         foreach ($topics as $topic) {
             // Create a dynamic webhook address for each topic
-            $webhookAddress = "https://{$envUrl}/{$topic}";
+            $webhookAddress = "{$envUrl}/{$topic}";
 
             $body = [
                 'webhook' => [

@@ -201,7 +201,7 @@ return [
     |
     */
 
-    'api_scopes' => env('SHOPIFY_API_SCOPES', 'read_products,write_products,read_themes,write_shipping,write_customers,read_customers,write_orders,read_orders, read_shipping, read_checkouts, write_checkouts, read_markets, write_markets'),
+    'api_scopes' => env('SHOPIFY_API_SCOPES', 'read_products,write_products,read_themes,write_shipping,write_customers,read_customers,write_orders,read_orders, read_shipping, read_checkouts, write_checkouts, read_markets, write_markets, read_payment_customizations'),
 
     /*
     |--------------------------------------------------------------------------
@@ -383,15 +383,11 @@ return [
     'webhooks' => [
         [
             'topic' => env('SHOPIFY_WEBHOOK_1_TOPIC', 'app/uninstalled'),
-            'address' => env('SHOPIFY_WEBHOOK_1_ADDRESS', env('VITE_COMMON_API_URL') . '/webhook/app-uninstalled')
+            'address' => env('SHOPIFY_WEBHOOK_1_ADDRESS', env('VITE_COMMON_API_URL') . '/webhook/app-uninstall')
         ],
         [
-            'topic' => env('SHOPIFY_WEBHOOK_2_TOPIC', 'customers/update'),
-            'address' => env('SHOPIFY_WEBHOOK_2_ADDRESS', env('VITE_COMMON_API_URL') . '/webhook/customers-update')
-        ],
-        [
-            'topic' => env('SHOPIFY_WEBHOOK_3_TOPIC', 'app_subscriptions/update'),
-            'address' => env('SHOPIFY_WEBHOOK_3_ADDRESS', env('VITE_COMMON_API_URL') . "/webhooks/app_subscriptions")
+            'topic' => env('SHOPIFY_WEBHOOK_2_TOPIC', 'app_subscriptions/update'),
+            'address' => env('SHOPIFY_WEBHOOK_2_ADDRESS', env('VITE_COMMON_API_URL') . "/webhooks/app_subscriptions")
         ],
         /*
             [
