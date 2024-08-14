@@ -37,13 +37,16 @@ class ProductApiController extends Controller
                 ], 404);
             }
 
+            $first = $request->input('first', 50);
+            $last = $request->input('last', 50);
+
             // Determine the query string based on cursor parameters
             if (isset($post['endCursor'])) {
-                $querystring = 'first: 10, after: "' . $post['endCursor'] . '"';
+                $querystring = 'first:' . $first . ', after: "' . $post['endCursor'] . '"';
             } elseif (isset($post['startCursor'])) {
-                $querystring = 'last: 10, before: "' . $post['startCursor'] . '"';
+                $querystring = 'last: ' . $last . ', before: "' . $post['startCursor'] . '"';
             } else {
-                $querystring = 'first: 10';
+                $querystring = 'first:'. $first;
             }
 
             // if (isset($post['query'])) {
