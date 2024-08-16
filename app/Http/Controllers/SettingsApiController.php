@@ -120,13 +120,12 @@ class SettingsApiController extends Controller
         }
     }
 
-    private function setMetafield($value, $ownerId, $password, $shop)
+    private function setMetafield(array $metafields, $password, $shop)
     {
-        Log::info("updadeted metafield", ["ownerId" => $ownerId]);
         $response = Http::withHeaders([
             'X-Shopify-Access-Token' => $password,
             'Content-Type' => 'application/json',
-        ])->post("https://{$shop}/admin/api/2021-10/graphql.json", [
+        ])->post("https://{$shop}/admin/api/2024-01/graphql.json", [
             'query' => 'mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
                 metafieldsSet(metafields: $metafields) {
                     metafields {
@@ -144,15 +143,7 @@ class SettingsApiController extends Controller
                 }
             }',
             'variables' => [
-                'metafields' => [
-                    [
-                        'namespace' => "custom",
-                        'key' => "shipping_price",
-                        'type' => "number_decimal",
-                        'value' => $value,
-                        'ownerId' => "gid://shopify/Product/{$ownerId}"
-                    ]
-                ]
+                'metafields' => $metafields
             ]
         ]);
 
@@ -265,31 +256,41 @@ class SettingsApiController extends Controller
             $setting = Setting::updateOrCreate(['user_id' => $token['id']], $post);
 
             if (null !== $request->input('productdata')) {
-                $productValue = 0;
+                $metafields = [];
+
                 foreach ($request->input('productdata') as $product) {
                     if (isset($product)) {
-                        if ($product['checked'] == 1) {
-                            // $productData = [
-                            //     "user_id" => $token['id'],
-                            //     "setting_id" => $setting->id,
-                            //     "product_id" => $product['product_id'],
-                            //     "title" => $product['title'],
-                            //     "value" => $product['value'],
-                            //     "checked" => $product['checked']
-                            // ];
-                            // Product::updateOrCreate(['product_id' => $product['product_id'], 'setting_id' => $setting->id], $productData);
-                            $productValue = "{$product['value']}";
+                        $productValue = $product['checked'] == 1 ? "{$product['value']}" : "0.00";
+                        if($product['checked']){
+                            $productData = [
+                                "user_id" => $token['id'],
+                                "setting_id" => $setting->id,
+                                "product_id" => $product['product_id'],
+                                "title" => $product['title'],
+                                "value" => $product['value'],
+                                "checked" => $product['checked']
+                            ];
+                            Product::updateOrCreate(['product_id' => $product['product_id'], 'setting_id' => $setting->id], $productData);
                         } else {
-                            // Product::where([
-                            //     'product_id' => $product['product_id'],
-                            //     'setting_id' => $setting->id,
-                            // ])->delete();
-                            $productValue = "0.00";
+                            Product::where([
+                                'product_id' => $product['product_id'],
+                                'setting_id' => $setting->id,
+                            ])->delete();
                         }
+
                         Log::info('input logs:', [$product['product_id'] => $productValue]);
-                        $this->setMetafield($productValue, $product['product_id'], $token['password'], $shop);
+
+                        $metafields[] = [
+                            'namespace' => "custom",
+                            'key' => "shipping_price",
+                            'type' => "number_decimal",
+                            'value' => $productValue,
+                            'ownerId' => "gid://shopify/Product/{$product['product_id']}"
+                        ];
                     }
                 }
+
+                $this->setMetafield($metafields, $token['password'], $shop);
             }
 
             if ($setting->wasRecentlyCreated) {

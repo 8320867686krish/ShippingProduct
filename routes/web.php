@@ -31,5 +31,3 @@ Route::post('customers/delete', [webhookController::class, 'customersDelete']);
 Route::post('shop/update', [webhookController::class, 'shopUpdate']);
 Route::post('products/update', [webhookController::class, 'handleProductUpdateWebhook']);
 
-Route::post('/webhooks/app_subscriptions', [WebhookController::class, 'handleAppSubscriptions']);
-

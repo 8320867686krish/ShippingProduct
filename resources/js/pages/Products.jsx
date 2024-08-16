@@ -333,11 +333,7 @@ function Products() {
             setErrors({});
             setShowToast(true);
             setToastContent('Data saved successfully');
-            setTimeout(() => {
-                settingData();
-                console.log('hello ')
-
-            }, 3000);
+            settingData();
             setFormSave(false);
         } catch (error) {
 
@@ -366,7 +362,7 @@ function Products() {
             // else if (Products) {
             //     setErrors(Products);
             //     setToastContent(Products);
-            // } 
+            // }
             else {
                 setErrors('');
                 setToastContent('Error occurred while saving data');
@@ -480,7 +476,7 @@ function Products() {
                 }
             }
         }
-       
+
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
