@@ -120,10 +120,10 @@ class WebhookController extends Controller
 
         $metafields = $this->getProductMetafields($productId, $accessToken['password'], $shopDomain);
 
-        if(!empty($metafields)){
-            foreach($metafields as $metafield){
-                Log::info('loop metafields', ['metafields'=> $metafield]);
-                Log::info('loop owner_id', ['owner_id'=> $metafield['owner_id']]);
+        if (!empty($metafields)) {
+            foreach ($metafields as $metafield) {
+                Log::info('loop metafields', ['metafields' => $metafield]);
+                Log::info('loop owner_id', ['owner_id' => $metafield['owner_id']]);
 
                 if ($metafield['namespace'] === 'custom' && $metafield['key'] === 'shipping_price') {
                     $productData = [
@@ -134,14 +134,26 @@ class WebhookController extends Controller
                         "value" => $metafield['value'],
                         "checked" => 1
                     ];
-                    Product::updateOrCreate(['product_id' => $metafield['owner_id'], 'setting_id' => $setting], $productData);
+
+                    if ($metafield['value'] <= 0 || $metafield['value'] == null) {
+                        Product::where([
+                            'product_id' => $metafield['owner_id'],
+                            'setting_id' => $setting,
+                        ])->delete();
+                    } else {
+                        Product::updateOrCreate(['product_id' => $metafield['owner_id'], 'setting_id' => $setting], $productData);
+                    }
                 }
             }
         }
 
-        Log::info('metafields', ['metafields'=> $metafields]);
+        Log::info('metafields', ['metafields' => $metafields]);
 
         return response()->json(['message' => 'Webhook processed successfully', 'metafields' => $metafields], 200);
         // return response()->json(['message' => 'Webhook processed successfully', 'metafields' => $metafields], 200);
+    }
+    public function shopRedact(Request $request)
+    {
+        Log::info('shop reduct.');
     }
 }

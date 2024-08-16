@@ -199,8 +199,8 @@ class HomeController extends Controller
             $data = json_decode($response, true);
             // Log::info('input logs:', ['shopDetail' => $data]);
             if (@$data['shop']) {
-                // $storeOwnerEmail = "kaushik.panot@meetanshi.com";
-                $storeOwnerEmail = $data['shop']['email'];
+                $storeOwnerEmail = "bhushan.trivedi@meetanshi.com";
+                // $storeOwnerEmail = $data['shop']['email'];
                 $store_name = $data['shop']['name'];
                 // User::where('name', $shop)->update(['store_owner_email' => $storeOwnerEmail, 'store_name' => $store_name]);
                 $details = [
@@ -211,7 +211,7 @@ class HomeController extends Controller
                 $name = $data['shop']['shop_owner'];
                 $shopDomain = $data['shop']['domain'];
 
-                // Mail::to($storeOwnerEmail)->send(new InstallMail($name, $shopDomain));
+                Mail::to($storeOwnerEmail)->send(new InstallMail($name, $shopDomain));
 
                 return true;
             }

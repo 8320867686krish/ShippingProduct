@@ -130,7 +130,9 @@ class ProductApiController extends Controller
                     }
                     if (isset($product['metafields']['edges'][0]['node']['value'])) {
                         $metafields = $product['metafields']['edges'][0]['node']['value'];
-                        $checked = 1;
+                        if($metafields > 0){
+                            $checked = 1;
+                        }
                     }
 
                     $itemArray = [
