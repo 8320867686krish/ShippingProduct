@@ -64,19 +64,22 @@ class HomeController extends Controller
 
     private function setMetaFiled($shop)
     {
-        $url = "https://" . $shop['name'] . "/admin/api/2021-10/graphql.json";
+        $url = "https://" . $shop['name'] . "/admin/api/2024-01/graphql.json";
         $query = 'mutation MetafieldDefinitionCreateMutation($input: MetafieldDefinitionInput!) {
-            metafieldDefinitionCreate(definition: $input) {
-                metafield {
-                    id
+                metafieldDefinitionCreate(definition: $input) {
+                    createdDefinition {
+                        id
+                        name
+                        namespace
+                        key
+                    }
+                    userErrors {
+                        code
+                        message
+                        field
+                    }
                 }
-                userErrors {
-                    code
-                    message
-                    field
-                }
-            }
-        }';
+            }';
 
         $variables = [
             'input' => [
@@ -102,13 +105,21 @@ class HomeController extends Controller
 
         if ($response->successful()) {
             $data = $response->json();
+            // Log::error('GraphQL request failed:', ['response' => $data]);
+            if (isset($data['data']['metafieldDefinitionCreate']['createdDefinition']['id'])) {
+                $metafieldId = $data['data']['metafieldDefinitionCreate']['createdDefinition']['id'];
+                $explod = explode('/', $metafieldId);
+                Log::info('Metafield Definition created successfully:', ['id' => $explod]);
+                User::where('id', $shop['id'])->update(['metafield_id' => $explod[4]]);
+                return $metafieldId;
+            }
+            return null;
         } else {
-            $data  = $response->json();
+            Log::error('GraphQL request failed:', ['response' => $response->json()]);
+            return null;
         }
-
-        Log::info('input logs:', ['mendatoryWebhook' => $data]);
-        return $data;
     }
+
 
     private function mendatoryWebhook($shopDetail)
     {

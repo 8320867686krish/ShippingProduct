@@ -12,6 +12,78 @@ use Illuminate\Support\Facades\Validator;
 
 class SettingsApiController extends Controller
 {
+    public function demo()
+    {
+        $user = User::where('name','jaypal-demo.myshopify.com')->first();
+        $url = "https://" . $user['name'] . "/admin/api/2024-01/graphql.json";
+        $query = <<<GQL
+        mutation MetafieldDefinitionDeleteMutation(\$id: ID!, \$deleteAllAssociatedMetafields: Boolean) {
+            metafieldDefinitionDelete(
+                id: \$id
+                deleteAllAssociatedMetafields: \$deleteAllAssociatedMetafields
+            ) {
+                deletedDefinitionId
+                userErrors {
+                    field
+                    message
+                    code
+                }
+            }
+        }
+        GQL;
+
+        $variables = [
+            'id' => "gid://shopify/MetafieldDefinition/{$user['metafield_id']}",
+            'deleteAllAssociatedMetafields' => false,
+        ];
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'X-Shopify-Access-Token' => $user['password'],
+        ])->post($url, [
+            'query' => $query,
+            'variables' => $variables,
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            if (isset($data['data']['metafieldDefinitionDelete']['deletedDefinitionId'])) {
+                Log::info('Metafield definition successfully deleted:', [
+                    'shop' => $user['name'],
+                    'deletedDefinitionId' => $data['data']['metafieldDefinitionDelete']['deletedDefinitionId'],
+                ]);
+                return $data['data']['metafieldDefinitionDelete']['deletedDefinitionId'];
+            } elseif (!empty($data['data']['metafieldDefinitionDelete']['userErrors'])) {
+                Log::error('Failed to delete Metafield definition due to user errors:', [
+                    'shop' => $user['name'],
+                    'errors' => $data['data']['metafieldDefinitionDelete']['userErrors'],
+                ]);
+            } else {
+                Log::warning('Metafield definition deletion request did not return a deletedDefinitionId.', [
+                    'shop' => $user['name'],
+                    'response' => $data,
+                ]);
+            }
+        } else {
+            $responseBody = $response->json();
+            if (isset($responseBody['errors'])) {
+                Log::error('API Error:', [
+                    'shop' => $user['name'],
+                    'error' => $responseBody['errors'],
+                ]);
+            } else {
+                Log::error('GraphQL request failed:', [
+                    'shop' => $user['name'],
+                    'response' => $responseBody,
+                ]);
+            }
+        }
+
+        return null;
+
+
+    }
+
     public function index(Request $request)
     {
         try {
@@ -52,7 +124,7 @@ class SettingsApiController extends Controller
 
     private function setMetafield($value, $ownerId, $password, $shop)
     {
-        Log::info("updadeted metafield", ["ownerId"=>$ownerId]);
+        Log::info("updadeted metafield", ["ownerId" => $ownerId]);
         $response = Http::withHeaders([
             'X-Shopify-Access-Token' => $password,
             'Content-Type' => 'application/json',
@@ -86,7 +158,7 @@ class SettingsApiController extends Controller
             ]
         ]);
 
-        Log::info("updadeted metafield", ['response'=>$response->json()]);
+        Log::info("updadeted metafield", ['response' => $response->json()]);
         return $response->json();
     }
 
