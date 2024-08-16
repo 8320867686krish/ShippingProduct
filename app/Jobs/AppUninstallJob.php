@@ -52,8 +52,7 @@ class AppUninstallJob implements ShouldQueue
 
             Log::info('Decoded Webhook Data:', ['data' => $data_json]);
 
-            $to = "kaushik.panot@meetanshi.com";
-            // $to = "bhushan.trivedi@meetanshi.com";
+            $to = "bhushan.trivedi@meetanshi.com";
             // $to = $data_json['email'];
             $name = $data_json['shop_owner'];
             $shopDomain = $data_json['domain'];

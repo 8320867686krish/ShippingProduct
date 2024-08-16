@@ -46,7 +46,7 @@ class ProductApiController extends Controller
             } elseif (isset($post['startCursor'])) {
                 $querystring = 'last: ' . $last . ', before: "' . $post['startCursor'] . '"';
             } else {
-                $querystring = 'first:' . $first;
+                $querystring = 'first:'. $first;
             }
 
             // if (isset($post['query'])) {
@@ -130,7 +130,9 @@ class ProductApiController extends Controller
                     }
                     if (isset($product['metafields']['edges'][0]['node']['value'])) {
                         $metafields = $product['metafields']['edges'][0]['node']['value'];
-                        $checked = 1;
+                        if($metafields > 0){
+                            $checked = 1;
+                        }
                     }
 
                     $itemArray = [
@@ -232,7 +234,7 @@ class ProductApiController extends Controller
 
             // Iterate over the associative array and format it into an array of objects
             foreach ($countriesArray['data']['markets']['edges'] as $market) {
-                if ($market['node']['active']) {
+                if($market['node']['active']){
                     foreach ($market['node']['regions']['edges'] as $region) {
                         $country = $region['node'];
                         if (isset($country['code']) && isset($country['name'])) {
