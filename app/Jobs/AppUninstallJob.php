@@ -3,12 +3,14 @@
 namespace App\Jobs;
 
 use App\Mail\UninstallEmail;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -50,7 +52,8 @@ class AppUninstallJob implements ShouldQueue
 
             Log::info('Decoded Webhook Data:', ['data' => $data_json]);
 
-            $to = "bhushan.trivedi@meetanshi.com";
+            $to = "kaushik.panot@meetanshi.com";
+            // $to = "bhushan.trivedi@meetanshi.com";
             // $to = $data_json['email'];
             $name = $data_json['shop_owner'];
             $shopDomain = $data_json['domain'];
@@ -63,11 +66,60 @@ class AppUninstallJob implements ShouldQueue
 
             $user = User::where('name', $shopDomain)->first();
 
-            if ($user) {
-                $user->password = "";
-                $user->save();
+            if (isset($user['metafield_id'])) {
+                $res = $this->deleteMetafieldDefinition($user, $user['metafield_id'], true);
+                if($res){
+                    $user->password = "";
+                    $user->save();
+                }
+                //     $url = "https://" . $user['name'] . "/admin/api/2024-01/graphql.json";
+                //     $query = <<<GRAPHQL
+                //         mutation MetafieldDefinitionDeleteMutation(\$id: ID!, \$deleteAllAssociatedMetafields: Boolean) {
+                //             metafieldDefinitionDelete(
+                //                 id: \$id
+                //                 deleteAllAssociatedMetafields: \$deleteAllAssociatedMetafields
+                //             ) {
+                //                 deletedDefinitionId
+                //                 userErrors {
+                //                     field
+                //                     message
+                //                     code
+                //                 }
+                //             }
+                //         }
+                //         GRAPHQL;
+
+                //     $variables = [
+                //         'id' => "gid://shopify/MetafieldDefinition/{$user['metafield_id']}",
+                //         'deleteAllAssociatedMetafields' => false,
+                //     ];
+
+                //     $response = Http::withHeaders([
+                //         'Content-Type' => 'application/json',
+                //         'X-Shopify-Access-Token' => $user['password'],
+                //     ])->post($url, [
+                //         'query' => $query,
+                //         'variables' => $variables,
+                //     ]);
+
+                //     if ($response->successful()) {
+                //         // $user->password = "";
+                //         // $user->save();
+                //     }
+
+                //     Log::info('Metafield removal request successful.', [
+                //         'shop' => $user['name'],
+                //         'response' => $response->json(),
+                //     ]);
+
+                //     Product::where('user_id', $user['id'])->delete();
             } else {
-                Log::warning('User not found for shop domain: ' . $shopDomain);
+                if ($user) {
+                    $user->password = "";
+                    $user->save();
+                } else {
+                    Log::warning('User not found for shop domain: ' . $shopDomain);
+                }
             }
 
             Mail::to($to)->send(new UninstallEmail($name, $shopDomain));
@@ -76,5 +128,74 @@ class AppUninstallJob implements ShouldQueue
         } catch (\Throwable $e) {
             Log::error('Error processing webhook:', ['error' => $e->getMessage()]);
         }
+    }
+
+    private function deleteMetafieldDefinition($user, $metafieldId, $deleteAllAssociatedMetafields = false)
+    {
+        $url = "https://" . $user['name'] . "/admin/api/2024-01/graphql.json";
+        $query = <<<GQL
+            mutation MetafieldDefinitionDeleteMutation(\$id: ID!, \$deleteAllAssociatedMetafields: Boolean) {
+                metafieldDefinitionDelete(
+                    id: \$id
+                    deleteAllAssociatedMetafields: \$deleteAllAssociatedMetafields
+                ) {
+                    deletedDefinitionId
+                    userErrors {
+                        field
+                        message
+                        code
+                    }
+                }
+            }
+            GQL;
+
+        $variables = [
+            'id' => "gid://shopify/MetafieldDefinition/{$metafieldId}",
+            'deleteAllAssociatedMetafields' => $deleteAllAssociatedMetafields,
+        ];
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'X-Shopify-Access-Token' => $user['password'],
+        ])->post($url, [
+            'query' => $query,
+            'variables' => $variables,
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            if (isset($data['data']['metafieldDefinitionDelete']['deletedDefinitionId'])) {
+                Log::info('Metafield definition successfully deleted:', [
+                    'shop' => $user['name'],
+                    'deletedDefinitionId' => $data['data']['metafieldDefinitionDelete']['deletedDefinitionId'],
+                ]);
+                return $data['data']['metafieldDefinitionDelete']['deletedDefinitionId'];
+            } elseif (!empty($data['data']['metafieldDefinitionDelete']['userErrors'])) {
+                Log::error('Failed to delete Metafield definition due to user errors:', [
+                    'shop' => $user['name'],
+                    'errors' => $data['data']['metafieldDefinitionDelete']['userErrors'],
+                ]);
+            } else {
+                Log::warning('Metafield definition deletion request did not return a deletedDefinitionId.', [
+                    'shop' => $user['name'],
+                    'response' => $data,
+                ]);
+            }
+        } else {
+            $responseBody = $response->json();
+            if (isset($responseBody['errors'])) {
+                Log::error('API Error:', [
+                    'shop' => $user['name'],
+                    'error' => $responseBody['errors'],
+                ]);
+            } else {
+                Log::error('GraphQL request failed:', [
+                    'shop' => $user['name'],
+                    'response' => $responseBody,
+                ]);
+            }
+        }
+
+        return true;
     }
 }

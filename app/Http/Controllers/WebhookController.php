@@ -125,7 +125,7 @@ class WebhookController extends Controller
                 Log::info('loop metafields', ['metafields'=> $metafield]);
                 Log::info('loop owner_id', ['owner_id'=> $metafield['owner_id']]);
 
-                if ($metafield['namespace'] === 'custom' && $metafield['key'] === 'shipping_price' && $metafield['value'] >= 0) {
+                if ($metafield['namespace'] === 'custom' && $metafield['key'] === 'shipping_price') {
                     $productData = [
                         "user_id" => $accessToken['id'],
                         "setting_id" => $setting,

@@ -25,14 +25,12 @@ use App\Http\Controllers\WebhookController;
 
 Route::post('carrier/callback', [CarrierServiceCallbackController::class, 'handleCallback']);
 Route::post('/webhooks/app_subscriptions', [WebhookController::class, 'handleAppSubscriptions']);
+Route::get('demo', [SettingsApiController::class, 'demo']);
 
 Route::post('recurring/create', [RecurringChargeController::class, 'createRecurringCharge']);
 Route::get('recurring/create', [RecurringChargeController::class, 'createRecurringCharge']);
 Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge']);
-Route::post('customers/update', [WebhookController::class, 'customersUpdate']);
-Route::post('customers/delete', [webhookController::class, 'customersDelete']);
-Route::post('shop/update', [webhookController::class, 'shopUpdate']);
-Route::post('products/update', [webhookController::class, 'handleProductUpdateWebhook']);
+
 Route::middleware(['check.token'])->group(function () {
     Route::get('country', [ProductApiController::class, 'getCountryList']);
     Route::post('products', [ProductApiController::class, 'products']);
