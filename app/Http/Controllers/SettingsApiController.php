@@ -14,7 +14,7 @@ class SettingsApiController extends Controller
 {
     public function demo()
     {
-        $user = User::where('name','jaypal-demo.myshopify.com')->first();
+        $user = User::where('name', 'jaypal-demo.myshopify.com')->first();
         $url = "https://" . $user['name'] . "/admin/api/2024-01/graphql.json";
         $query = <<<GQL
         mutation MetafieldDefinitionDeleteMutation(\$id: ID!, \$deleteAllAssociatedMetafields: Boolean) {
@@ -80,8 +80,6 @@ class SettingsApiController extends Controller
         }
 
         return null;
-
-
     }
 
     public function index(Request $request)
@@ -189,10 +187,10 @@ class SettingsApiController extends Controller
                 'title' => 'required|string|max:254',
                 'shipping_rate' => 'required|numeric|in:1,2',
                 'shipping_rate_calculation' => 'required|integer|in:1,2,3',
-                'method_name' => 'required|string|max:254',
+                'method_name' => 'nullable|string|max:254',
                 'product_shipping_cost' => 'required|boolean',
-                'rate_per_item' => 'required|numeric|min:0',
-                'handling_fee' => 'required|numeric|min:0',
+                'rate_per_item' => 'nullable|numeric|min:0',
+                'handling_fee' => 'nullable|numeric|min:0',
                 'applicable_countries' => 'required|boolean',
                 'countries' => 'required_if:applicable_countries,1',
                 'method_if_not_applicable' => 'nullable|boolean',
@@ -202,7 +200,21 @@ class SettingsApiController extends Controller
                 // 'productdata.*.price' => 'required_if:productdata.*.checked,true',
                 'productdata.*.product_id' => 'required_if:productdata.*.checked,true',
                 'productdata.*.title' => 'required_if:productdata.*.checked,true',
-                'productdata.*.value' => 'required_if:productdata.*.checked,true|numeric|min:0'
+                'productdata.*.value' => [
+                    'required_if:productdata.*.checked,true',
+                    function ($attribute, $value, $fail) use ($request) {
+                        $index = explode('.', $attribute)[1]; // Extract the index from the attribute name
+
+                        // Check if checked is true
+                        if ($request->input("productdata.$index.checked") == true) {
+                            if (!is_numeric($value)) {
+                                $fail("The $attribute must be a numeric value.");
+                            } elseif ($value < 0) {
+                                $fail("The $attribute must be at least 0.");
+                            }
+                        }
+                    },
+                ],
             ], [
                 'enabled.required' => 'The enabled field is required.',
                 'enabled.boolean' => 'The enabled field must be true or false.',
@@ -220,9 +232,7 @@ class SettingsApiController extends Controller
                 'method_name.max' => 'The method name may not be greater than 254 characters.',
                 'product_shipping_cost.required' => 'The product shipping cost field is required.',
                 'product_shipping_cost.boolean' => 'The product shipping cost field must be true or false.',
-                'rate_per_item.required' => 'The rate per item is required.',
                 'rate_per_item.numeric' => 'The rate per item must be a number.',
-                'handling_fee.required' => 'The handling fee is required.',
                 'handling_fee.numeric' => 'The handling fee must be a number.',
                 'rate_per_item.min' => 'The rate per item must be at least 0.',
                 'handling_fee.min' => 'The handling fee must be at least 0.',
@@ -257,20 +267,23 @@ class SettingsApiController extends Controller
             if (null !== $request->input('productdata')) {
                 $productValue = 0;
                 foreach ($request->input('productdata') as $product) {
-                    if (null !== $product) {
-                        if ($product['checked']) {
-                            $productData = [
-                                "user_id" => $token['id'],
-                                "setting_id" => $setting->id,
-                                "product_id" => $product['product_id'],
-                                "title" => $product['title'],
-                                "value" => $product['value'],
-                                "checked" => $product['checked']
-                            ];
-                            Product::updateOrCreate(['product_id' => $product['product_id'], 'setting_id' => $setting->id], $productData);
+                    if (isset($product)) {
+                        if ($product['checked'] == 1) {
+                            // $productData = [
+                            //     "user_id" => $token['id'],
+                            //     "setting_id" => $setting->id,
+                            //     "product_id" => $product['product_id'],
+                            //     "title" => $product['title'],
+                            //     "value" => $product['value'],
+                            //     "checked" => $product['checked']
+                            // ];
+                            // Product::updateOrCreate(['product_id' => $product['product_id'], 'setting_id' => $setting->id], $productData);
                             $productValue = "{$product['value']}";
                         } else {
-                            Product::where('product_id', $product['product_id'])->where('setting_id', $setting->id)->delete();
+                            // Product::where([
+                            //     'product_id' => $product['product_id'],
+                            //     'setting_id' => $setting->id,
+                            // ])->delete();
                             $productValue = "0.00";
                         }
                         Log::info('input logs:', [$product['product_id'] => $productValue]);
