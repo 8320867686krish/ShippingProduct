@@ -122,6 +122,11 @@ function Products() {
             ...prevState,
             [field]: value,
         }));
+
+        setErrors((prevErrors) => ({
+            ...prevErrors,
+            [field]: '',
+        }));
     }
 
     const toast = negativeValueToastVisible ? (
@@ -174,8 +179,6 @@ function Products() {
     const fetchProducts = async (value = null, cursor, direction) => {
         try {
             setLoadingTable(true);
-            console.log("textFieldValue : ", value);
-
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
@@ -208,10 +211,8 @@ function Products() {
         }
     };
 
-
     const debouncedFetchProducts = useCallback(
         debounce((value) => {
-            console.log('Fetching products with value:', value);
             fetchProducts(value, null, null);
         }, 1000),
         []
@@ -269,6 +270,10 @@ function Products() {
             const newErrors = {};
             const maxOrderAmount = Number(formData.max_order_amount);
             const minOrderAmount = Number(formData.min_order_amount);
+
+            if (!formData.title) {
+                newErrors.title = 'Title is required';
+            }
             let hasProductError = false;
             if (!(maxOrderAmount === 0 && minOrderAmount === 0)) {
                 if (maxOrderAmount <= minOrderAmount) {
@@ -324,13 +329,33 @@ function Products() {
             setToastContent('Data saved successfully');
             settingData();
             setFormSave(false);
+            console.log(response.data.error)
+
         } catch (error) {
-            console.error('Error occurs', error);
-            setToastContent('Error occurred while saving data');
+            console.log('Error occurs', error.response?.data?.errors || error.message);
+
+            const errors = error.response?.data?.errors || {};
+            const minOrderAmountError = errors.min_order_amount?.[0];
+            const maxOrderAmountError = errors.max_order_amount?.[0];
+            if (minOrderAmountError) {
+                setErrors(minOrderAmountError);
+                setToastContent(minOrderAmountError);
+            } else if (maxOrderAmountError) {
+                setErrors(maxOrderAmountError);
+                setToastContent(maxOrderAmountError);
+            } else {
+                setErrors(''); 
+                setToastContent('Error occurred while saving data');
+            }
+
+
+
             setShowToast(true);
             setFormSave(false);
         }
     };
+
+console.log('erros from',errorToast)
     useEffect(() => {
         getCountry()
         fetchProducts()
@@ -588,6 +613,7 @@ function Products() {
                                                         type="text"
                                                         value={formData.title}
                                                         onChange={handleChange('title')}
+                                                        error={errors.title}
                                                     />
                                                 </div>
                                             </div>
@@ -662,7 +688,7 @@ function Products() {
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
-                                                        type="text"
+                                                        type="number"
                                                         value={formData.rate_per_item}
                                                         onChange={handleChange('rate_per_item')}
                                                     />
@@ -677,7 +703,7 @@ function Products() {
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
-                                                        type="text"
+                                                        type="number"
                                                         value={formData.handling_fee}
                                                         onChange={handleChange('handling_fee')}
                                                     />
@@ -698,29 +724,30 @@ function Products() {
                                                     />
                                                 </div>
                                             </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Ship to Specific Countries
-                                                    </Text>
+                                            {formData.applicable_countries === 1 && (
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            Ship to Specific Countries
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto', width: "70%" }}>
+                                                        <Autocomplete
+                                                            allowMultiple
+                                                            options={country}
+                                                            selected={selectedOptions}
+                                                            textField={textField}
+                                                            onSelect={(selected) => {
+                                                                setSelectedOptions(selected);
+                                                                setInputValue('');
+                                                                setCountry(allCountries);
+                                                                setTextFieldError('');
+                                                            }}
+                                                            listTitle="Suggested Countries"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto', width: "70%" }}>
-                                                    <Autocomplete
-                                                        allowMultiple
-                                                        options={country}
-                                                        selected={selectedOptions}
-                                                        textField={textField}
-                                                        onSelect={(selected) => {
-                                                            setSelectedOptions(selected);
-                                                            setInputValue('');
-                                                            setCountry(allCountries);
-                                                            setTextFieldError('');
-                                                        }}
-                                                        listTitle="Suggested Countries"
-                                                    />
-                                                </div>
-                                            </div>
+                                            )}
                                             {/* {formData.applicable_countries === 1 && (
                                                 <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                     <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
@@ -761,9 +788,10 @@ function Products() {
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
-                                                        type="number"
+                                                        type="string"
                                                         value={formData.min_order_amount}
                                                         onChange={handleChange('min_order_amount')}
+                                                        error={errors.min_order_amount}
                                                     />
                                                 </div>
                                             </div>
@@ -776,7 +804,7 @@ function Products() {
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
-                                                        type="number"
+                                                        type="text"
                                                         value={formData.max_order_amount}
                                                         onChange={handleChange('max_order_amount')}
                                                         error={errors.max_order_amount}
