@@ -77,7 +77,7 @@ function Products() {
         title: 'Flat Rate',
         shipping_rate: 1,
         shipping_rate_calculation: 2,
-        method_name: "3 to 4 business day",
+        method_name: "3 To 4 Business Day",
         product_shipping_cost: 0,
         rate_per_item: 10,
         handling_fee: 0,
@@ -238,6 +238,11 @@ function Products() {
                     'Authorization': `Bearer ${token}`
                 }
             });
+
+            setFormData(prevFormData => ({
+                ...prevFormData,
+                productdata: []
+            }));
             const apiData = response.data.setting;
             setFormData({
                 id: apiData.id,
@@ -258,6 +263,7 @@ function Products() {
                 // method_if_not_applicable: apiData.method_if_not_applicable,
                 productdata: apiData.productdata,
             });
+            console.log(formData.productdata)
             setSelectedOptions(Array.isArray(apiData.countries) ? apiData.countries : []);
         } catch (error) {
             // console.error('Error occurs', error);
@@ -327,35 +333,50 @@ function Products() {
             setErrors({});
             setShowToast(true);
             setToastContent('Data saved successfully');
-            settingData();
-            setFormSave(false);
-            console.log(response.data.error)
+            setTimeout(() => {
+                settingData();
+                console.log('hello ')
 
+            }, 3000);
+            setFormSave(false);
         } catch (error) {
-            console.log('Error occurs', error.response?.data?.errors || error.message);
 
             const errors = error.response?.data?.errors || {};
             const minOrderAmountError = errors.min_order_amount?.[0];
             const maxOrderAmountError = errors.max_order_amount?.[0];
+            const handlingFee = errors.handling_fee?.[0];
+            const ratePerItem = errors.rate_per_item?.[0];
+            // const Products = errors.productdata.5.value?.[0];
+
             if (minOrderAmountError) {
                 setErrors(minOrderAmountError);
                 setToastContent(minOrderAmountError);
             } else if (maxOrderAmountError) {
                 setErrors(maxOrderAmountError);
                 setToastContent(maxOrderAmountError);
-            } else {
-                setErrors(''); 
+            }
+            else if (handlingFee) {
+                setErrors(handlingFee);
+                setToastContent(handlingFee);
+            }
+            else if (ratePerItem) {
+                setErrors(ratePerItem);
+                setToastContent(ratePerItem);
+            }
+            // else if (Products) {
+            //     setErrors(Products);
+            //     setToastContent(Products);
+            // } 
+            else {
+                setErrors('');
                 setToastContent('Error occurred while saving data');
             }
-
-
-
             setShowToast(true);
             setFormSave(false);
         }
     };
 
-console.log('erros from',errorToast)
+
     useEffect(() => {
         getCountry()
         fetchProducts()
@@ -459,10 +480,12 @@ console.log('erros from',errorToast)
                 }
             }
         }
+       
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
         }));
+        console.log(updatedProductData, 'skjdhfksj')
     };
 
 
@@ -565,7 +588,7 @@ console.log('erros from',errorToast)
                             <>
                                 {formSave && (
                                     <div style={{
-                                        position: 'absolute',
+                                        position: "fixed",
                                         top: 0,
                                         left: 0,
                                         right: 0,
@@ -583,8 +606,8 @@ console.log('erros from',errorToast)
                                 <div style={formSave ? { filter: 'blur(1px)', pointerEvents: 'none' } : {}}>
                                     {selected === 0 && (
                                         <div>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: "1%" }}>
-                                                <Button variant="primary" onClick={saveConfig}>Save</Button>
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', }}>
+                                                <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
                                             </div>
 
                                             <div style={{ display: 'flex', marginTop: "2%" }}>
@@ -688,7 +711,7 @@ console.log('erros from',errorToast)
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
-                                                        type="number"
+                                                        type="text"
                                                         value={formData.rate_per_item}
                                                         onChange={handleChange('rate_per_item')}
                                                     />
@@ -703,7 +726,7 @@ console.log('erros from',errorToast)
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
-                                                        type="number"
+                                                        type="text"
                                                         value={formData.handling_fee}
                                                         onChange={handleChange('handling_fee')}
                                                     />
@@ -831,7 +854,7 @@ console.log('erros from',errorToast)
                                     {selected === 1 && (
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                <Button variant="primary" onClick={saveConfig}>Save</Button>
+                                                <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
                                             </div>
                                             <div style={{ marginTop: "2.5%" }}>
                                                 <TextField
