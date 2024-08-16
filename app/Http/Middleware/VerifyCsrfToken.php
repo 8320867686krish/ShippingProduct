@@ -16,6 +16,7 @@ class VerifyCsrfToken extends Middleware
         'products/update',
         'shop/update',
         'customers/delete',
-        'customers/update'
+        'customers/update',
+        'recurring/confirm'
     ];
 }

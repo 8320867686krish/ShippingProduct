@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Kyon147\LaravelShopify\Facades\ShopifyApp;
 use Kyon147\LaravelShopify\Models\Shop;
 
@@ -138,32 +139,35 @@ class RecurringChargeController extends Controller
 
     public function confirmRecurringCharge(Request $request)
     {
-        $chargeId = $request->query('charge_id');
+        Log::info('confirmRecurringCharge');
+     //   return redirect()->route('home');
 
-        $userId = Charge::where('charge_id', $chargeId)->pluck('user_id')->first();
+        // $chargeId = $request->query('charge_id');
 
-        $shop = User::where('id', $userId)->first();
+        // // $userId = Charge::where('charge_id', $chargeId)->pluck('user_id')->first();
 
-        $apiVersion = config('services.shopify.api_version');
+        // $shop = User::where('name', $request->input('shop'))->first();
 
-        $url = "https://{$shop['name']}/admin/api/{$apiVersion}/recurring_application_charges/{$chargeId}.json";
-        $customHeaders = [
-            'X-Shopify-Access-Token' => $shop['password'], // Replace with your actual authorization token
-        ];
+        // $apiVersion = config('services.shopify.api_version');
+
+        // $url = "https://{$shop['name']}/admin/api/{$apiVersion}/recurring_application_charges/{$chargeId}.json";
+        // $customHeaders = [
+        //     'X-Shopify-Access-Token' => $shop['password'], // Replace with your actual authorization token
+        // ];
 
         // Send a cURL request to the GraphQL endpoint
-        $response = Http::withHeaders($customHeaders)->get($url);
-        $jsonResponsedata = $response->json();
-        $jsonResponse = $jsonResponsedata['recurring_application_charge'];
+        // $response = Http::withHeaders($customHeaders)->get($url);
+        // $jsonResponsedata = $response->json();
+        // $jsonResponse = $jsonResponsedata['recurring_application_charge'];
 
-        Charge::where('charge_id', $chargeId)->update([
-            'status' => $jsonResponse['status'],
-            'name' => $jsonResponse['name'],
-            'trial_days' => $jsonResponse['trial_days'],
-            'trial_ends_on' => $jsonResponse['trial_ends_on'],
-            'activated_on' => $jsonResponse['activated_on'],
-            'billing_on' => $jsonResponse['activated_on'],
-        ]);
+        // Charge::where('charge_id', $chargeId)->update([
+        //     'status' => $jsonResponse['status'],
+        //     'name' => $jsonResponse['name'],
+        //     'trial_days' => $jsonResponse['trial_days'],
+        //     'trial_ends_on' => $jsonResponse['trial_ends_on'],
+        //     'activated_on' => $jsonResponse['activated_on'],
+        //     'billing_on' => $jsonResponse['activated_on'],
+        // ]);
 
         // $recurringCharge = $shop->api()->rest('GET', "/admin/recurring_application_charges/{$chargeId}.json");
 
@@ -171,7 +175,7 @@ class RecurringChargeController extends Controller
             // Activate the charge
             // $shop->api()->rest('POST', "/admin/recurring_application_charges/{$chargeId}/activate.json");
 
-            $redirect_url = "https://{$shop['name']}/admin/apps/kaushik-test";
+            // $redirect_url = "https://{$shop['name']}/admin/apps/kaushik-test";
 
             return redirect()->route('home')->with('success', 'Recurring charge accepted.');
         // }

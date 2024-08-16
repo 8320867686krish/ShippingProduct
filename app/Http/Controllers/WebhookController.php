@@ -136,10 +136,7 @@ class WebhookController extends Controller
                     ];
 
                     if ($metafield['value'] <= 0 || $metafield['value'] == null) {
-                        Product::where([
-                            'product_id' => $metafield['owner_id'],
-                            'setting_id' => $setting,
-                        ])->delete();
+                        Log::info('loop owner_id', [$metafield['owner_id'] => $metafield['value']]);
                     } else {
                         Product::updateOrCreate(['product_id' => $metafield['owner_id'], 'setting_id' => $setting], $productData);
                     }
