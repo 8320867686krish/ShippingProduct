@@ -484,15 +484,8 @@ function Products() {
         }));
     };
     
-    
-    
-    
-    
-    
-    
     console.log(formData.productdata)
-
-
+    
     const toastMarkup = toastActive ? (
         <Toast content={toastMessage} onDismiss={toggleToastActive} />
     ) : null;
