@@ -53,7 +53,7 @@ class AppSubscriptionsUpdateJob implements ShouldQueue
             $jsonResponsedata = $response->json();
             $jsonResponse = $jsonResponsedata['recurring_application_charge'];
 
-            Charge::updateOrCreate(['charge_id'=>$chargeId[4]], [
+            Charge::updateOrCreate(['user_id'=>$shop['id']], [
                 'charge_id' => $jsonResponse['id'],
                 'test'=>$jsonResponse['test'],
                 'status'=>$jsonResponse['status'],
