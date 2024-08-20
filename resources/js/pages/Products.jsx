@@ -376,7 +376,6 @@ function Products() {
         }
     };
 
-
     useEffect(() => {
         getCountry()
         fetchProducts()
@@ -446,48 +445,38 @@ function Products() {
         const product2 = Product.find(p => p.id == productId);
         const updatedProductData = [...formData.productdata];
         const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
+    
         if (key === 'value' && value < 0) {
             setToastMessage('Value cannot be negative');
             setToastActive(true);
             return;
         }
+    
         if (productIndex === -1) {
             const newProductData = {
                 product_id: product2.id,
                 title: product2.title,
                 price: product2.price,
-                [key]: value,
+                value: key === 'value' ? value : product2.value, // Use default value if key is not 'value'
+                checked: key === 'checked' ? value : false,
+                error: '',
             };
-            if (key === 'value' && value) {
-                newProductData['checked'] = true;
-                newProductData['error'] = '';
-            }
             updatedProductData.push(newProductData);
         } else {
-            updatedProductData[productIndex][key] = value;
-            if (key === 'value') {
-                if (value) {
-                    updatedProductData[productIndex]['checked'] = true;
-                    updatedProductData[productIndex]['error'] = '';
-                } else {
-                    updatedProductData[productIndex]['error'] = '';
-                    updatedProductData[productIndex]['checked'] = false;
-                }
-            } else if (key === 'checked') {
-                if (!value) {
-                    updatedProductData[productIndex]['value'] = '';
-                    updatedProductData[productIndex]['error'] = '';
-                }
+            if (key === 'checked') {
+                updatedProductData[productIndex]['checked'] = value;
+            } else if (key === 'value') {
+                updatedProductData[productIndex]['value'] = value;
+                updatedProductData[productIndex]['checked'] = true;
+                updatedProductData[productIndex]['error'] = '';
             }
         }
-       
+    
         setFormData((prevState) => ({
             ...prevState,
             productdata: updatedProductData,
         }));
-        console.log(updatedProductData, 'skjdhfksj')
     };
-
 
     const toastMarkup = toastActive ? (
         <Toast content={toastMessage} onDismiss={toggleToastActive} />
@@ -508,8 +497,9 @@ function Products() {
     const rowMarkup = Product.map(({ id, title, image, price, value, checked }) => {
         const productData = formData.productdata.find(p => p.product_id == id);
         const isChecked = productData ? productData.checked : checked;
-        const productValue = productData ? productData.value : value;
+        const productValue = productData ? productData.value : value; // Default to product value if not set in formData
         const productError = productData ? productData.error : '';
+    
         return (
             <IndexTable.Row
                 id={id}
@@ -541,7 +531,7 @@ function Products() {
                     <div style={{ width: "100px" }}>
                         <TextField
                             type='number'
-                            value={productValue}
+                            value={productValue} // Maintain product value even if not checked
                             onChange={(value) => handleProductDataChange('value', value, id)}
                             error={productError}
                             autoComplete="off"
