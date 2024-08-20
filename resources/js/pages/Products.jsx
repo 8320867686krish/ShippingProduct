@@ -453,17 +453,27 @@ function Products() {
                 product_id: product2.id,
                 title: product2.title,
                 price: product2.price,
-                value: key === 'value' ? value : product2.value, // Use default value if key is not 'value'
-                checked: key === 'checked' ? value : false,
+                value: key === 'value' ? value : '',
+                checked: key === 'checked' ? (value ? 1 : 0) : 0,
                 error: '',
             };
             updatedProductData.push(newProductData);
         } else {
             if (key === 'checked') {
-                updatedProductData[productIndex]['checked'] = value;
+                updatedProductData[productIndex]['checked'] = value ? 1 : 0;
+    
+                if (!value) {
+                    updatedProductData[productIndex]['value'] = ''; 
+                }
             } else if (key === 'value') {
                 updatedProductData[productIndex]['value'] = value;
-                updatedProductData[productIndex]['checked'] = true;
+    
+                if (value === '' || value === null) {
+                    updatedProductData[productIndex]['checked'] = 0;
+                } else {
+                    updatedProductData[productIndex]['checked'] = 1;
+                }
+    
                 updatedProductData[productIndex]['error'] = '';
             }
         }
@@ -473,6 +483,15 @@ function Products() {
             productdata: updatedProductData,
         }));
     };
+    
+    
+    
+    
+    
+    
+    
+    console.log(formData.productdata)
+
 
     const toastMarkup = toastActive ? (
         <Toast content={toastMessage} onDismiss={toggleToastActive} />
@@ -493,9 +512,9 @@ function Products() {
     const rowMarkup = Product.map(({ id, title, image, price, value, checked }) => {
         const productData = formData.productdata.find(p => p.product_id == id);
         const isChecked = productData ? productData.checked : checked;
-        const productValue = productData ? productData.value : value; // Default to product value if not set in formData
+        const productValue = productData ? productData.value : value; 
         const productError = productData ? productData.error : '';
-    
+
         return (
             <IndexTable.Row
                 id={id}
