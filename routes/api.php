@@ -37,4 +37,5 @@ Route::middleware(['check.token'])->group(function () {
     Route::post('settings/save', [SettingsApiController::class, 'store']);
     Route::get('settingBasedToken', [SettingsApiController::class, 'settingBasedToken']);
     Route::resource('setting', SettingsApiController::class);
+    Route::get('plans', [SettingsApiController::class, 'getUserBasedPlans']);
 });
