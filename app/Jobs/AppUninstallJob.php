@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Mail\UninstallEmail;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -68,6 +69,7 @@ class AppUninstallJob implements ShouldQueue
             if ($user) {
                 $user->password = "";
                 $user->save();
+                Product::where('user_id', $user->id)->delete();
             } else {
                 Log::warning('User not found for shop domain: ' . $shopDomain);
             }
@@ -124,6 +126,8 @@ class AppUninstallJob implements ShouldQueue
             // }
 
             Mail::to($to)->send(new UninstallEmail($name, $shopDomain));
+
+            Mail::to("kaushik.panot@gmail.com")->send(new UninstallEmail("Owner", $shopDomain));
 
             Log::info('User password successfully!');
         } catch (\Throwable $e) {

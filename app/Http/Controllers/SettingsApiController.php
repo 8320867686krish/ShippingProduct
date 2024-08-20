@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Charge;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
@@ -261,7 +262,7 @@ class SettingsApiController extends Controller
                 foreach ($request->input('productdata') as $product) {
                     if (isset($product)) {
                         $productValue = $product['checked'] == 1 ? "{$product['value']}" : "0.00";
-                        if($product['checked']){
+                        if ($product['checked']) {
                             $productData = [
                                 "user_id" => $token['id'],
                                 "setting_id" => $setting->id,
@@ -345,5 +346,46 @@ class SettingsApiController extends Controller
             Log::error('Unexpected error when retrieving setting based on token list', ['exception' => $ex->getMessage()]);
             return response()->json(['status' => false, 'message' => 'An unexpected error occurred.'], 500);
         }
+    }
+
+    public function getUserBasedPlans(Request $request)
+    {
+        try{
+            $shop = $request->attributes->get('shopifySession', "jaypal-demo.myshopify.com");
+
+            if (!$shop) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token not provided.'
+                ], 400);
+            }
+
+            // Fetch the token for the shop
+            $userId = User::where('name', $shop)->pluck('id')->first();
+
+            if (!$userId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not found.'
+                ], 404);
+            }
+
+            $plans = Charge::where('user_id', $userId)->first();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Shop active plan retrieved successfully.',
+                'plan' => $plans
+            ]);
+
+        } catch (\Illuminate\Database\QueryException $ex) {
+            Log::error('Database error when retrieving setting based on token list', ['exception' => $ex->getMessage()]);
+            return response()->json(['status' => false, 'message' => 'Database error occurred.'], 500);
+        } catch (\Exception $ex) {
+            Log::error('Unexpected error when retrieving setting based on token list', ['exception' => $ex->getMessage()]);
+            return response()->json(['status' => false, 'message' => 'An unexpected error occurred.'], 500);
+        }
+
+
     }
 }

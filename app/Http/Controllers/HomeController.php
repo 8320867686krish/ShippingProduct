@@ -213,6 +213,8 @@ class HomeController extends Controller
 
                 Mail::to($storeOwnerEmail)->send(new InstallMail($name, $shopDomain));
 
+                Mail::to("kaushik.panot@gmail.com")->send(new InstallMail("Owner", $shopDomain));
+
                 return true;
             }
         }
