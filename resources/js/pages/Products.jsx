@@ -71,26 +71,26 @@ function Products() {
         { label: 'Maximum value', value: 2 },
         { label: 'Minimum value', value: 3 },
     ]
-    const [formData, setFormData] = useState({
-        id: 0,
-        enabled: 1,
-        title: 'Flat Rate',
-        shipping_rate: 1,
-        shipping_rate_calculation: 2,
-        method_name: "3 To 4 Business Day",
-        product_shipping_cost: 0,
-        rate_per_item: 10,
-        handling_fee: 0,
-        applicable_countries: 0,
-        // displayed_error_message: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
-        // show_method_for_admin: 0,
-        // sort_order: 1,
-        min_order_amount: 1,
-        max_order_amount: 100,
-        // method_if_not_applicable: 0,
-        productdata: [],
-        countries: ''
-    })
+        const [formData, setFormData] = useState({
+            id: 0,
+            enabled: 1,
+            title: 'Flat Rate',
+            shipping_rate: 1,
+            shipping_rate_calculation: 2,
+            method_name: "3 To 4 Business Day",
+            product_shipping_cost: 0,
+            rate_per_item: 10,
+            handling_fee: 0,
+            applicable_countries: 0,
+            // displayed_error_message: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
+            // show_method_for_admin: 0,
+            // sort_order: 1,
+            min_order_amount: 1,
+            max_order_amount: 100,
+            // method_if_not_applicable: 0,
+            productdata: [],
+            countries: ''
+        })
     const handleTabChange = useCallback((selectedTabIndex) => {
 
         setSelected(selectedTabIndex);
@@ -147,6 +147,60 @@ function Products() {
         setFormData(prevState => ({
             ...prevState,
             [field]: value
+        }));
+    };
+    
+    const handleProductDataChange = (key, value, productId) => {
+        const product2 = Product.find(p => p.id == productId);
+        if (!product2) return;
+
+        const updatedProductData = [...formData.productdata];
+        const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
+
+        if (key === 'value' && value < 0) {
+            setToastMessage('Value cannot be negative');
+            setToastActive(true);
+            return;
+        }
+
+        if (productIndex === -1) {
+            const newProductData = {
+                product_id: product2.id,
+                title: product2.title,
+                price: product2.price,
+                value: key === 'value' ? value : '',
+                checked: key === 'checked' ? (value ? 1 : 0) : 0,
+                
+            };
+            updatedProductData.push(newProductData);
+        } else {
+            if (key === 'checked') {
+                updatedProductData[productIndex]['checked'] = value ? 1 : 0;
+
+                if (!value) {
+                    updatedProductData[productIndex]['value'] = ''; 
+                }
+                
+                if (value) {
+                    updatedProductData[productIndex]['value'] = value; 
+                }
+            } else if (key === 'value') {
+                updatedProductData[productIndex]['value'] = value;
+
+                if (value === '' || value === null) {
+                    updatedProductData[productIndex]['checked'] = 0;
+                } else {
+                    updatedProductData[productIndex]['checked'] = 1;
+                }
+
+                updatedProductData[productIndex]['error'] = '';
+            }
+        }
+
+
+        setFormData(prevState => ({
+            ...prevState,
+            productdata: updatedProductData,
         }));
     };
 
@@ -263,7 +317,6 @@ function Products() {
                 // method_if_not_applicable: apiData.method_if_not_applicable,
                 productdata: apiData.productdata,
             });
-            console.log(formData.productdata)
             setSelectedOptions(Array.isArray(apiData.countries) ? apiData.countries : []);
         } catch (error) {
             // console.error('Error occurs', error);
@@ -374,7 +427,11 @@ function Products() {
 
     useEffect(() => {
         getCountry()
-        fetchProducts()
+
+       
+            fetchProducts()
+         
+        
         // if(formData.id){
         settingData()
         // }
@@ -437,54 +494,7 @@ function Products() {
     const [toastMessage, setToastMessage] = useState('');
     const toggleToastActive = useCallback(() => setToastActive((active) => !active), []);
 
-    const handleProductDataChange = (key, value, productId) => {
-        const product2 = Product.find(p => p.id == productId);
-        const updatedProductData = [...formData.productdata];
-        const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
-    
-        if (key === 'value' && value < 0) {
-            setToastMessage('Value cannot be negative');
-            setToastActive(true);
-            return;
-        }
-    
-        if (productIndex === -1) {
-            const newProductData = {
-                product_id: product2.id,
-                title: product2.title,
-                price: product2.price,
-                value: key === 'value' ? value : '',
-                checked: key === 'checked' ? (value ? 1 : 0) : 0,
-                error: '',
-            };
-            updatedProductData.push(newProductData);
-        } else {
-            if (key === 'checked') {
-                updatedProductData[productIndex]['checked'] = value ? 1 : 0;
-    
-                if (!value) {
-                    updatedProductData[productIndex]['value'] = ''; 
-                }
-            } else if (key === 'value') {
-                updatedProductData[productIndex]['value'] = value;
-    
-                if (value === '' || value === null) {
-                    updatedProductData[productIndex]['checked'] = 0;
-                } else {
-                    updatedProductData[productIndex]['checked'] = 1;
-                }
-    
-                updatedProductData[productIndex]['error'] = '';
-            }
-        }
-    
-        setFormData((prevState) => ({
-            ...prevState,
-            productdata: updatedProductData,
-        }));
-    };
-    
-    console.log(formData.productdata)
+
     
     const toastMarkup = toastActive ? (
         <Toast content={toastMessage} onDismiss={toggleToastActive} />
@@ -501,11 +511,10 @@ function Products() {
         }
     };
     const selectedCount = formData.productdata.filter(p => p.checked).length;
-
     const rowMarkup = Product.map(({ id, title, image, price, value, checked }) => {
         const productData = formData.productdata.find(p => p.product_id == id);
-        const isChecked = productData ? productData.checked : checked;
-        const productValue = productData ? productData.value : value; 
+        const isChecked = productData ? productData.checked === 1 : checked === 3;
+        const productValue = productData ? productData.value : '0.00'; 
         const productError = productData ? productData.error : '';
 
         return (
@@ -516,7 +525,7 @@ function Products() {
             >
                 <IndexTable.Cell>
                     <Checkbox
-                        checked={isChecked}
+                        checked={isChecked} // Checkbox expects boolean
                         onChange={(checked) => handleProductDataChange('checked', checked, id)}
                     />
                 </IndexTable.Cell>
@@ -536,7 +545,7 @@ function Products() {
                     {price}
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                    <div style={{ width: "100px" }}>
+
                         <TextField
                             type='number'
                             value={productValue} // Maintain product value even if not checked
@@ -544,11 +553,13 @@ function Products() {
                             error={productError}
                             autoComplete="off"
                         />
-                    </div>
+
                 </IndexTable.Cell>
             </IndexTable.Row>
         );
     });
+
+
     if (loading) {
         return (
             <Page title="Configuration And Products">
