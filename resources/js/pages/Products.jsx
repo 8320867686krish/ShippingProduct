@@ -150,59 +150,6 @@ function Products() {
         }));
     };
     
-    const handleProductDataChange = (key, value, productId) => {
-        const product2 = Product.find(p => p.id == productId);
-        if (!product2) return;
-
-        const updatedProductData = [...formData.productdata];
-        const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
-
-        if (key === 'value' && value < 0) {
-            setToastMessage('Value cannot be negative');
-            setToastActive(true);
-            return;
-        }
-
-        if (productIndex === -1) {
-            const newProductData = {
-                product_id: product2.id,
-                title: product2.title,
-                price: product2.price,
-                value: key === 'value' ? value : '',
-                checked: key === 'checked' ? (value ? 1 : 0) : 0,
-                
-            };
-            updatedProductData.push(newProductData);
-        } else {
-            if (key === 'checked') {
-                updatedProductData[productIndex]['checked'] = value ? 1 : 0;
-
-                if (!value) {
-                    updatedProductData[productIndex]['value'] = ''; 
-                }
-                
-                if (value) {
-                    updatedProductData[productIndex]['value'] = value; 
-                }
-            } else if (key === 'value') {
-                updatedProductData[productIndex]['value'] = value;
-
-                if (value === '' || value === null) {
-                    updatedProductData[productIndex]['checked'] = 0;
-                } else {
-                    updatedProductData[productIndex]['checked'] = 1;
-                }
-
-                updatedProductData[productIndex]['error'] = '';
-            }
-        }
-
-
-        setFormData(prevState => ({
-            ...prevState,
-            productdata: updatedProductData,
-        }));
-    };
 
     const getCountry = async () => {
         try {
@@ -494,8 +441,6 @@ function Products() {
     const [toastMessage, setToastMessage] = useState('');
     const toggleToastActive = useCallback(() => setToastActive((active) => !active), []);
 
-
-    
     const toastMarkup = toastActive ? (
         <Toast content={toastMessage} onDismiss={toggleToastActive} />
     ) : null;
@@ -510,10 +455,65 @@ function Products() {
             fetchProducts(null, pageInfo.startCursor, 'prev');
         }
     };
+    const handleProductDataChange = (key, value, productId) => {
+        const product2 = Product.find(p => p.id == productId);
+        if (!product2) return;
+
+        const updatedProductData = [...formData.productdata];
+        const productIndex = updatedProductData.findIndex(p => p.product_id == productId);
+
+        if (key === 'value' && value < 0) {
+            setToastMessage('Value cannot be negative');
+            setToastActive(true);
+            return;
+        }
+
+        if (productIndex === -1) {
+            const newProductData = {
+                product_id: product2.id,
+                title: product2.title,
+                price: product2.price,
+                value: key === 'value' ? value : '',
+                checked: key === 'checked' ? (value ? 1 : 0) : 0,
+                
+            };
+            updatedProductData.push(newProductData);
+        } else {
+            if (key === 'checked') {
+                updatedProductData[productIndex]['checked'] = value ? 1 : 0;
+
+                if (!value) {
+                    updatedProductData[productIndex]['value'] = value; 
+                }
+                
+                if (value) {
+                    updatedProductData[productIndex]['value'] = value; 
+                }
+            } else if (key === 'value') {
+                updatedProductData[productIndex]['value'] = value;
+
+                if (value === '' || value === null) {
+                    updatedProductData[productIndex]['checked'] = 0;
+                } else {
+                    updatedProductData[productIndex]['checked'] = 1;
+                }
+
+                updatedProductData[productIndex]['error'] = '';
+            }
+        }
+
+
+        setFormData(prevState => ({
+            ...prevState,
+            productdata: updatedProductData,
+        }));
+    };
+
+    
     const selectedCount = formData.productdata.filter(p => p.checked).length;
     const rowMarkup = Product.map(({ id, title, image, price, value, checked }) => {
         const productData = formData.productdata.find(p => p.product_id == id);
-        const isChecked = productData ? productData.checked === 1 : checked === 3;
+        const isChecked = productData ? productData.checked === 1 : 0;
         const productValue = productData ? productData.value : '0.00'; 
         const productError = productData ? productData.error : '';
 
