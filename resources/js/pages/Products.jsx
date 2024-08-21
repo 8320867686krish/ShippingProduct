@@ -71,26 +71,26 @@ function Products() {
         { label: 'Maximum value', value: 2 },
         { label: 'Minimum value', value: 3 },
     ]
-        const [formData, setFormData] = useState({
-            id: 0,
-            enabled: 1,
-            title: 'Flat Rate',
-            shipping_rate: 1,
-            shipping_rate_calculation: 2,
-            method_name: "3 To 4 Business Day",
-            product_shipping_cost: 0,
-            rate_per_item: 10,
-            handling_fee: 0,
-            applicable_countries: 0,
-            // displayed_error_message: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
-            // show_method_for_admin: 0,
-            // sort_order: 1,
-            min_order_amount: 1,
-            max_order_amount: 100,
-            // method_if_not_applicable: 0,
-            productdata: [],
-            countries: ''
-        })
+    const [formData, setFormData] = useState({
+        id: 0,
+        enabled: 1,
+        title: 'Flat Rate',
+        shipping_rate: 1,
+        shipping_rate_calculation: 2,
+        method_name: "3 To 4 Business Day",
+        product_shipping_cost: 0,
+        rate_per_item: 10,
+        handling_fee: 0,
+        applicable_countries: 0,
+        // displayed_error_message: "This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.",
+        // show_method_for_admin: 0,
+        // sort_order: 1,
+        min_order_amount: 1,
+        max_order_amount: 100,
+        // method_if_not_applicable: 0,
+        productdata: [],
+        countries: ''
+    })
     const handleTabChange = useCallback((selectedTabIndex) => {
 
         setSelected(selectedTabIndex);
@@ -149,7 +149,7 @@ function Products() {
             [field]: value
         }));
     };
-    
+
 
     const getCountry = async () => {
         try {
@@ -375,10 +375,10 @@ function Products() {
     useEffect(() => {
         getCountry()
 
-       
-            fetchProducts()
-         
-        
+
+        fetchProducts()
+
+
         // if(formData.id){
         settingData()
         // }
@@ -467,15 +467,15 @@ function Products() {
             setToastActive(true);
             return;
         }
-
+        console.log(value)
         if (productIndex === -1) {
             const newProductData = {
                 product_id: product2.id,
                 title: product2.title,
                 price: product2.price,
-                value: key === 'value' ? value : '',
+                value: key === 'value' ? value : '0.00',
                 checked: key === 'checked' ? (value ? 1 : 0) : 0,
-                
+
             };
             updatedProductData.push(newProductData);
         } else {
@@ -483,11 +483,11 @@ function Products() {
                 updatedProductData[productIndex]['checked'] = value ? 1 : 0;
 
                 if (!value) {
-                    updatedProductData[productIndex]['value'] = value; 
+                    updatedProductData[productIndex]['value'] = value;
                 }
-                
+
                 if (value) {
-                    updatedProductData[productIndex]['value'] = value; 
+                    updatedProductData[productIndex]['value'] = value;
                 }
             } else if (key === 'value') {
                 updatedProductData[productIndex]['value'] = value;
@@ -509,12 +509,12 @@ function Products() {
         }));
     };
 
-    
+
     const selectedCount = formData.productdata.filter(p => p.checked).length;
     const rowMarkup = Product.map(({ id, title, image, price, value, checked }) => {
         const productData = formData.productdata.find(p => p.product_id == id);
         const isChecked = productData ? productData.checked === 1 : 0;
-        const productValue = productData ? productData.value : '0.00'; 
+        const productValue = productData ? productData.value : '0.00';
         const productError = productData ? productData.error : '';
 
         return (
@@ -546,13 +546,13 @@ function Products() {
                 </IndexTable.Cell>
                 <IndexTable.Cell>
 
-                        <TextField
-                            type='number'
-                            value={productValue} // Maintain product value even if not checked
-                            onChange={(value) => handleProductDataChange('value', value, id)}
-                            error={productError}
-                            autoComplete="off"
-                        />
+                    <TextField
+                        type='number'
+                        value={productValue} // Maintain product value even if not checked
+                        onChange={(value) => handleProductDataChange('value', value, id)}
+                        error={productError}
+                        autoComplete="off"
+                    />
 
                 </IndexTable.Cell>
             </IndexTable.Row>
