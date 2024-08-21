@@ -455,7 +455,8 @@ function Products() {
             fetchProducts(null, pageInfo.startCursor, 'prev');
         }
     };
-    const handleProductDataChange = (key, value, productId) => {
+
+    const handleProductDataChange = (key, value, productId,) => {
         const product2 = Product.find(p => p.id == productId);
         if (!product2) return;
 
@@ -467,7 +468,6 @@ function Products() {
             setToastActive(true);
             return;
         }
-        console.log(value)
         if (productIndex === -1) {
             const newProductData = {
                 product_id: product2.id,
@@ -478,12 +478,13 @@ function Products() {
 
             };
             updatedProductData.push(newProductData);
+            console.log(newProductData)
         } else {
             if (key === 'checked') {
                 updatedProductData[productIndex]['checked'] = value ? 1 : 0;
 
                 if (!value) {
-                    updatedProductData[productIndex]['value'] = value;
+                    updatedProductData[productIndex]['value'] = '0.00';
                 }
 
                 if (value) {
