@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\InstallMail;
+use App\Mail\InstallSupportMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -213,7 +214,7 @@ class HomeController extends Controller
 
                 Mail::to($storeOwnerEmail)->send(new InstallMail($name, $shopDomain));
 
-                Mail::to("kaushik.panot@gmail.com")->send(new InstallMail("Owner", $shopDomain));
+                Mail::to("kaushik.panot@meetanshi.com")->send(new InstallSupportMail("Owner", $shopDomain));
 
                 return true;
             }

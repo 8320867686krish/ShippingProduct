@@ -9,10 +9,9 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class UninstallEmail extends Mailable
+class InstallSupportMail extends Mailable
 {
     use Queueable, SerializesModels;
-
     public $name;
     public $shopDomain;
 
@@ -31,7 +30,7 @@ class UninstallEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Account Uninstall Notification ({$this->shopDomain})",
+            subject: "Install Support Mail ({$this->shopDomain})",
         );
     }
 
@@ -41,7 +40,7 @@ class UninstallEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.uninstall',
+            view: 'emails.install',
         );
     }
 

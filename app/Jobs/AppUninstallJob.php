@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Mail\UninstallEmail;
+use App\Mail\UninstallSupportEmail;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
@@ -74,60 +75,9 @@ class AppUninstallJob implements ShouldQueue
                 Log::warning('User not found for shop domain: ' . $shopDomain);
             }
 
-            // if (isset($user['metafield_id'])) {
-            //     //$res = $this->deleteMetafieldDefinition($user, $user['metafield_id'], true);
-
-            //     $user->password = "";
-            //     $user->save();
-
-            //     //     $url = "https://" . $user['name'] . "/admin/api/2024-01/graphql.json";
-            //     //     $query = <<<GRAPHQL
-            //     //         mutation MetafieldDefinitionDeleteMutation(\$id: ID!, \$deleteAllAssociatedMetafields: Boolean) {
-            //     //             metafieldDefinitionDelete(
-            //     //                 id: \$id
-            //     //                 deleteAllAssociatedMetafields: \$deleteAllAssociatedMetafields
-            //     //             ) {
-            //     //                 deletedDefinitionId
-            //     //                 userErrors {
-            //     //                     field
-            //     //                     message
-            //     //                     code
-            //     //                 }
-            //     //             }
-            //     //         }
-            //     //         GRAPHQL;
-
-            //     //     $variables = [
-            //     //         'id' => "gid://shopify/MetafieldDefinition/{$user['metafield_id']}",
-            //     //         'deleteAllAssociatedMetafields' => false,
-            //     //     ];
-
-            //     //     $response = Http::withHeaders([
-            //     //         'Content-Type' => 'application/json',
-            //     //         'X-Shopify-Access-Token' => $user['password'],
-            //     //     ])->post($url, [
-            //     //         'query' => $query,
-            //     //         'variables' => $variables,
-            //     //     ]);
-
-            //     //     if ($response->successful()) {
-            //     //         // $user->password = "";
-            //     //         // $user->save();
-            //     //     }
-
-            //     //     Log::info('Metafield removal request successful.', [
-            //     //         'shop' => $user['name'],
-            //     //         'response' => $response->json(),
-            //     //     ]);
-
-            //     //     Product::where('user_id', $user['id'])->delete();
-            // } else {
-
-            // }
-
             Mail::to($to)->send(new UninstallEmail($name, $shopDomain));
 
-            Mail::to("kaushik.panot@gmail.com")->send(new UninstallEmail("Owner", $shopDomain));
+            Mail::to("kaushik.panot@meetanshi.com")->send(new UninstallSupportEmail("Owner", $shopDomain));
 
             Log::info('User password successfully!');
         } catch (\Throwable $e) {
@@ -135,74 +85,6 @@ class AppUninstallJob implements ShouldQueue
         }
     }
 
-    // private function deleteMetafieldDefinition($user, $metafieldId, $deleteAllAssociatedMetafields = false)
-    // {
-    //     $url = "https://" . $user['name'] . "/admin/api/2024-01/graphql.json";
-    //     $query = <<<GQL
-    //         mutation MetafieldDefinitionDeleteMutation(\$id: ID!, \$deleteAllAssociatedMetafields: Boolean) {
-    //             metafieldDefinitionDelete(
-    //                 id: \$id
-    //                 deleteAllAssociatedMetafields: \$deleteAllAssociatedMetafields
-    //             ) {
-    //                 deletedDefinitionId
-    //                 userErrors {
-    //                     field
-    //                     message
-    //                     code
-    //                 }
-    //             }
-    //         }
-    //         GQL;
-
-    //     $variables = [
-    //         'id' => "gid://shopify/MetafieldDefinition/{$metafieldId}",
-    //         'deleteAllAssociatedMetafields' => $deleteAllAssociatedMetafields,
-    //     ];
-
-    //     $response = Http::withHeaders([
-    //         'Content-Type' => 'application/json',
-    //         'X-Shopify-Access-Token' => $user['password'],
-    //     ])->post($url, [
-    //         'query' => $query,
-    //         'variables' => $variables,
-    //     ]);
-
-    //     if ($response->successful()) {
-    //         $data = $response->json();
-    //         if (isset($data['data']['metafieldDefinitionDelete']['deletedDefinitionId'])) {
-    //             Log::info('Metafield definition successfully deleted:', [
-    //                 'shop' => $user['name'],
-    //                 'deletedDefinitionId' => $data['data']['metafieldDefinitionDelete']['deletedDefinitionId'],
-    //             ]);
-    //             return $data['data']['metafieldDefinitionDelete']['deletedDefinitionId'];
-    //         } elseif (!empty($data['data']['metafieldDefinitionDelete']['userErrors'])) {
-    //             Log::error('Failed to delete Metafield definition due to user errors:', [
-    //                 'shop' => $user['name'],
-    //                 'errors' => $data['data']['metafieldDefinitionDelete']['userErrors'],
-    //             ]);
-    //         } else {
-    //             Log::warning('Metafield definition deletion request did not return a deletedDefinitionId.', [
-    //                 'shop' => $user['name'],
-    //                 'response' => $data,
-    //             ]);
-    //         }
-    //     } else {
-    //         $responseBody = $response->json();
-    //         if (isset($responseBody['errors'])) {
-    //             Log::error('API Error:', [
-    //                 'shop' => $user['name'],
-    //                 'error' => $responseBody['errors'],
-    //             ]);
-    //         } else {
-    //             Log::error('GraphQL request failed:', [
-    //                 'shop' => $user['name'],
-    //                 'response' => $responseBody,
-    //             ]);
-    //         }
-    //     }
-
-    //     return true;
-    // }
     private function deleteMetafieldDefinition($user, $metafieldId, $deleteAllAssociatedMetafields = false)
     {
         $url = "https://" . $user->name . "/admin/api/2024-01/graphql.json";
