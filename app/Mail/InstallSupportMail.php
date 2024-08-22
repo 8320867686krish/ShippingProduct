@@ -30,7 +30,7 @@ class InstallSupportMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Install Support Mail ({$this->shopDomain})",
+            subject: "Welcome to Meetanshi Shipping Per Product! Your Installation is Complete",
         );
     }
 

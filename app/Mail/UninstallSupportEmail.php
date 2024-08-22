@@ -31,7 +31,7 @@ class UninstallSupportEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Uninstall Support Email ({$this->shopDomain})",
+            subject: "We’re Sorry to See You Go – Feedback Appreciated",
         );
     }
 
