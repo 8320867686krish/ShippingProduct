@@ -2,15 +2,14 @@ import React from 'react';
 import { Route } from "react-router";
 import { Routes } from 'react-router-dom';
 import Products from '../pages/Products';
-import Pricing_plans from '../pages/Pricing_plans';
+import Plans from '../pages/Plans';
 
 
 export default function Routing(props) {
     return (
         <Routes>
-            <Route exact path="/" element={<Products {...props} />} />
-
-
+            <Route  index element={<Products {...props} />} />
+            <Route  path="/Plans" element={<Plans {...props} />} />
         </Routes>
     );
 }

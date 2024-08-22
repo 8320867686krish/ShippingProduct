@@ -24,6 +24,7 @@ import {
     SkeletonBodyText,
     TextContainer
 } from '@shopify/polaris';
+import { useNavigate, useParams } from 'react-router-dom';
 import { SearchIcon } from '@shopify/polaris-icons';
 import createApp from '@shopify/app-bridge';
 import { getSessionToken } from "@shopify/app-bridge-utils";
@@ -31,6 +32,7 @@ const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
 const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
 
 function Products() {
+    const navigate = useNavigate();
     const [selected, setSelected] = useState(0);
     const [country, setCountry] = useState([])
     const [selectedOptions, setSelectedOptions] = useState([]);
@@ -185,7 +187,7 @@ function Products() {
                 host: new URLSearchParams(location.search).get("host"),
             });
             const token = await getSessionToken(app);
-
+console.log(token)
             const payload = {
                 ...(direction === 'next' ? { endCursor: cursor, first: 50 } : { startCursor: cursor, last: 50 }),
                 ...(value ? { query: value } : {}),
@@ -371,7 +373,9 @@ function Products() {
             setFormSave(false);
         }
     };
-
+const navigatePlans  = ( () => {
+    navigate('/Plans');
+})
     useEffect(() => {
         getCountry()
 
@@ -584,6 +588,12 @@ function Products() {
             </Page>
         );
     }
+
+
+    const handlePlanSelect = (plan) => {
+        const  name = 'khushi_test'
+           window.location.href = `https:/admin.shopify.com/charges/${name}/pricing_plans?plan=${plan}`;
+         };
     return (
         <Page title="Configuration And Products">
             <div style={{ marginBottom: "1%" }}>
@@ -618,6 +628,8 @@ function Products() {
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', }}>
                                                 <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
+                                                {/* <Button variant="primary" size="large" onClick={navigatePlans}>navigate</Button> */}
+                                                
                                             </div>
 
                                             <div style={{ display: 'flex', marginTop: "2%" }}>
@@ -932,3 +944,5 @@ function Products() {
 }
 
 export default Products
+
+
