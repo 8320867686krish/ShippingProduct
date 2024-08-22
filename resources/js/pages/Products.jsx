@@ -24,7 +24,6 @@ import {
     SkeletonBodyText,
     TextContainer
 } from '@shopify/polaris';
-import { useNavigate, useParams } from 'react-router-dom';
 import { SearchIcon } from '@shopify/polaris-icons';
 import createApp from '@shopify/app-bridge';
 import { getSessionToken } from "@shopify/app-bridge-utils";
@@ -32,7 +31,7 @@ const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
 const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
 
 function Products() {
-    const navigate = useNavigate();
+
     const [selected, setSelected] = useState(0);
     const [country, setCountry] = useState([])
     const [selectedOptions, setSelectedOptions] = useState([]);
@@ -98,7 +97,36 @@ function Products() {
         setSelected(selectedTabIndex);
 
     }, []);
+    const [plan, setPlan] = useState();
+    const [status,setStatus] = useState()
+   
+   
+    const getPlans = async () => {
+        try {
+            setLoading(true)
+            const app = createApp({
+                apiKey: SHOPIFY_API_KEY,
+                host: new URLSearchParams(location.search).get("host"),
+            });
+            const token = await getSessionToken(app);
+            const response = await axios.get(`${apiCommonURL}/api/plans`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            let status = response.data.plan?.toLowerCase();
+            console.log(response.data)
+            if (status !== "active") {
 
+                    const name = 'shipping-product';
+                   window.top.location.href = `https://admin.shopify.com/charges/${name}/pricing_plans`;
+            }
+        
+        } catch (error) {
+            console.error("Error fetching country:", error);
+        }
+    }
+  
     const tabs = [
         {
             id: 'all-customers-1',
@@ -187,7 +215,6 @@ function Products() {
                 host: new URLSearchParams(location.search).get("host"),
             });
             const token = await getSessionToken(app);
-console.log(token)
             const payload = {
                 ...(direction === 'next' ? { endCursor: cursor, first: 50 } : { startCursor: cursor, last: 50 }),
                 ...(value ? { query: value } : {}),
@@ -373,21 +400,19 @@ console.log(token)
             setFormSave(false);
         }
     };
-const navigatePlans  = ( () => {
-    navigate('/Plans');
-})
+
     useEffect(() => {
-        getCountry()
-
-
-        fetchProducts()
-
-
-        // if(formData.id){
-        settingData()
-        // }
+        apiCall();
     }, [])
-
+    const apiCall = async()=>{
+        await getPlans().then( function () {
+            getCountry()
+            fetchProducts()
+            settingData()
+           
+        })
+      
+    }
     const updateText = useCallback(
         (value) => {
             setInputValue(value);
@@ -482,7 +507,6 @@ const navigatePlans  = ( () => {
 
             };
             updatedProductData.push(newProductData);
-            console.log(newProductData)
         } else {
             if (key === 'checked') {
                 updatedProductData[productIndex]['checked'] = value ? 1 : 0;
@@ -589,11 +613,6 @@ const navigatePlans  = ( () => {
         );
     }
 
-
-    const handlePlanSelect = (plan) => {
-        const  name = 'khushi_test'
-           window.location.href = `https:/admin.shopify.com/charges/${name}/pricing_plans?plan=${plan}`;
-         };
     return (
         <Page title="Configuration And Products">
             <div style={{ marginBottom: "1%" }}>
@@ -628,8 +647,6 @@ const navigatePlans  = ( () => {
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', }}>
                                                 <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
-                                                {/* <Button variant="primary" size="large" onClick={navigatePlans}>navigate</Button> */}
-                                                
                                             </div>
 
                                             <div style={{ display: 'flex', marginTop: "2%" }}>

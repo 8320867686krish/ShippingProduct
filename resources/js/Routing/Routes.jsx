@@ -9,7 +9,7 @@ export default function Routing(props) {
     return (
         <Routes>
             <Route  index element={<Products {...props} />} />
-            <Route  path="/Plans" element={<Plans {...props} />} />
+            {/* <Route  path="/Plans" element={<Plans {...props} />} /> */}
         </Routes>
     );
 }

@@ -370,8 +370,7 @@ class SettingsApiController extends Controller
                 ], 404);
             }
 
-            $plans = Charge::where('user_id', $userId)->first();
-
+            $plans = Charge::where('user_id', $userId)->pluck('status')->first();
             return response()->json([
                 'status' => true,
                 'message' => 'Shop active plan retrieved successfully.',
