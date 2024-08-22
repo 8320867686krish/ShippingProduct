@@ -30,10 +30,6 @@ class HomeController extends Controller
             'X-Shopify-Access-Token' => $token['password'],
         ];
 
-        $this->mendatoryWebhook($shop);
-        $this->getStoreOwnerEmail($shop);
-        $this->setMetaFiled($token);
-
         // Log::info('input logs:', ['mendatoryWebhook' => $mendatoryWebhook]);
 
         $data = [
@@ -52,6 +48,10 @@ class HomeController extends Controller
 
         // Parse the JSON response
         $jsonResponse = $response->json();
+
+        $this->mendatoryWebhook($shop);
+        $this->setMetaFiled($token);
+        $this->getStoreOwnerEmail($shop);
 
         return view('welcome', compact('shop', 'host'));
     }
@@ -120,7 +120,6 @@ class HomeController extends Controller
             return null;
         }
     }
-
 
     private function mendatoryWebhook($shopDetail)
     {
@@ -198,22 +197,16 @@ class HomeController extends Controller
             return false;
         } else {
             $data = json_decode($response, true);
-            // Log::info('input logs:', ['shopDetail' => $data]);
             if (@$data['shop']) {
-                $storeOwnerEmail = "bhushan.trivedi@meetanshi.com";
+                // $storeOwnerEmail = "bhushan.trivedi@meetanshi.com";
+                $storeOwnerEmail = "krishna.patel@meetanshi.com";
                 // $storeOwnerEmail = $data['shop']['email'];
                 $store_name = $data['shop']['name'];
                 // User::where('name', $shop)->update(['store_owner_email' => $storeOwnerEmail, 'store_name' => $store_name]);
-                $details = [
-                    'title' => 'Thank You for Installing AI Content Generator for Shopify - Meetanshi',
-                    'name' => $store_name
-                ];
-
                 $name = $data['shop']['shop_owner'];
                 $shopDomain = $data['shop']['domain'];
 
                 Mail::to($storeOwnerEmail)->send(new InstallMail($name, $shopDomain));
-
                 Mail::to("kaushik.panot@meetanshi.com")->send(new InstallSupportMail("Owner", $shopDomain));
 
                 return true;
