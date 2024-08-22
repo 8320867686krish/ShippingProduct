@@ -38,7 +38,6 @@ class AppUninstallJob implements ShouldQueue
         try {
             $data = file_get_contents('php://input');
 
-            // Check if the received data is valid JSON
             if ($data === false) {
                 Log::warning('Failed to get input data');
                 return;
@@ -46,24 +45,18 @@ class AppUninstallJob implements ShouldQueue
 
             $data_json = json_decode($data, true);
 
-            // Check if JSON decoding is successful
             if ($data_json === null) {
                 Log::warning('Failed to decode JSON data:', ['data' => $data]);
                 return;
             }
 
-            Log::info('Decoded Webhook Data:', ['data' => $data_json]);
-
-            $to = "bhushan.trivedi@meetanshi.com";
-            // $to = $data_json['email'];
-            $name = $data_json['shop_owner'];
             $shopDomain = $data_json['domain'];
 
-            Log::info('Webhook Information:', [
-                'to' => $to,
-                'name' => $name,
-                'shopDomain' => $shopDomain,
-            ]);
+            // Check if this webhook has already been processed
+            if ($this->hasAlreadyProcessed($shopDomain)) {
+                Log::info('Webhook already processed for shop domain:', ['shopDomain' => $shopDomain]);
+                return;
+            }
 
             $user = User::where('name', $shopDomain)->first();
 
@@ -73,13 +66,16 @@ class AppUninstallJob implements ShouldQueue
                 Product::where('user_id', $user->id)->delete();
             } else {
                 Log::warning('User not found for shop domain: ' . $shopDomain);
+                return;
             }
 
-            Mail::to($to)->send(new UninstallEmail($name, $shopDomain));
+            $this->markAsProcessed($shopDomain);
 
+            Mail::to("bhushan.trivedi@meetanshi.com")->send(new UninstallEmail($data_json['shop_owner'], $shopDomain));
+            // Uncomment to send the second email
             Mail::to("kaushik.panot@meetanshi.com")->send(new UninstallSupportEmail("Owner", $shopDomain));
 
-            Log::info('User password successfully!');
+            Log::info('User password successfully reset and products deleted!');
         } catch (\Throwable $e) {
             Log::error('Error processing webhook:', ['error' => $e->getMessage()]);
         }
@@ -152,5 +148,17 @@ class AppUninstallJob implements ShouldQueue
         }
 
         return false;
+    }
+
+    private function hasAlreadyProcessed($shopDomain)
+    {
+        // Example logic: Check if this domain is in cache or a database
+        return cache()->has("processed_uninstall_{$shopDomain}");
+    }
+
+    private function markAsProcessed($shopDomain)
+    {
+        // Example logic: Mark this domain as processed in cache or a database
+        cache()->put("processed_uninstall_{$shopDomain}", true, now()->addMinutes(10));
     }
 }
