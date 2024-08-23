@@ -84,8 +84,8 @@ class AppUninstalledJob implements ShouldQueue
                 DB::commit();
 
                 // Send uninstall email notifications
-                Mail::to("krishna.patel@meetanshi.com")->send(new UninstallEmail($data_json['shop_owner'], $shopDomain));
-                Mail::to("kaushik.panot@meetanshi.com")->send(new UninstallSupportEmail("Owner", $shopDomain));
+                Mail::to("bhushan.trivedi@meetanshi.com")->send(new UninstallEmail($data_json['shop_owner'], $shopDomain));
+                // Mail::to("kaushik.panot@meetanshi.com")->send(new UninstallSupportEmail("Owner", $shopDomain));
 
                 Log::info('User successfully uninstalled and associated data removed for shop domain: ' . $shopDomain);
                 return;
