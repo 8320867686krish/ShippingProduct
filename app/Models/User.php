@@ -17,7 +17,7 @@ class User extends Authenticatable implements IShopModel
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'metafield_id'
+        'name', 'email', 'password', 'metafield_id', 'isInstall'
     ];
 
     /**

@@ -49,9 +49,13 @@ class HomeController extends Controller
         // Parse the JSON response
         $jsonResponse = $response->json();
 
-        $this->mendatoryWebhook($shop);
-        $this->setMetaFiled($token);
-        $this->getStoreOwnerEmail($shop);
+        if ($token['isInstall'] == 0) {
+            $token->isInstall = 1;
+            $token->save();
+            $this->mendatoryWebhook($shop);
+            $this->setMetaFiled($token);
+            $this->getStoreOwnerEmail($shop);
+        }
 
         return view('welcome', compact('shop', 'host'));
     }
@@ -210,6 +214,8 @@ class HomeController extends Controller
                 Mail::to("kaushik.panot@meetanshi.com")->send(new InstallSupportMail("Owner", $shopDomain));
 
                 return true;
+            } else {
+                return false;
             }
         }
     }
