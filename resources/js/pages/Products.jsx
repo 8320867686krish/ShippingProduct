@@ -97,10 +97,7 @@ function Products() {
         setSelected(selectedTabIndex);
 
     }, []);
-    const [plan, setPlan] = useState();
-    const [status,setStatus] = useState()
-   
-   
+
     const getPlans = async () => {
         try {
             setLoading(true)
@@ -116,14 +113,17 @@ function Products() {
             });
             let status = response.data.plan?.toLowerCase();
             console.log(response.data)
-            if (status !== "active") {
+            // if (status !== "active") {
 
-                    const name = 'shipping-product';
-                   window.top.location.href = `https://admin.shopify.com/charges/${name}/pricing_plans`;
-            }
+            //         const name = 'shipping-product';
+            //        window.top.location.href = `https://admin.shopify.com/charges/${name}/pricing_plans`;
+            // }
         
         } catch (error) {
             console.error("Error fetching country:", error);
+        }
+        finally{
+            setLoading(false)
         }
     }
   
@@ -183,7 +183,6 @@ function Products() {
 
     const getCountry = async () => {
         try {
-            setLoading(true)
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
@@ -201,7 +200,6 @@ function Products() {
             }));
             setCountry(stateList);
             setAllCountries(stateList);
-            setLoading(false)
         } catch (error) {
             console.error("Error fetching country:", error);
         }
@@ -588,6 +586,27 @@ function Products() {
         );
     });
 
+    useEffect(() => {
+        (function (d, src, c) {
+            const t = d.scripts[d.scripts.length - 1];
+            const s = d.createElement('script');
+            s.id = 'la_x2s6df8d';
+            s.defer = true;
+            s.src = src;
+            s.onload = s.onreadystatechange = function () {
+                const rs = this.readyState;
+                if (rs && (rs !== 'complete') && (rs !== 'loaded')) {
+                    return;
+                }
+                c(this);
+            };
+            t.parentElement.insertBefore(s, t.nextSibling);
+        })(document,
+            'https://helpdesk.meetanshi.com/scripts/track.js',
+            function (e) {
+                window.LiveAgent.createButton('eb8cc755', e);
+            });
+    }, []);
 
     if (loading) {
         return (
