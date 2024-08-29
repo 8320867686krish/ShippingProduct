@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Frame } from '@shopify/polaris';
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import Routing from './Routing/Routes';
+import Main from './pages/Main';
 
 export default function Index(props) {
 
@@ -13,7 +14,7 @@ export default function Index(props) {
         <BrowserRouter>
             <AppProvider i18n={translations}>
                 <Frame>
-                   <Routing/>
+                <Main {...props} />
                 </Frame>
             </AppProvider>
         </BrowserRouter>

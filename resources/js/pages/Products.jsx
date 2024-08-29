@@ -43,7 +43,7 @@ function Products() {
     const toastDuration = 3000
     const [errors, setErrors] = useState({});
     const [errorToast, setErroToast] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [loadingTable, setLoadingTable] = useState(false)
     const [negativeValueToastVisible, setNegativeValueToastVisible] = useState(false);
     const [negativeValueToastMessage, setNegativeValueToastMessage] = useState('');
@@ -58,8 +58,8 @@ function Products() {
         { label: 'Disabled', value: 0 },
     ]
     const shhppingRate = [
-        { label: 'yes', value: 1 },
-        { label: 'no', value: 0 },
+        { label: 'Default Value', value: 1 },
+        { label: 'Product-wise Value', value: 0 },
     ]
     const shipping_rate = [
         { label: 'per Item(s)', value: 1 },
@@ -100,7 +100,6 @@ function Products() {
 
     const getPlans = async () => {
         try {
-            setLoading(true)
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
                 host: new URLSearchParams(location.search).get("host"),
@@ -166,7 +165,9 @@ function Products() {
         />
     ) : null;
     const isFieldsetDisabled = formData.shipping_rate === 2;
-
+    const isTextFieldDisabled = formData.shipping_rate === 1 && formData.product_shipping_cost === 1;
+    
+    
     const handleSelectChange = (field, value) => {
         if (field === 'applicable_countries' && value === 0) {
             setSelectedOptions([]);
@@ -534,8 +535,6 @@ function Products() {
             productdata: updatedProductData,
         }));
     };
-
-
     const selectedCount = formData.productdata.filter(p => p.checked).length;
     const rowMarkup = Product.map(({ id, title, image, price, value, checked }) => {
         const productData = formData.productdata.find(p => p.product_id == id);
@@ -609,7 +608,7 @@ function Products() {
 
     if (loading) {
         return (
-            <Page title="Configuration And Products">
+            <Page title="Shipping Rate Settings">
                 <div style={{ marginBottom: "1%" }}>
                     <LegacyCard sectioned>
                         <TextContainer>
@@ -757,7 +756,6 @@ function Products() {
                                                                 options={shhppingRate}
                                                                 onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
                                                                 value={formData.product_shipping_cost}
-                                                                helpText='If set to "Yes", the default rate per item will be used for all products.'
                                                             />
                                                         </div>
                                                     </div>
@@ -773,6 +771,7 @@ function Products() {
                                                 <div style={{ flex: 1, width: "70%" }}>
                                                     <TextField
                                                         type="text"
+                                                        disabled={isTextFieldDisabled}
                                                         value={formData.rate_per_item}
                                                         onChange={handleChange('rate_per_item')}
                                                     />
@@ -916,7 +915,7 @@ function Products() {
                                         <div>
                                             {isFieldsetDisabled && (
                                                 <div style={{ color: 'red', marginTop: '1rem', textAlign: "center" }}>
-                                                    <Text variant="headingMd" as="h6"> The Product Table is disabled because "per Order" is selected.</Text>
+                                                    <Text variant="headingMd" as="h6">Please change rate type to "per item" in the configuration</Text>
                                                 </div>
                                             )}
                                             <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={isFieldsetDisabled}>
