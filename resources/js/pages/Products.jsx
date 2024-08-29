@@ -19,8 +19,6 @@ import {
     Checkbox,
     Spinner,
     Card,
-    SkeletonTabs,
-    SkeletonDisplayText,
     SkeletonBodyText,
     TextContainer
 } from '@shopify/polaris';
@@ -56,8 +54,12 @@ function Products() {
         hasPreviousPage: false
     });
     const enabledd = [
-        { label: 'Yes', value: 1 },
-        { label: 'No', value: 0 },
+        { label: 'Enabled', value: 1 },
+        { label: 'Disabled', value: 0 },
+    ]
+    const shhppingRate = [
+        { label: 'yes', value: 1 },
+        { label: 'no', value: 0 },
     ]
     const shipping_rate = [
         { label: 'per Item(s)', value: 1 },
@@ -79,7 +81,7 @@ function Products() {
         shipping_rate: 1,
         shipping_rate_calculation: 2,
         method_name: "3 To 4 Business Day",
-        product_shipping_cost: 0,
+        product_shipping_cost: 1,
         rate_per_item: 10,
         handling_fee: 0,
         applicable_countries: 0,
@@ -93,9 +95,7 @@ function Products() {
         countries: ''
     })
     const handleTabChange = useCallback((selectedTabIndex) => {
-
         setSelected(selectedTabIndex);
-
     }, []);
 
     const getPlans = async () => {
@@ -118,26 +118,25 @@ function Products() {
             //         const name = 'shipping-product';
             //        window.top.location.href = `https://admin.shopify.com/charges/${name}/pricing_plans`;
             // }
-        
+
         } catch (error) {
             console.error("Error fetching country:", error);
         }
-        finally{
+        finally {
             setLoading(false)
         }
     }
-  
+
     const tabs = [
         {
-            id: 'all-customers-1',
-            content: 'Configuration ',
-            accessibilityLabel: 'All customers',
-            panelID: 'all-customers-content-1',
+            id: 'Default Rate',
+            content: 'Default Rate',
+            panelID: 'Default Rate',
         },
         {
-            id: 'accepts-marketing-1',
-            content: 'Products',
-            panelID: 'accepts-marketing-content-1',
+            id: 'Product-wise Rates',
+            content: 'Product-wise Rates',
+            panelID: 'Product-wise Rates',
         },
     ];
 
@@ -166,6 +165,7 @@ function Products() {
             onDismiss={() => setNegativeValueToastVisible(false)}
         />
     ) : null;
+    const isFieldsetDisabled = formData.shipping_rate === 2;
 
     const handleSelectChange = (field, value) => {
         if (field === 'applicable_countries' && value === 0) {
@@ -174,13 +174,12 @@ function Products() {
         if (field === 'applicable_countries' && value === 0) {
             setTextFieldError('');
         }
+
         setFormData(prevState => ({
             ...prevState,
             [field]: value
         }));
     };
-
-
     const getCountry = async () => {
         try {
             const app = createApp({
@@ -402,14 +401,14 @@ function Products() {
     useEffect(() => {
         apiCall();
     }, [])
-    const apiCall = async()=>{
-        await getPlans().then( function () {
+    const apiCall = async () => {
+        await getPlans().then(function () {
             getCountry()
             fetchProducts()
             settingData()
-           
+
         })
-      
+
     }
     const updateText = useCallback(
         (value) => {
@@ -633,7 +632,7 @@ function Products() {
     }
 
     return (
-        <Page title="Configuration And Products">
+        <Page title="Shipping Rate Settings">
             <div style={{ marginBottom: "1%" }}>
                 <Card>
                     <LegacyTabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
@@ -671,7 +670,7 @@ function Products() {
                                             <div style={{ display: 'flex', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
-                                                        Enabled
+                                                        Shipping Method
                                                     </Text>
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
@@ -718,7 +717,7 @@ function Products() {
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
-                                                        Shipping Rate
+                                                        Rate Type
                                                     </Text>
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
@@ -730,41 +729,45 @@ function Products() {
                                                 </div>
                                             </div>
 
+                                            {formData.shipping_rate !== 2 && (
+                                                <div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                        <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                            <Text variant="headingSm" as="h6">
+                                                                Calculation Method
+                                                            </Text>
+                                                        </div>
+                                                        <div style={{ flex: 1, width: "70%" }}>
+                                                            <Select
+                                                                options={Ratecalculation}
+                                                                onChange={(value) => handleSelectChange('shipping_rate_calculation', parseInt(value))}
+                                                                value={formData.shipping_rate_calculation}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%", }}>
+                                                        <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                            <Text variant="headingSm" as="h6">
+                                                                Set Shipping Rate
+                                                            </Text>
+                                                        </div>
+                                                        <div style={{ flex: 1, width: "70%" }}>
+                                                            <Select
+                                                                options={shhppingRate}
+                                                                onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
+                                                                value={formData.product_shipping_cost}
+                                                                helpText='If set to "Yes", the default rate per item will be used for all products.'
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
-                                                        Shipping Rate Calculation
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <Select
-                                                        options={Ratecalculation}
-                                                        onChange={(value) => handleSelectChange('shipping_rate_calculation', parseInt(value))}
-                                                        value={formData.shipping_rate_calculation}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%", }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Default Product Shipping Cost
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <Select
-                                                        options={enabledd}
-                                                        onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
-                                                        value={formData.product_shipping_cost}
-                                                        helpText='If set to "Yes", the default rate per item will be used for all products.'
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Default Rate Per Item
+                                                        {formData.shipping_rate === 1 ? 'Default Rate Per Item' : formData.shipping_rate === 2 ? 'Default Rate Per Order' : ''}
                                                     </Text>
                                                 </div>
                                                 <div style={{ flex: 1, width: "70%" }}>
@@ -911,51 +914,59 @@ function Products() {
 
                                     {selected === 1 && (
                                         <div>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
-                                            </div>
-                                            <div style={{ marginTop: "2.5%" }}>
-                                                <TextField
-                                                    type="text"
-                                                    value={textFieldValue}
-                                                    placeholder="Search by Title..."
-                                                    onChange={handleTextFieldChange}
-                                                    prefix={<Icon source={SearchIcon} />}
-                                                    autoComplete="off"
-                                                />
-                                            </div>
-                                            <div style={{ marginTop: "2%" }}>
-                                                <IndexTable
-                                                    resourceName={resourceName}
-                                                    itemCount={Product.length}
-                                                    headings={[
-                                                        { title: `${selectedCount} Selected` },
-                                                        { title: 'Image' },
-                                                        { title: 'Title' },
-                                                        { title: 'Price' },
-                                                        { title: 'Rate Price' },
-                                                    ]}
-                                                    selectable={false}
-                                                    pagination={{
-                                                        hasNext: pageInfo.hasNextPage,
-                                                        onNext: handleNextPage,
-                                                        hasPrevious: pageInfo.hasPreviousPage,
-                                                        onPrevious: handlePreviousPage,
-                                                    }}
-                                                >
-                                                    {loadingTable ? (
-                                                        <IndexTable.Row>
-                                                            <IndexTable.Cell colSpan={5}>
-                                                                <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-                                                                    <Spinner accessibilityLabel="Loading products" size="small" />
-                                                                </div>
-                                                            </IndexTable.Cell>
-                                                        </IndexTable.Row>
-                                                    ) : (
-                                                        rowMarkup
-                                                    )}
-                                                </IndexTable>
-                                            </div>
+                                            {isFieldsetDisabled && (
+                                                <div style={{ color: 'red', marginTop: '1rem', textAlign: "center" }}>
+                                                    <Text variant="headingMd" as="h6"> The Product Table is disabled because "per Order" is selected.</Text>
+                                                </div>
+                                            )}
+                                            <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={isFieldsetDisabled}>
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                    <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
+                                                </div>
+                                                <div style={{ marginTop: "2.5%" }}>
+                                                    <TextField
+                                                        type="text"
+                                                        value={textFieldValue}
+                                                        placeholder="Search by Title..."
+                                                        onChange={handleTextFieldChange}
+                                                        prefix={<Icon source={SearchIcon} />}
+                                                        autoComplete="off"
+                                                    />
+                                                </div>
+                                                <div style={{ marginTop: "2%" }}>
+                                                    <IndexTable
+                                                        resourceName={resourceName}
+                                                        itemCount={Product.length}
+                                                        headings={[
+                                                            { title: `${selectedCount} Selected` },
+                                                            { title: 'Image' },
+                                                            { title: 'Title' },
+                                                            { title: 'Price' },
+                                                            { title: 'Rate Price' },
+                                                        ]}
+                                                        selectable={false}
+                                                        pagination={{
+                                                            hasNext: pageInfo.hasNextPage,
+                                                            onNext: handleNextPage,
+                                                            hasPrevious: pageInfo.hasPreviousPage,
+                                                            onPrevious: handlePreviousPage,
+                                                        }}
+
+                                                    >
+                                                        {loadingTable ? (
+                                                            <IndexTable.Row>
+                                                                <IndexTable.Cell colSpan={5}>
+                                                                    <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                                                                        <Spinner accessibilityLabel="Loading products" size="small" />
+                                                                    </div>
+                                                                </IndexTable.Cell>
+                                                            </IndexTable.Row>
+                                                        ) : (
+                                                            rowMarkup
+                                                        )}
+                                                    </IndexTable>
+                                                </div>
+                                            </fieldset>
                                         </div>
                                     )}
 
