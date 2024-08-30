@@ -165,7 +165,7 @@ function Products() {
         />
     ) : null;
     const isFieldsetDisabled = formData.shipping_rate === 2;
-    const isTextFieldDisabled = formData.shipping_rate === 1 && formData.product_shipping_cost === 1;
+    const isTextFieldDisabled = formData.shipping_rate === 1 && formData.product_shipping_cost === 0;
     
     
     const handleSelectChange = (field, value) => {
