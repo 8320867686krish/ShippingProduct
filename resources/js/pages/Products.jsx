@@ -25,11 +25,12 @@ import {
 import { SearchIcon } from '@shopify/polaris-icons';
 import createApp from '@shopify/app-bridge';
 import { getSessionToken } from "@shopify/app-bridge-utils";
+import { useNavigate, useParams } from 'react-router-dom';
 const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
 const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
 
 function Products() {
-
+    const navigate = useNavigate();
     const [selected, setSelected] = useState(0);
     const [country, setCountry] = useState([])
     const [selectedOptions, setSelectedOptions] = useState([]);
@@ -112,11 +113,11 @@ function Products() {
             });
             let status = response.data.plan?.toLowerCase();
             console.log(response.data)
-            // if (status !== "active") {
 
-            //         const name = 'shipping-product';
-            //        window.top.location.href = `https://admin.shopify.com/charges/${name}/pricing_plans`;
-            // }
+            if (status !== "active") {
+                console.log('hello')
+                navigate("/plan");
+            }
 
         } catch (error) {
             console.error("Error fetching country:", error);
@@ -166,8 +167,8 @@ function Products() {
     ) : null;
     const isFieldsetDisabled = formData.shipping_rate === 2;
     const isTextFieldDisabled = formData.shipping_rate === 1 && formData.product_shipping_cost === 0;
-    
-    
+
+
     const handleSelectChange = (field, value) => {
         if (field === 'applicable_countries' && value === 0) {
             setSelectedOptions([]);
