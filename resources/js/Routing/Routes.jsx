@@ -11,7 +11,7 @@ export default function Routing(props) {
             <Route  index element={<Products {...props} />} />
             <Route exact path="/Main" element={<Main {...props} />} />
             <Route  path="/helpCenter" element={<Support {...props} />} />
-            <Route  path="/plan" element={<Plans {...props} />} />
+            <Route  path="/pricing_plans" element={<Plans {...props} />} />
         </Routes>
     );
 }

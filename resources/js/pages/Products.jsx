@@ -24,11 +24,10 @@ import {
     TextContainer
 } from '@shopify/polaris';
 import { SearchIcon } from '@shopify/polaris-icons';
-import createApp from '@shopify/app-bridge';
 import { Redirect } from '@shopify/app-bridge/actions';
-
-import { getSessionToken } from "@shopify/app-bridge-utils";
 import { useNavigate, useParams } from 'react-router-dom';
+import createApp from '@shopify/app-bridge';
+import { getSessionToken } from "@shopify/app-bridge-utils";
 const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
 const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
 
@@ -547,8 +546,8 @@ function Products(props) {
             productdata: updatedProductData,
         }));
     };
-    const selectedCount = formData.productdata.filter(p => p.checked).length;
-    const rowMarkup = Product.map(({ id, title, image, price, value, checked }) => {
+    const selectedCount = formData?.productdata?.filter(p => p.checked).length;
+    const rowMarkup = Product?.map(({ id, title, image, price, value, checked }) => {
         const productData = formData.productdata.find(p => p.product_id == id);
         const isChecked = productData ? productData.checked === 1 : 0;
         const productValue = productData ? productData.value : '0.00';
