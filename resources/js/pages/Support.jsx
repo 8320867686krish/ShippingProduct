@@ -58,7 +58,7 @@ function Support() {
                 <Grid.Cell columnSpan={{ xs: 8, sm: 3, md: 3, lg: 8, xl: 8 }}>
                     <LegacyCard sectioned title="Contact our support">
                         <Text variant="headingXs" as="h6">
-                            Get instant answers to your queries and assistance to customize the app tp suit your theme.
+                            Get instant answers to your queries and assistance to customize the app to suit your theme.
                         </Text>
                         <div style={{ marginTop: "2%", display: "flex", gap: "5px", alignItems: "center" }}>
                             <Button variant="primary"  onClick={handleClick}>Chat with Us</Button>
@@ -73,7 +73,7 @@ function Support() {
                             if you need support to get started or to setup offers, please reach out to our support team.
                         </Text>
                         <div style={{ marginTop: "2%", }}>
-                            <Button icon={ShareIcon} onClick={handleButtonZoom} >Schedual a meeting</Button>
+                            <Button icon={ShareIcon} onClick={handleButtonZoom} >Scheduale a meeting</Button>
                         </div>
                     </LegacyCard>
 
@@ -138,7 +138,7 @@ function Support() {
                             <div style={{ marginTop: "3%", marginBottom: '3%' }}>
                                 <Button icon={ShareIcon} onClick={handleButtonCollections} >Start your free trial</Button>
                             </div>
-                            <Divider borderColor="border" />
+                          
                         </div>
 
                        

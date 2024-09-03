@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import axios from 'axios';
+
 import debounce from 'lodash.debounce';
 import {
     LegacyCard,
@@ -24,12 +25,14 @@ import {
 } from '@shopify/polaris';
 import { SearchIcon } from '@shopify/polaris-icons';
 import createApp from '@shopify/app-bridge';
+import { Redirect } from '@shopify/app-bridge/actions';
+
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { useNavigate, useParams } from 'react-router-dom';
 const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
 const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
 
-function Products() {
+function Products(props) {
     const navigate = useNavigate();
     const [selected, setSelected] = useState(0);
     const [country, setCountry] = useState([])
@@ -48,6 +51,7 @@ function Products() {
     const [loadingTable, setLoadingTable] = useState(false)
     const [negativeValueToastVisible, setNegativeValueToastVisible] = useState(false);
     const [negativeValueToastMessage, setNegativeValueToastMessage] = useState('');
+    const [planStatus, setPlanStatus] = useState(false)
     const [pageInfo, setPageInfo] = useState({
         startCursor: null,
         endCursor: null,
@@ -103,20 +107,27 @@ function Products() {
         try {
             const app = createApp({
                 apiKey: SHOPIFY_API_KEY,
-                host: new URLSearchParams(location.search).get("host"),
+                host: props.host
             });
             const token = await getSessionToken(app);
+            const redirect = Redirect.create(app);
             const response = await axios.get(`${apiCommonURL}/api/plans`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
             let status = response.data.plan?.toLowerCase();
-            console.log(response.data)
+
+            console.log("plan", response.data)
 
             if (status !== "active") {
+                const name = 'meetanshi-shipping-per-product';
                 console.log('hello')
-                navigate("/plan");
+                setPlanStatus(true)
+                redirect.dispatch(
+                    Redirect.Action.ADMIN_PATH,
+                    `/charges/${name}/pricing_plans`
+                );
             }
 
         } catch (error) {
@@ -402,7 +413,7 @@ function Products() {
 
     useEffect(() => {
         apiCall();
-    }, [])
+    }, [planStatus])
     const apiCall = async () => {
         await getPlans().then(function () {
             getCountry()
@@ -605,11 +616,35 @@ function Products() {
             function (e) {
                 window.LiveAgent.createButton('eb8cc755', e);
             });
-    }, []);
+    }, [planStatus]);
 
-    if (loading) {
-        return (
-            <Page title="Shipping Rate Settings">
+    // if (loading && planStatus === false) {
+    //     return (
+    //         <Page title="Shipping Rate Settings">
+    //             <div style={{ marginBottom: "1%" }}>
+    //                 <LegacyCard sectioned>
+    //                     <TextContainer>
+    //                         <SkeletonBodyText />
+    //                     </TextContainer>
+    //                 </LegacyCard>
+    //                 <LegacyCard sectioned>
+    //                     <TextContainer>
+    //                         <SkeletonBodyText />
+    //                     </TextContainer>
+    //                 </LegacyCard>
+    //                 <LegacyCard sectioned>
+    //                     <TextContainer>
+    //                         <SkeletonBodyText />
+    //                     </TextContainer>
+    //                 </LegacyCard>
+    //             </div>
+    //         </Page>
+    //     );
+    // }
+
+    return (
+        <>
+            {planStatus === false ? loading ? <Page title="Shipping Rate Settings">
                 <div style={{ marginBottom: "1%" }}>
                     <LegacyCard sectioned>
                         <TextContainer>
@@ -627,212 +662,207 @@ function Products() {
                         </TextContainer>
                     </LegacyCard>
                 </div>
-            </Page>
-        );
-    }
-
-    return (
-        <Page title="Shipping Rate Settings">
-            <div style={{ marginBottom: "1%" }}>
-                <Card>
-                    <LegacyTabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
-                        <LegacyCard.Section>
-                            {/* {loading ? (
+            </Page> : <Page title="Shipping Rate Settings">
+                <div style={{ marginBottom: "1%" }}>
+                    <Card>
+                        <LegacyTabs tabs={tabs} selected={selected} onSelect={handleTabChange}>
+                            <LegacyCard.Section>
+                                {/* {loading ? (
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', marginTop: "5%" }}>
                                     <Spinner accessibilityLabel="Loading" size="large" />
                                 </div>
                             ) : ( */}
-                            <>
-                                {formSave && (
-                                    <div style={{
-                                        position: "fixed",
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        bottom: 0,
-                                        backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        zIndex: 9999
-                                    }}>
-                                        <Spinner accessibilityLabel="Loading" size="large" />
-                                    </div>
-                                )}
+                                <>
+                                    {formSave && (
+                                        <div style={{
+                                            position: "fixed",
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            zIndex: 9999
+                                        }}>
+                                            <Spinner accessibilityLabel="Loading" size="large" />
+                                        </div>
+                                    )}
 
-                                <div style={formSave ? { filter: 'blur(1px)', pointerEvents: 'none' } : {}}>
-                                    {selected === 0 && (
-                                        <div>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', }}>
-                                                <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
-                                            </div>
+                                    <div style={formSave ? { filter: 'blur(1px)', pointerEvents: 'none' } : {}}>
+                                        {selected === 0 && (
+                                            <div>
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end', }}>
+                                                    <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
+                                                </div>
 
-                                            <div style={{ display: 'flex', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Shipping Method
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <Select
-                                                        options={enabledd}
-                                                        onChange={(value) => handleSelectChange('enabled', parseInt(value))}
-                                                        value={formData.enabled}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Title
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <TextField
-                                                        type="text"
-                                                        value={formData.title}
-                                                        onChange={handleChange('title')}
-                                                        error={errors.title}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Description
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <TextField
-                                                        type="text"
-                                                        value={formData.method_name}
-                                                        onChange={handleChange('method_name')}
-                                                        helpText=''
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Rate Type
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <Select
-                                                        options={shipping_rate}
-                                                        onChange={(value) => handleSelectChange('shipping_rate', parseInt(value))}
-                                                        value={formData.shipping_rate}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {formData.shipping_rate !== 2 && (
-                                                <div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                        <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                            <Text variant="headingSm" as="h6">
-                                                                Calculation Method
-                                                            </Text>
-                                                        </div>
-                                                        <div style={{ flex: 1, width: "70%" }}>
-                                                            <Select
-                                                                options={Ratecalculation}
-                                                                onChange={(value) => handleSelectChange('shipping_rate_calculation', parseInt(value))}
-                                                                value={formData.shipping_rate_calculation}
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%", }}>
-                                                        <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                            <Text variant="headingSm" as="h6">
-                                                                Set Shipping Rate
-                                                            </Text>
-                                                        </div>
-                                                        <div style={{ flex: 1, width: "70%" }}>
-                                                            <Select
-                                                                options={shhppingRate}
-                                                                onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
-                                                                value={formData.product_shipping_cost}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        {formData.shipping_rate === 1 ? 'Default Rate Per Item' : formData.shipping_rate === 2 ? 'Default Rate Per Order' : ''}
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <TextField
-                                                        type="text"
-                                                        disabled={isTextFieldDisabled}
-                                                        value={formData.rate_per_item}
-                                                        onChange={handleChange('rate_per_item')}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Handling Fee
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <TextField
-                                                        type="text"
-                                                        value={formData.handling_fee}
-                                                        onChange={handleChange('handling_fee')}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Ship to Applicable Countries
-                                                    </Text>
-                                                </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <Select
-                                                        options={applicable_countries}
-                                                        onChange={(value) => handleSelectChange('applicable_countries', parseInt(value))}
-                                                        value={formData.applicable_countries}
-                                                    />
-                                                </div>
-                                            </div>
-                                            {formData.applicable_countries === 1 && (
-                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                <div style={{ display: 'flex', marginTop: "2%" }}>
                                                     <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                         <Text variant="headingSm" as="h6">
-                                                            Ship to Specific Countries
+                                                            Shipping Method
                                                         </Text>
                                                     </div>
-                                                    <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto', width: "70%" }}>
-                                                        <Autocomplete
-                                                            allowMultiple
-                                                            options={country}
-                                                            selected={selectedOptions}
-                                                            textField={textField}
-                                                            onSelect={(selected) => {
-                                                                setSelectedOptions(selected);
-                                                                setInputValue('');
-                                                                setCountry(allCountries);
-                                                                setTextFieldError('');
-                                                            }}
-                                                            listTitle="Suggested Countries"
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <Select
+                                                            options={enabledd}
+                                                            onChange={(value) => handleSelectChange('enabled', parseInt(value))}
+                                                            value={formData.enabled}
                                                         />
                                                     </div>
                                                 </div>
-                                            )}
-                                            {/* {formData.applicable_countries === 1 && (
+
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            Title
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <TextField
+                                                            type="text"
+                                                            value={formData.title}
+                                                            onChange={handleChange('title')}
+                                                            error={errors.title}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            Description
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <TextField
+                                                            type="text"
+                                                            value={formData.method_name}
+                                                            onChange={handleChange('method_name')}
+                                                            helpText=''
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            Rate Type
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <Select
+                                                            options={shipping_rate}
+                                                            onChange={(value) => handleSelectChange('shipping_rate', parseInt(value))}
+                                                            value={formData.shipping_rate}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {formData.shipping_rate !== 2 && (
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                            <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                                <Text variant="headingSm" as="h6">
+                                                                    Calculation Method
+                                                                </Text>
+                                                            </div>
+                                                            <div style={{ flex: 1, width: "70%" }}>
+                                                                <Select
+                                                                    options={Ratecalculation}
+                                                                    onChange={(value) => handleSelectChange('shipping_rate_calculation', parseInt(value))}
+                                                                    value={formData.shipping_rate_calculation}
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%", }}>
+                                                            <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                                <Text variant="headingSm" as="h6">
+                                                                    Set Shipping Rate
+                                                                </Text>
+                                                            </div>
+                                                            <div style={{ flex: 1, width: "70%" }}>
+                                                                <Select
+                                                                    options={shhppingRate}
+                                                                    onChange={(value) => handleSelectChange('product_shipping_cost', parseInt(value))}
+                                                                    value={formData.product_shipping_cost}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            {formData.shipping_rate === 1 ? 'Default Rate Per Item' : formData.shipping_rate === 2 ? 'Default Rate Per Order' : ''}
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <TextField
+                                                            type="text"
+                                                            disabled={isTextFieldDisabled}
+                                                            value={formData.rate_per_item}
+                                                            onChange={handleChange('rate_per_item')}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            Handling Fee
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <TextField
+                                                            type="text"
+                                                            value={formData.handling_fee}
+                                                            onChange={handleChange('handling_fee')}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            Ship to Applicable Countries
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <Select
+                                                            options={applicable_countries}
+                                                            onChange={(value) => handleSelectChange('applicable_countries', parseInt(value))}
+                                                            value={formData.applicable_countries}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                {formData.applicable_countries === 1 && (
+                                                    <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                        <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                            <Text variant="headingSm" as="h6">
+                                                                Ship to Specific Countries
+                                                            </Text>
+                                                        </div>
+                                                        <div style={{ pointerEvents: formData.applicable_countries === 0 ? 'none' : 'auto', width: "70%" }}>
+                                                            <Autocomplete
+                                                                allowMultiple
+                                                                options={country}
+                                                                selected={selectedOptions}
+                                                                textField={textField}
+                                                                onSelect={(selected) => {
+                                                                    setSelectedOptions(selected);
+                                                                    setInputValue('');
+                                                                    setCountry(allCountries);
+                                                                    setTextFieldError('');
+                                                                }}
+                                                                listTitle="Suggested Countries"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {/* {formData.applicable_countries === 1 && (
                                                 <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                     <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                         <Text variant="headingSm" as="h6">
@@ -849,7 +879,7 @@ function Products() {
                                                 </div>
                                             )} */}
 
-                                            {/* <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                {/* <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Displayed Error Message
@@ -864,38 +894,38 @@ function Products() {
                                                     />
                                                 </div>
                                             </div> */}
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Minimum Order Amount
-                                                    </Text>
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            Minimum Order Amount
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <TextField
+                                                            type="string"
+                                                            value={formData.min_order_amount}
+                                                            onChange={handleChange('min_order_amount')}
+                                                            error={errors.min_order_amount}
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <TextField
-                                                        type="string"
-                                                        value={formData.min_order_amount}
-                                                        onChange={handleChange('min_order_amount')}
-                                                        error={errors.min_order_amount}
-                                                    />
-                                                </div>
-                                            </div>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
-                                                <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
-                                                    <Text variant="headingSm" as="h6">
-                                                        Maximum Order Amount
-                                                    </Text>
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                    <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
+                                                        <Text variant="headingSm" as="h6">
+                                                            Maximum Order Amount
+                                                        </Text>
+                                                    </div>
+                                                    <div style={{ flex: 1, width: "70%" }}>
+                                                        <TextField
+                                                            type="text"
+                                                            value={formData.max_order_amount}
+                                                            onChange={handleChange('max_order_amount')}
+                                                            error={errors.max_order_amount}
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div style={{ flex: 1, width: "70%" }}>
-                                                    <TextField
-                                                        type="text"
-                                                        value={formData.max_order_amount}
-                                                        onChange={handleChange('max_order_amount')}
-                                                        error={errors.max_order_amount}
-                                                    />
-                                                </div>
-                                            </div>
-                                            {/* <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
+                                                {/* <div style={{ display: 'flex', alignItems: 'center', marginTop: "2%" }}>
                                                 <div style={{ width: '30%', textAlign: 'left', paddingRight: '10px' }}>
                                                     <Text variant="headingSm" as="h6">
                                                         Sort Order
@@ -909,84 +939,85 @@ function Products() {
                                                     />
                                                 </div>
                                             </div> */}
-                                        </div>
-                                    )}
+                                            </div>
+                                        )}
 
-                                    {selected === 1 && (
-                                        <div>
-                                            {isFieldsetDisabled && (
-                                                <div style={{ color: 'red', marginTop: '1rem', textAlign: "center" }}>
-                                                    <Text variant="headingMd" as="h6">Please change rate type to "per item" in the configuration</Text>
-                                                </div>
-                                            )}
-                                            <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={isFieldsetDisabled}>
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                    <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
-                                                </div>
-                                                <div style={{ marginTop: "2.5%" }}>
-                                                    <TextField
-                                                        type="text"
-                                                        value={textFieldValue}
-                                                        placeholder="Search by Title..."
-                                                        onChange={handleTextFieldChange}
-                                                        prefix={<Icon source={SearchIcon} />}
-                                                        autoComplete="off"
-                                                    />
-                                                </div>
-                                                <div style={{ marginTop: "2%" }}>
-                                                    <IndexTable
-                                                        resourceName={resourceName}
-                                                        itemCount={Product.length}
-                                                        headings={[
-                                                            { title: `${selectedCount} Selected` },
-                                                            { title: 'Image' },
-                                                            { title: 'Title' },
-                                                            { title: 'Price' },
-                                                            { title: 'Rate Price' },
-                                                        ]}
-                                                        selectable={false}
-                                                        pagination={{
-                                                            hasNext: pageInfo.hasNextPage,
-                                                            onNext: handleNextPage,
-                                                            hasPrevious: pageInfo.hasPreviousPage,
-                                                            onPrevious: handlePreviousPage,
-                                                        }}
+                                        {selected === 1 && (
+                                            <div>
+                                                {isFieldsetDisabled && (
+                                                    <div style={{ color: 'red', marginTop: '1rem', textAlign: "center" }}>
+                                                        <Text variant="headingMd" as="h6">Please change rate type to "per item" in the configuration</Text>
+                                                    </div>
+                                                )}
+                                                <fieldset style={{ border: 'none', padding: 0, margin: 0 }} disabled={isFieldsetDisabled}>
+                                                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                        <Button variant="primary" size="large" onClick={saveConfig}>Save</Button>
+                                                    </div>
+                                                    <div style={{ marginTop: "2.5%" }}>
+                                                        <TextField
+                                                            type="text"
+                                                            value={textFieldValue}
+                                                            placeholder="Search by Title..."
+                                                            onChange={handleTextFieldChange}
+                                                            prefix={<Icon source={SearchIcon} />}
+                                                            autoComplete="off"
+                                                        />
+                                                    </div>
+                                                    <div style={{ marginTop: "2%" }}>
+                                                        <IndexTable
+                                                            resourceName={resourceName}
+                                                            itemCount={Product.length}
+                                                            headings={[
+                                                                { title: `${selectedCount} Selected` },
+                                                                { title: 'Image' },
+                                                                { title: 'Title' },
+                                                                { title: 'Price' },
+                                                                { title: 'Rate Price' },
+                                                            ]}
+                                                            selectable={false}
+                                                            pagination={{
+                                                                hasNext: pageInfo.hasNextPage,
+                                                                onNext: handleNextPage,
+                                                                hasPrevious: pageInfo.hasPreviousPage,
+                                                                onPrevious: handlePreviousPage,
+                                                            }}
 
-                                                    >
-                                                        {loadingTable ? (
-                                                            <IndexTable.Row>
-                                                                <IndexTable.Cell colSpan={5}>
-                                                                    <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-                                                                        <Spinner accessibilityLabel="Loading products" size="small" />
-                                                                    </div>
-                                                                </IndexTable.Cell>
-                                                            </IndexTable.Row>
-                                                        ) : (
-                                                            rowMarkup
-                                                        )}
-                                                    </IndexTable>
-                                                </div>
-                                            </fieldset>
-                                        </div>
-                                    )}
+                                                        >
+                                                            {loadingTable ? (
+                                                                <IndexTable.Row>
+                                                                    <IndexTable.Cell colSpan={5}>
+                                                                        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                                                                            <Spinner accessibilityLabel="Loading products" size="small" />
+                                                                        </div>
+                                                                    </IndexTable.Cell>
+                                                                </IndexTable.Row>
+                                                            ) : (
+                                                                rowMarkup
+                                                            )}
+                                                        </IndexTable>
+                                                    </div>
+                                                </fieldset>
+                                            </div>
+                                        )}
 
 
-                                </div>
-                            </>
-                            {/* )} */}
-                        </LegacyCard.Section>
-                    </LegacyTabs>
-                </Card>
-            </div>
-            {toast}
-            {showToast && (
-                <Toast content={toastContent} duration={toastDuration} onDismiss={() => setShowToast(false)} />
-            )}
-            {errorToast && (
-                <Toast content={toastContent} error duration={toastDuration} onDismiss={() => setErroToast(false)} />
-            )}
-            {toastMarkup}
-        </Page >
+                                    </div>
+                                </>
+                                {/* )} */}
+                            </LegacyCard.Section>
+                        </LegacyTabs>
+                    </Card>
+                </div>
+                {toast}
+                {showToast && (
+                    <Toast content={toastContent} duration={toastDuration} onDismiss={() => setShowToast(false)} />
+                )}
+                {errorToast && (
+                    <Toast content={toastContent} error duration={toastDuration} onDismiss={() => setErroToast(false)} />
+                )}
+                {toastMarkup}
+            </Page > : <></>}
+        </>
     )
 }
 
