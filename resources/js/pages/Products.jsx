@@ -118,11 +118,11 @@ function Products(props) {
             });
             let status = response.data.plan?.toLowerCase();
 
-            console.log("plan", response.data)
+         
 
             if (status !== "active") {
                 const name = 'meetanshi-shipping-per-product';
-                console.log('hello')
+               
                 setPlanStatus(true)
                 redirect.dispatch(
                     Redirect.Action.ADMIN_PATH,

@@ -9,48 +9,23 @@ const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
 const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
 
 function Products(props) {
-  
 
-    const getPlans = async () => {
-        try {
-            const app = createApp({
-                apiKey: SHOPIFY_API_KEY,
-                host: props.host
-            });
-            const redirect = Redirect.create(app);
-            const token = await getSessionToken(app);
-            const response = await axios.get(`${apiCommonURL}/api/plans`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            let status = response.data.plan?.toLowerCase();
-            console.log(response.data)
-
-            // if (status !== "active") {
-            //     const name = 'meetanshi-shipping-per-product';
-            //     console.log("ffffffff");
-            //     redirect.dispatch(
-            //         Redirect.Action.ADMIN_PATH,
-            //         `/charges/${name}/pricing_plans`
-            //     );
-            //   //   window.location.href = `https://admin.shopify.com/charges/${name}/pricing_plans`;
-            // }
-
-        } catch (error) {
-            console.error("Error fetching plans:", error);
-        }
-        finally {
-          
-        }
-    }
     useEffect(() => {
-        getPlans();
+        const app = createApp({
+            apiKey: SHOPIFY_API_KEY,
+            host: props.host
+        });
+        const redirect = Redirect.create(app);
+        const name = 'meetanshi-shipping-per-product';
+        redirect.dispatch(
+            Redirect.Action.ADMIN_PATH,
+            `/charges/${name}/pricing_plans`
+        );
     }, [])
- 
-    
+
+
     return (
-      <div>sdfsdf</div>
+        <div>sdfsdf</div>
     )
 }
 
