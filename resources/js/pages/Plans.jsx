@@ -25,7 +25,7 @@ function Products(props) {
 
 
     return (
-        <div>sdfsdf</div>
+        <div></div>
     )
 }
 
