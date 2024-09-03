@@ -368,6 +368,17 @@ function Products(props) {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            console.log(response)
+            if(response.data.isExpired == false){
+                const redirect = Redirect.create(app);
+
+                const name = 'meetanshi-shipping-per-product';
+               
+                redirect.dispatch(
+                    Redirect.Action.ADMIN_PATH,
+                    `/charges/${name}/pricing_plans`
+                );
+            }
             setErrors({});
             setShowToast(true);
             setToastContent('Data saved successfully');

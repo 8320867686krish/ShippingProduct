@@ -173,7 +173,11 @@ class SettingsApiController extends Controller
                     'message' => 'User not found.'
                 ], 404);
             }
-
+            $plans = Charge::where('user_id',$token['id'])->pluck('status')->first();
+            
+            if($plans != 'active'){
+              return response()->json(['status' => false,'isExpired'=>false, 'message' => 'Your Plan hass been expired']);
+            }
             $validator = Validator::make($request->all(), [
                 'enabled' => 'required|boolean',
                 'title' => 'required|string|max:254',
@@ -374,7 +378,7 @@ class SettingsApiController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Shop active plan retrieved successfully.',
-                'plan' => $plans
+                    'plan' => $plans
             ]);
 
         } catch (\Illuminate\Database\QueryException $ex) {
