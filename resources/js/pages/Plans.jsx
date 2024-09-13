@@ -1,34 +1,27 @@
-import React, { useState, useCallback, useEffect } from 'react'
-import axios from 'axios';
 import { Redirect } from '@shopify/app-bridge/actions';
+import { useAppBridge } from '@shopify/app-bridge-react';
+import { Button } from '@shopify/polaris';
+import React from 'react';
 
-import createApp from '@shopify/app-bridge';
-import { getSessionToken } from "@shopify/app-bridge-utils";
+function PricingPlanRedirect() {
+  const app = useAppBridge();
 
-const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
-const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
+  const handleRedirect = () => {
+    const redirect = Redirect.create(app);
+    // Log the Redirect.Action.ADMIN_PATH to the console
+    console.log('Redirect.Action.ADMIN_PATH:', Redirect.Action.ADMIN_PATH);
 
-function Products(props) {
+    redirect.dispatch(
+      Redirect.Action.ADMIN_PATH,
+      '/store/khushi-sonani/charges/khushi_test/pricing_plans'
+    );
+    //   redirect.dispatch(
+    //     Redirect.Action.ADMIN_PATH,
+    //     '/apps/khushi_test/store/khushi-sonani/charges/khushi_test/pricing_plans'
+    //   );
+  };
 
-    useEffect(() => {
-        const app = createApp({
-            apiKey: SHOPIFY_API_KEY,
-            host: props.host
-        });
-        const redirect = Redirect.create(app);
-        const name = 'meetanshi-shipping-per-product';
-        redirect.dispatch(
-            Redirect.Action.ADMIN_PATH,
-            `/charges/${name}/pricing_plans`
-        );
-    }, [])
-
-
-    return (
-        <div></div>
-    )
+  return <Button onClick={handleRedirect}>Go to Pricing Plans</Button>;
 }
 
-export default Products
-
-
+export default PricingPlanRedirect;

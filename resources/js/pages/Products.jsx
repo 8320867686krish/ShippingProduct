@@ -368,12 +368,12 @@ function Products(props) {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            console.log(response)
+            console.log(response.data)
             if(response.data.isExpired == false){
                 const redirect = Redirect.create(app);
 
                 const name = 'meetanshi-shipping-per-product';
-               
+                setToastContent('Your Plan hass been expired');
                 redirect.dispatch(
                     Redirect.Action.ADMIN_PATH,
                     `/charges/${name}/pricing_plans`
