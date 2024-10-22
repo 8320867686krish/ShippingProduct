@@ -120,7 +120,7 @@ class WebhookController extends Controller
 
         $metafields = $this->getProductMetafields($productId, $accessToken['password'], $shopDomain);
 
-        if (!empty($metafields)) {
+        if (!empty($metafields) && !empty($setting)) {
             foreach ($metafields as $metafield) {
                 Log::info('loop metafields', ['metafields' => $metafield]);
                 Log::info('loop owner_id', ['owner_id' => $metafield['owner_id']]);
