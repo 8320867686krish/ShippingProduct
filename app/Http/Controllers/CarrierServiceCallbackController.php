@@ -36,7 +36,7 @@ class CarrierServiceCallbackController extends Controller
 
         $response = [];
 
-        if ($setting->enabled) {
+        if (!empty($setting) && $setting->enabled) {
             $destinationCountryName = $input['rate']['destination']['country'];
 
             if ($setting->applicable_countries == 1) {
