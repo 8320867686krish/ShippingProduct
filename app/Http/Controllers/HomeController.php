@@ -18,41 +18,79 @@ class HomeController extends Controller
         $shop = $request->input('shop');
         $host = $request->input('host');
 
-        $shopName = $post['shop'];
-        $token = User::where('name', $shopName)->first();
-
         $apiVersion = config('services.shopify.api_version');
 
-        $graphqlEndpoint = "https://$shopName/admin/api/$apiVersion/carrier_services.json";
+        $shopName = $post['shop'];
+        $token = User::where('name', $shop)->first();
+
+        $graphqlEndpoint = "https://$shop/admin/api/$apiVersion/graphql.json";
 
         // Headers for Shopify API request
         $customHeaders = [
             'X-Shopify-Access-Token' => $token['password'],
         ];
 
-        // Log::info('input logs:', ['mendatoryWebhook' => $mendatoryWebhook]);
+        // GraphQL query for creating a carrier service
+        $query = <<<'GRAPHQL'
+            mutation carrierServiceCreate($input: DeliveryCarrierServiceCreateInput!) {
+                carrierServiceCreate(input: $input) {
+                    carrierService {
+                        id
+                        name
+                        callbackUrl
+                        supportsServiceDiscovery
+                        active
+                    }
+                    userErrors {
+                        field
+                        message
+                    }
+                }
+            }
+            GRAPHQL;
 
-        $data = [
-            'carrier_service' => [
+        // Variables for the mutation
+        $variables = [
+            'input' => [
                 'name' => 'Meetanshi Shipping Product',
-                'callback_url' => env('VITE_COMMON_API_URL') . "/api/carrier/callback",
-                'service_discovery' => true,
-                'format' => 'json'
-            ]
+                'callbackUrl' => env('VITE_COMMON_API_URL') . "/api/carrier/callback",
+                'supportsServiceDiscovery' => true,
+                'active' => true,
+            ],
         ];
 
-        // Encode the data as JSON
-        $jsonData = json_encode($data);
-        // Make HTTP POST request to Shopify GraphQL endpoint
+        // Prepare the data for the GraphQL request
+        $data = [
+            'query' => $query,
+            'variables' => $variables,
+        ];
+
+        // Make the HTTP POST request to Shopify GraphQL endpoint
         $response = Http::withHeaders($customHeaders)->post($graphqlEndpoint, $data);
 
         // Parse the JSON response
         $jsonResponse = $response->json();
 
+        Log::error("GraphQL User Error: ", ["jsonResponse"=>$jsonResponse]);
+
+        // Check for errors in the response
+        if (isset($jsonResponse['data']['carrierServiceCreate']['userErrors']) && !empty($jsonResponse['data']['carrierServiceCreate']['userErrors'])) {
+            $errors = $jsonResponse['data']['carrierServiceCreate']['userErrors'];
+            foreach ($errors as $error) {
+                Log::error("GraphQL User Error: " . $error['message'], ['field' => $error['field']]);
+            }
+        }
+
+        // Check for carrier service in the response
+        if (isset($jsonResponse['data']['carrierServiceCreate']['carrierService'])) {
+            $carrierService = $jsonResponse['data']['carrierServiceCreate']['carrierService'];
+            Log::info('Carrier Service Created Successfully', $carrierService);
+        }
+
         if ($token['isInstall'] == 0) {
             $token->isInstall = 1;
             $token->save();
-            $this->mendatoryWebhook($shop);
+            // $this->mendatoryWebhook($shop);
             $this->setMetaFiled($token);
             $this->getStoreOwnerEmail($shop);
         }
@@ -71,20 +109,20 @@ class HomeController extends Controller
     {
         $url = "https://" . $shop['name'] . "/admin/api/2024-01/graphql.json";
         $query = 'mutation MetafieldDefinitionCreateMutation($input: MetafieldDefinitionInput!) {
-                metafieldDefinitionCreate(definition: $input) {
-                    createdDefinition {
-                        id
-                        name
-                        namespace
-                        key
+                    metafieldDefinitionCreate(definition: $input) {
+                        createdDefinition {
+                            id
+                            name
+                            namespace
+                            key
+                        }
+                        userErrors {
+                            code
+                            message
+                            field
+                        }
                     }
-                    userErrors {
-                        code
-                        message
-                        field
-                    }
-                }
-            }';
+                }';
 
         $variables = [
             'input' => [
@@ -125,98 +163,44 @@ class HomeController extends Controller
         }
     }
 
-    private function mendatoryWebhook($shopDetail)
-    {
-        // Log::info('input logs:', ['shopDetail' => $shopDetail]);
-
-        $token = User::where('name', $shopDetail)->first();
-
-        $topics = [
-            'customers/update',
-            'customers/delete',
-            'shop/update',
-            'products/update'
-        ];
-
-        $apiVersion = config('services.shopify.api_version');
-
-        Log::info('input logs:', ['shopurl' => $shopDetail]);
-
-        $url = "https://{$token['name']}/admin/api/{$apiVersion}/webhooks.json";
-        $envUrl = env('VITE_COMMON_API_URL');
-
-        foreach ($topics as $topic) {
-            // Create a dynamic webhook address for each topic
-            $webhookAddress = "{$envUrl}/{$topic}";
-
-            $body = [
-                'webhook' => [
-                    'address' => $webhookAddress,
-                    'topic' => $topic,
-                    'format' => 'json'
-                ]
-            ];
-
-            // Make the HTTP request (you can use Laravel's HTTP client or other libraries)
-            $customHeaders = [
-                'X-Shopify-Access-Token' => $token['password'], // Replace with your actual authorization token
-            ];
-
-            // Send a cURL request to the GraphQL endpoint
-            $response = Http::withHeaders($customHeaders)->post($url, $body);
-            $jsonResponse = $response->json();
-
-            Log::info('input logs:', ['shopDetail' => $jsonResponse]);
-        }
-        return true;
-    }
-
     private function getStoreOwnerEmail($shop)
     {
         $user = User::where('name', $shop)->pluck('password')->first();
         $apiVersion = config('services.shopify.api_version');
-        $shop_url = "https://{$shop}/admin/api/{$apiVersion}/shop.json";
+        $graphqlEndpoint = "https://$shop/admin/api/{$apiVersion}/graphql.json";
 
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $shop_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => "GET",
-            CURLOPT_HTTPHEADER => [
-                "Content-Type: application/json",
-                "X-Shopify-Access-Token:" . $user
-            ],
+        // Headers for Shopify API request
+        $customHeaders = [
+            'X-Shopify-Access-Token' => $user,
+        ];
+
+        $query = <<<GRAPHQL
+                {
+                    shop {
+                        name
+                        email
+                    }
+                }
+                GRAPHQL;
+
+        // Make HTTP POST request to Shopify GraphQL endpoint
+        $response = Http::withHeaders($customHeaders)->post($graphqlEndpoint, [
+            'query' => $query,
         ]);
 
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
+        $data = $response->json();
+        if (@$data['data']['shop']) {
+            $storeOwnerEmail = $jsonResponse['data']['shop']['email'] ?? "sanjay@meetanshi.com";
 
-        curl_close($curl);
+            $store_name = $data['data']['shop']['name'];
+            $shopDomain = $data['data']['shop']['name'];
 
-        if ($err) {
-            return false;
+            Mail::to($storeOwnerEmail)->send(new InstallMail($store_name, $shopDomain));
+            Mail::to("sanjay@meetanshi.com")->send(new InstallSupportMail("Owner", $shopDomain));
+
+            return true;
         } else {
-            $data = json_decode($response, true);
-            if (@$data['shop']) {
-                // $storeOwnerEmail = "bhushan.trivedi@meetanshi.com";
-                $storeOwnerEmail = "krishna.patel@meetanshi.com";
-                // $storeOwnerEmail = $data['shop']['email'];
-                $store_name = $data['shop']['name'];
-                // User::where('name', $shop)->update(['store_owner_email' => $storeOwnerEmail, 'store_name' => $store_name]);
-                $name = $data['shop']['shop_owner'];
-                $shopDomain = $data['shop']['domain'];
-
-                Mail::to($storeOwnerEmail)->send(new InstallMail($name, $shopDomain));
-                Mail::to("kaushik.panot@meetanshi.com")->send(new InstallSupportMail("Owner", $shopDomain));
-
-                return true;
-            } else {
-                return false;
-            }
+            return false;
         }
     }
 }
