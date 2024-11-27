@@ -27,21 +27,8 @@ Route::post('shop/update', [webhookController::class, 'shopUpdate']);
 Route::post('products/update', [webhookController::class, 'handleProductUpdateWebhook']);
 
 Route::get('/', [HomeController::class, 'index'])->middleware(['verify.shopify', 'verify.shop'])->name('home');
-Route::get('/{path?}', [HomeController::class, 'common'])->where('path', '.*');
+Route::get('/{path}', [HomeController::class, 'common'])->where('path', '[a-zA-Z0-9-_]+')->middleware(['verify.shop']);
 
-Route::get('demo', function () {
-    $allUser =  User::get();
-    foreach ($allUser as $value) {
-        if (@$value['password']) {
-            $token = $value->password; // Assuming the token is stored in the password field
-            $shopDomain = $value->name;
-            $shopUrl = "https://{$shopDomain}/admin/api/2023-10/webhooks.json";
-            $response = Http::withHeaders([
-                'X-Shopify-Access-Token' => $token,
-            ])->get($shopUrl);
-            $shopJsonResponse = $response->json();
-            $array = ['shop' => $value->name, 're' => $shopJsonResponse];
-            dump($array);
-        }
-    }
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
 });

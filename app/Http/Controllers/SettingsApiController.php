@@ -174,7 +174,7 @@ class SettingsApiController extends Controller
                 ], 404);
             }
             $plans = Charge::where('user_id',$token['id'])->pluck('status')->first();
-            
+
             if($plans != 'active'){
               return response()->json(['status' => false,'isExpired'=>false, 'message' => 'Your Plan hass been expired']);
             }

@@ -13,7 +13,7 @@ class WebhookController extends Controller
 {
     private function verifyWebhookInternal($data, $hmacHeader)
     {
-        $calculatedHmac = base64_encode(hash_hmac('sha256', $data, env('SHOPIFY_API_SECRET'), true));
+        $calculatedHmac = base64_encode(hash_hmac('sha256', $data, config('shopify-app.api_secret'), true));
         return hash_equals($calculatedHmac, $hmacHeader);
     }
 
@@ -149,6 +149,7 @@ class WebhookController extends Controller
         return response()->json(['message' => 'Webhook processed successfully', 'metafields' => $metafields], 200);
         // return response()->json(['message' => 'Webhook processed successfully', 'metafields' => $metafields], 200);
     }
+
     public function shopRedact(Request $request)
     {
         Log::info('shop reduct.');
