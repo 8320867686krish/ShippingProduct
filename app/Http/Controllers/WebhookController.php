@@ -154,4 +154,39 @@ class WebhookController extends Controller
     {
         Log::info('shop reduct.');
     }
+
+    public function callback(Request $request)
+    {
+        $query = $request->query();
+        $shop= $query['shop'] ?? "";
+        $hmac = $query['hmac'] ?? "";
+        unset($query['hmac']);
+        ksort($query);
+        $message = http_build_query($query);
+        $calculatedHmac = hash_hmac('sha256', $message, '41e9c77adb191749af82646f75467bd6');
+
+        if (!hash_equals($hmac, $calculatedHmac)) {
+            abort(403, 'Invalid HMAC');
+        }
+
+        // Step 2: Exchange Authorization Code for Access Token
+        $response = Http::post("https://{$query['shop']}/admin/oauth/access_token", [
+            'client_id' => '5aab428e38ed7c350a16664477d914f9',
+            'client_secret' => '41e9c77adb191749af82646f75467bd6',
+            'code' => $query['code'],
+        ]);
+
+        if ($response->successful()) {
+            $accessToken = $response->json()['access_token'];
+            $shop_data = User::where('name', $shop)->first();
+            $shop_data->password = $accessToken;
+            $shop_data->needs_update = 0;
+            $shop_data->save();
+            $redirect_url = "https://".$shop."/admin/apps/".env('SHOPIFY_APP');
+            return redirect(  $redirect_url );
+
+        }
+
+       // return response()->json(['error' => 'Failed to get access token'], 400);
+    }
 }

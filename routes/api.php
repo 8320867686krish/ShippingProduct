@@ -31,6 +31,9 @@ Route::post('recurring/create', [RecurringChargeController::class, 'createRecurr
 Route::get('recurring/create', [RecurringChargeController::class, 'createRecurringCharge']);
 Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge']);
 
+Route::get('genrateurl/{shop}',[SettingsApiController::class,'genrateurl']);
+Route::post('saveauth',[SettingsApiController::class,'saveauth']);
+
 Route::middleware(['check.token'])->group(function () {
     Route::get('country', [ProductApiController::class, 'getCountryList']);
     Route::post('products', [ProductApiController::class, 'products']);

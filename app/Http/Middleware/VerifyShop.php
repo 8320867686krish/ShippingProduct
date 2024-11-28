@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -18,9 +19,11 @@ class VerifyShop
     {
         // dd($request->input('embedded'));
         if ($request->input('embedded') == 1) {
-            $shop = $request->input('host');
+            $host = $request->input('host');
+            $shop = $request->input('shop');
+            $shop_exist = User::where('name', $shop)->first();
             // return $next($request);
-            return response()->view('welcome', ['host' => $shop], 200);
+            return response()->view('welcome', ['host'=>$host, 'shop_exist'=>$shop_exist, 'shop'=>$shop], 200);
         } else {
             $shop = $request->input('shop');
             if (@$shop) {
