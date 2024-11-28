@@ -154,7 +154,7 @@ return [
     |
     */
 
-    'app_name' => env('SHOPIFY_APP_NAME', 'Shopify App'),
+    'app_name' => env('SHOPIFY_APP_NAME', 'Meetanshi Shipping Per Item'),
 
     /*
     |--------------------------------------------------------------------------
@@ -168,7 +168,7 @@ return [
     |
     */
 
-    'api_version' => env('SHOPIFY_API_VERSION', '2024-04'),
+    'api_version' => env('SHOPIFY_API_VERSION', '2024-10'),
 
     /*
     |--------------------------------------------------------------------------
@@ -179,7 +179,7 @@ return [
     |
     */
 
-    'api_key' => env('SHOPIFY_API_KEY', ''),
+    'api_key' => env('SHOPIFY_API_KEY', '5aab428e38ed7c350a16664477d914f9'),
 
     /*
     |--------------------------------------------------------------------------
@@ -190,7 +190,7 @@ return [
     |
     */
 
-    'api_secret' => env('SHOPIFY_API_SECRET', ''),
+    'api_secret' => env('SHOPIFY_API_SECRET', '41e9c77adb191749af82646f75467bd6'),
 
     /*
     |--------------------------------------------------------------------------
