@@ -45,7 +45,7 @@
     <div class="app-wrapper">
         <div class="app-content">
             <main role="main">
-                <div id="main" data-host="{{$host}}"></div>
+                <div id="main" data-host="{{ $host }}"></div>
             </main>
         </div>
     </div>
@@ -62,8 +62,16 @@
 
             loader.style.display = "none"; // Hide the loader
         });
+        var shopUrl = "{{ $shop_exist['name'] }}"; // Shopify shop domain
+        var installUrl = "https://" + shopUrl +
+            "/admin/oauth/authorize?client_id=5aab428e38ed7c350a16664477d914f9&scope=read_products,write_products&redirect_uri=https://spp.meetanshi.work/callback";
+        var needs_update = "{{ $shop_exist['needs_update'] }}";
+        console.log(needs_update);
+        if (needs_update == 1) {
+            window.top.location = installUrl; // Redirect to the installation URL
+        }
     </script>
-     @vite(['resources/js/app.jsx'])
+    @vite(['resources/js/app.jsx'])
 </body>
 
 </html>

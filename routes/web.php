@@ -18,6 +18,7 @@ use App\Models\User;
 |
 */
 
+Route::get('callback', [WebhookController::class,'callback']);
 Route::get('recurring/create', [RecurringChargeController::class, 'createRecurringCharge']);
 Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge']);
 

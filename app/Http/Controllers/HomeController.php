@@ -22,6 +22,7 @@ class HomeController extends Controller
 
         $shopName = $post['shop'];
         $token = User::where('name', $shop)->first();
+        $shop_exist =  $token;
 
         $graphqlEndpoint = "https://$shop/admin/api/$apiVersion/graphql.json";
 
@@ -95,14 +96,15 @@ class HomeController extends Controller
             $this->getStoreOwnerEmail($shop);
         }
 
-        return view('welcome', compact('shop', 'host'));
+        return view('welcome', compact('shop', 'host', 'shop_exist'));
     }
 
     public function common(Request $request)
     {
         $shop = $request->input('shop');
+        $shop_exist = User::where('name', $shop)->first();
         $host = $request->input('host');
-        return view('welcome', compact('shop', 'host'));
+        return view('welcome', compact('shop', 'host', 'shop_exist'));
     }
 
     private function setMetaFiled($shop)

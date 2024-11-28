@@ -173,10 +173,10 @@ class SettingsApiController extends Controller
                     'message' => 'User not found.'
                 ], 404);
             }
-            $plans = Charge::where('user_id',$token['id'])->pluck('status')->first();
+            $plans = Charge::where('user_id', $token['id'])->pluck('status')->first();
 
-            if($plans != 'active'){
-              return response()->json(['status' => false,'isExpired'=>false, 'message' => 'Your Plan hass been expired']);
+            if ($plans != 'active') {
+                return response()->json(['status' => false, 'isExpired' => false, 'message' => 'Your Plan hass been expired']);
             }
             $validator = Validator::make($request->all(), [
                 'enabled' => 'required|boolean',
@@ -354,7 +354,7 @@ class SettingsApiController extends Controller
 
     public function getUserBasedPlans(Request $request)
     {
-        try{
+        try {
             $shop = $request->attributes->get('shopifySession', "jaypal-demo.myshopify.com");
 
             if (!$shop) {
@@ -378,9 +378,8 @@ class SettingsApiController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Shop active plan retrieved successfully.',
-                    'plan' => $plans
+                'plan' => $plans
             ]);
-
         } catch (\Illuminate\Database\QueryException $ex) {
             Log::error('Database error when retrieving setting based on token list', ['exception' => $ex->getMessage()]);
             return response()->json(['status' => false, 'message' => 'Database error occurred.'], 500);
@@ -388,7 +387,19 @@ class SettingsApiController extends Controller
             Log::error('Unexpected error when retrieving setting based on token list', ['exception' => $ex->getMessage()]);
             return response()->json(['status' => false, 'message' => 'An unexpected error occurred.'], 500);
         }
+    }
 
+    public function genrateurl($shop)
+    {
+        $url = "https://" . $shop . "/admin/oauth/authorize?client_id=33e0b28e884a42f617edbe47df6430d4&scope=read_products,write_products&redirect_uri=https://aicontent.meetanshi.work/callback&state=random_string";
+        return response()->json(['url' => $url]);
+    }
 
+    public function saveauth(Request $request)
+    {
+        $data = $request->input();
+        $shop_data = User::where('name', $data['shop'])->first();
+        $shop_data->passowrd = $data['token'];
+        $shop_data->save();
     }
 }
