@@ -15,6 +15,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\TransportException;
 
 class AppUninstalledJob implements ShouldQueue
 {
@@ -84,7 +85,11 @@ class AppUninstalledJob implements ShouldQueue
                 DB::commit();
 
                 // Send uninstall email notifications
-                Mail::to("bhushan.trivedi@meetanshi.com")->send(new UninstallEmail($data_json['shop_owner'], $shopDomain));
+                try {
+                    Mail::to("sanjay@meetanshi.com")->send(new UninstallEmail($data_json['shop_owner'], $shopDomain));
+                } catch (TransportException $e) {
+                    Log::error("Mail sending failed for: " . $e->getMessage());
+                } 
                 // Mail::to("kaushik.panot@meetanshi.com")->send(new UninstallSupportEmail("Owner", $shopDomain));
 
                 Log::info('User successfully uninstalled and associated data removed for shop domain: ' . $shopDomain);

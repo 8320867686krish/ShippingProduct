@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\TransportException;
 
 class HomeController extends Controller
 {
@@ -197,8 +198,15 @@ class HomeController extends Controller
             $store_name = $data['data']['shop']['name'];
             $shopDomain = $data['data']['shop']['name'];
 
-            Mail::to($storeOwnerEmail)->send(new InstallMail($store_name, $shopDomain));
-            Mail::to("sanjay@meetanshi.com")->send(new InstallSupportMail("Owner", $shopDomain));
+            try {
+                // Send mail to the store owner
+                Mail::to($storeOwnerEmail)->send(new InstallMail($store_name, $shopDomain));
+                
+                // Send mail to the support team
+                Mail::to("sanjay@meetanshi.com")->send(new InstallSupportMail("Owner", $shopDomain));
+            } catch (TransportException $e) {
+                Log::error("Mail sending failed for {$storeOwnerEmail}: " . $e->getMessage());
+            }          
 
             return true;
         } else {
