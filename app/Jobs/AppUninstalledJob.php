@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Mail\UninstallEmail;
 use App\Mail\UninstallSupportEmail;
+use App\Models\Charge;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
@@ -21,12 +22,13 @@ class AppUninstalledJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $data;
     /**
      * Create a new job instance.
      */
-    public function __construct()
+    public function __construct($data)
     {
-        //
+        $this->data = $data;
     }
 
     /**
@@ -44,7 +46,7 @@ class AppUninstalledJob implements ShouldQueue
 
             $data_json = json_decode($data, true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            if ($data_json === null) {
                 Log::warning('Failed to decode JSON data:', ['data' => $data]);
                 return;
             }
@@ -69,8 +71,6 @@ class AppUninstalledJob implements ShouldQueue
                 return;
             }
 
-            // Begin transaction to ensure atomicity.
-            DB::beginTransaction();
             try {
                 // Update user status
                 $user->password = "";
@@ -80,9 +80,7 @@ class AppUninstalledJob implements ShouldQueue
                 // Delete products associated with the user
                 Product::where('user_id', $user->id)->delete();
                 Setting::where('user_id', $user->id)->delete();
-
-                // Commit the transaction
-                DB::commit();
+                Charge::where('user_id', $user->id)->delete();
 
                 // Send uninstall email notifications
                 try {
@@ -95,8 +93,6 @@ class AppUninstalledJob implements ShouldQueue
                 Log::info('User successfully uninstalled and associated data removed for shop domain: ' . $shopDomain);
                 return;
             } catch (\Throwable $e) {
-                // Rollback the transaction on failure
-                DB::rollBack();
                 Log::error('Failed to process uninstall webhook transaction:', ['error' => $e->getMessage()]);
                 return;
             }
