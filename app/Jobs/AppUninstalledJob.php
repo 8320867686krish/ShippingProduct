@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Mail\UninstallEmail;
 use App\Mail\UninstallSupportEmail;
+use App\Models\Charge;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
@@ -15,17 +16,19 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\TransportException;
 
 class AppUninstalledJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $data;
     /**
      * Create a new job instance.
      */
-    public function __construct()
+    public function __construct($data)
     {
-        //
+        $this->data = $data;
     }
 
     /**
@@ -43,7 +46,7 @@ class AppUninstalledJob implements ShouldQueue
 
             $data_json = json_decode($data, true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            if ($data_json === null) {
                 Log::warning('Failed to decode JSON data:', ['data' => $data]);
                 return;
             }
@@ -68,8 +71,6 @@ class AppUninstalledJob implements ShouldQueue
                 return;
             }
 
-            // Begin transaction to ensure atomicity.
-            DB::beginTransaction();
             try {
                 // Update user status
                 $user->password = "";
@@ -79,19 +80,19 @@ class AppUninstalledJob implements ShouldQueue
                 // Delete products associated with the user
                 Product::where('user_id', $user->id)->delete();
                 Setting::where('user_id', $user->id)->delete();
-
-                // Commit the transaction
-                DB::commit();
+                Charge::where('user_id', $user->id)->delete();
 
                 // Send uninstall email notifications
-                Mail::to("bhushan.trivedi@meetanshi.com")->send(new UninstallEmail($data_json['shop_owner'], $shopDomain));
+                try {
+                    Mail::to("sanjay@meetanshi.com")->send(new UninstallEmail($data_json['shop_owner'], $shopDomain));
+                } catch (TransportException $e) {
+                    Log::error("Mail sending failed for: " . $e->getMessage());
+                } 
                 // Mail::to("kaushik.panot@meetanshi.com")->send(new UninstallSupportEmail("Owner", $shopDomain));
 
                 Log::info('User successfully uninstalled and associated data removed for shop domain: ' . $shopDomain);
                 return;
             } catch (\Throwable $e) {
-                // Rollback the transaction on failure
-                DB::rollBack();
                 Log::error('Failed to process uninstall webhook transaction:', ['error' => $e->getMessage()]);
                 return;
             }
