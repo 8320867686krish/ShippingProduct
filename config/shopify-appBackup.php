@@ -27,18 +27,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Sub Domain
-    |--------------------------------------------------------------------------
-    |
-    | This is the subdomain where Shopify will be accessible from. If the
-    | setting is null, Shopify will reside under the same domain as the
-    | application. Otherwise, this value will be used as the subdomain.
-    |
-    */
-
-    'domain' => env('SHOPIFY_DOMAIN'),
-    /*
-    |--------------------------------------------------------------------------
     | Manual routes
     |--------------------------------------------------------------------------
     |
@@ -136,6 +124,26 @@ return [
     */
 
     'prefix' => env('SHOPIFY_APP_PREFIX', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | AppBridge Mode
+    |--------------------------------------------------------------------------
+    |
+    | AppBridge (embedded apps) are enabled by default. Set to false to use legacy
+    | mode and host the app inside your own container.
+    |
+    */
+
+    'appbridge_enabled' => (bool) env('SHOPIFY_APPBRIDGE_ENABLED', true),
+
+    // Use semver range to link to a major or minor version number.
+    // Leaving empty will use the latest version - not recommended in production.
+    'appbridge_version' => env('SHOPIFY_APPBRIDGE_VERSION', 'latest'),
+
+    // Set a new CDN URL if you want to host the AppBridge JS yourself or unpkg goes down.
+    // DO NOT include a trailing slash.
+    'appbridge_cdn_url' => env('SHOPIFY_APPBRIDGE_CDN_URL', 'https://unpkg.com'),
 
     /*
     |--------------------------------------------------------------------------
@@ -338,18 +346,6 @@ return [
     | Register listeners to the events
     |--------------------------------------------------------------------------
     |
-    | In Laravel version 11 and later, event listeners located in the `App\Listeners`
-    | directory are automatically registered by default. Therefore, manual registration
-    | in this configuration file is unnecessary.
-    |
-    | If you register the listeners manually again here, the listener will be called twice.
-    |
-    | If you plan to store your listeners in a different directory like `App\Shopify\Listeners`
-    | or within multiple directories, then you should register them here.
-    |
-    | If you are using Laravel version 10 or earlier, then corresponding listeners
-    | must be registered here.
-    |
     */
 
     'listen' => [
@@ -385,22 +381,31 @@ return [
     */
 
     'webhooks' => [
-        /*
-            [
-                'topic' => env('SHOPIFY_WEBHOOK_1_TOPIC', 'ORDERS_CREATE'),
-                'address' => env('SHOPIFY_WEBHOOK_1_ADDRESS', 'https://some-app.com/webhook/orders-create')
-            ], [
-                'topic' => env('SHOPIFY_WEBHOOK_2_TOPIC', 'APP_PURCHASES_ONE_TIME_UPDATE'),
-                'address' => env('SHOPIFY_WEBHOOK_2_ADDRESS', 'https://some-app.com/webhook/purchase'),
-            ]
-            // In certain situations you may wish to map the webhook to a specific class
-            // To do this, change the array to an associative array with a 'class' key
-            'orders-create' => [
-                'topic' => env('SHOPIFY_WEBHOOK_3_TOPIC', 'ORDERS_PAID'),
-                'address' => env('SHOPIFY_WEBHOOK_3_ADDRESS', 'https://some-app.com/webhook/orders-create'),
-                'class' => \App\Shopify\Actions\ExampleAppJob::class
-            ],
-        */],
+        // [
+        //     'topic' => env('SHOPIFY_WEBHOOK_1_TOPIC', 'APP_UNINSTALLED'),
+        //     'address' => env('SHOPIFY_WEBHOOK_1_ADDRESS', env('VITE_COMMON_API_URL') . '/webhook/app-uninstalled')
+        // ],
+        // [
+        //     'topic' => env('SHOPIFY_WEBHOOK_2_TOPIC', 'app_subscriptions/update'),
+        //     'address' => env('SHOPIFY_WEBHOOK_2_ADDRESS', env('VITE_COMMON_API_URL') . "/webhook/appsubscriptions-update")
+        // ],
+        // [
+        //     'topic' => env('SHOPIFY_WEBHOOK_3_TOPIC', 'customers/update'),
+        //     'address' => env('SHOPIFY_WEBHOOK_3_ADDRESS', env('VITE_COMMON_API_URL') . "/customers/update")
+        // ],
+        // [
+        //     'topic' => env('SHOPIFY_WEBHOOK_4_TOPIC', 'customers/delete'),
+        //     'address' => env('SHOPIFY_WEBHOOK_4_ADDRESS', env('VITE_COMMON_API_URL') . "/customers/delete")
+        // ],
+        // [
+        //     'topic' => env('SHOPIFY_WEBHOOK_5_TOPIC', 'shop/update'),
+        //     'address' => env('SHOPIFY_WEBHOOK_5_ADDRESS', env('VITE_COMMON_API_URL') . "/shop/update")
+        // ],
+        // [
+        //     'topic' => env('SHOPIFY_WEBHOOK_6_TOPIC', 'products/update'),
+        //     'address' => env('SHOPIFY_WEBHOOK_6_ADDRESS', env('VITE_COMMON_API_URL') . "/products/update")
+        // ]
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -460,21 +465,7 @@ return [
         'scripttags' => env('SCRIPTTAGS_JOB_QUEUE', null),
         'after_authenticate' => env('AFTER_AUTHENTICATE_JOB_QUEUE', null),
     ],
-    /*
-    |--------------------------------------------------------------------------
-    | Job Connections
-    |--------------------------------------------------------------------------
-    |
-    | This option is for setting a specific job connection for webhooks, scripttags
-    | and after_authenticate_job.
-    |
-    */
 
-    'job_connections' => [
-        'webhooks' => env('WEBHOOKS_JOB_CONNECTION', null),
-        'scripttags' => env('SCRIPTTAGS_JOB_CONNECTION', null),
-        'after_authenticate' => env('AFTER_AUTHENTICATE_JOB_CONNECTION', null),
-    ],
     /*
     |--------------------------------------------------------------------------
     | Config API Callback
@@ -491,6 +482,18 @@ return [
     */
 
     'config_api_callback' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Enable Turbolinks or Hotwire Turbo
+    |--------------------------------------------------------------------------
+    |
+    | If you use Turbolinks/Turbo and Livewire, turn on this setting to get
+    | the token assigned automatically.
+    |
+    */
+
+    'turbo_enabled' => (bool) env('SHOPIFY_TURBO_ENABLED', false),
 
     /*
     |--------------------------------------------------------------------------

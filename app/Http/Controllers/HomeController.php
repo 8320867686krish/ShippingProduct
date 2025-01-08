@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendEmailJob;
 use App\Mail\InstallMail;
 use App\Mail\InstallSupportMail;
 use App\Models\User;
@@ -25,7 +26,7 @@ class HomeController extends Controller
         $token = User::where('name', $shop)->first();
         $shop_exist =  $token;
 
-        $graphqlEndpoint = "https://$shop/admin/api/$apiVersion/graphql.json";
+        $graphqlEndpoint = "https://{$shop}/admin/api/{$apiVersion}/graphql.json";
 
         // Headers for Shopify API request
         $customHeaders = [
@@ -73,7 +74,7 @@ class HomeController extends Controller
         // Parse the JSON response
         $jsonResponse = $response->json();
 
-        Log::error("GraphQL User Error: ", ["jsonResponse"=>$jsonResponse]);
+        Log::error("GraphQL User Error: ", ["jsonResponse" => $jsonResponse]);
 
         // Check for errors in the response
         if (isset($jsonResponse['data']['carrierServiceCreate']['userErrors']) && !empty($jsonResponse['data']['carrierServiceCreate']['userErrors'])) {
@@ -89,13 +90,14 @@ class HomeController extends Controller
             Log::info('Carrier Service Created Successfully', $carrierService);
         }
 
-        if ($token['isInstall'] == 0) {
-            $token->isInstall = 1;
-            $token->save();
-            // $this->mendatoryWebhook($shop);
-            $this->setMetaFiled($token);
-            $this->getStoreOwnerEmail($shop);
-        }
+        $token->isInstall = 1;
+        $token->save();
+        $this->mendatoryWebhook($shop);
+        $this->getStoreOwnerEmail($shop);
+        $this->setMetaFiled($token);
+
+        // if ($token['isInstall'] == 0) {
+        // }
 
         return view('welcome', compact('shop', 'host', 'shop_exist'));
     }
@@ -170,7 +172,7 @@ class HomeController extends Controller
     {
         $user = User::where('name', $shop)->pluck('password')->first();
         $apiVersion = config('services.shopify.api_version');
-        $graphqlEndpoint = "https://$shop/admin/api/{$apiVersion}/graphql.json";
+        $graphqlEndpoint = "https://{$shop}/admin/api/{$apiVersion}/graphql.json";
 
         // Headers for Shopify API request
         $customHeaders = [
@@ -198,19 +200,120 @@ class HomeController extends Controller
             $store_name = $data['data']['shop']['name'];
             $shopDomain = $data['data']['shop']['name'];
 
-            try {
-                // Send mail to the store owner
-                Mail::to($storeOwnerEmail)->send(new InstallMail($store_name, $shopDomain));
-                
-                // Send mail to the support team
-                Mail::to("sanjay@meetanshi.com")->send(new InstallSupportMail("Owner", $shopDomain));
-            } catch (TransportException $e) {
-                Log::error("Mail sending failed for {$storeOwnerEmail}: " . $e->getMessage());
-            }          
+
+            $emailData = [
+                "to" => $storeOwnerEmail,
+                'name' => $store_name,
+                'shopDomain' => $shopDomain,
+            ];
+
+            $emailData1 = [
+                "to" => "kaushik.panot@meetanshi.com",
+                'name' => $store_name,
+                'shopDomain' => $shopDomain,
+            ];
+
+            SendEmailJob::dispatch($emailData, InstallMail::class);
+            SendEmailJob::dispatch($emailData1, InstallMail::class);
 
             return true;
         } else {
             return false;
         }
+    }
+
+    protected function mendatoryWebhook($shopDetail)
+    {
+        // Retrieve the shop token
+        $token = User::where('name', $shopDetail)->first();
+
+        // Check if the token exists before proceeding
+        if (!$token) {
+            Log::error('Shop token not found.', ['shopDetail' => $shopDetail]);
+            return false;
+        }
+
+        // Define the topics for which webhooks need to be created
+        $topics = [
+            ['topic' => 'APP_UNINSTALLED', 'address' => 'app/uninstalled'],
+            ['topic' => 'APP_SUBSCRIPTIONS_UPDATE', 'address' => 'appsubscriptions/update'],
+            ['topic' => 'PRODUCTS_UPDATE', 'address' => 'products/update'],
+            ['topic' => 'CUSTOMERS_UPDATE', 'address' => 'customers/update'],
+            ['topic' => 'CUSTOMERS_DELETE', 'address' => 'customers/delete'],
+            ['topic' => 'SHOP_UPDATE', 'address' => 'shop/update'],
+        ];
+
+        // Get the base URL for webhook callbacks
+        $callbackBaseUrl = env('APP_URL');
+
+        $apiVersion = config('services.shopify.api_version');
+        // Define the GraphQL API endpoint
+        $url = "https://{$token['name']}/admin/api/{$apiVersion}/graphql.json";
+
+        // Set the custom headers for the request
+        $customHeaders = [
+            'X-Shopify-Access-Token' => $token['password'],
+            'Content-Type' => 'application/json'
+        ];
+
+        // Log the shop details
+        Log::info('Creating mandatory webhooks for shop.', ['shop' => $shopDetail]);
+
+        // Build a single GraphQL query with multiple webhookSubscriptionCreate mutations
+        $mutations = [];
+        foreach ($topics as $index => $topic) {
+            $webhookAddress = "{$callbackBaseUrl}/{$topic['address']}";
+            $mutations[] = <<<"GRAPHQL"
+                webhookSubscription{$index}: webhookSubscriptionCreate(
+                    topic: {$topic['topic']},
+                    webhookSubscription: {callbackUrl: "{$webhookAddress}", format: JSON}
+                ) {
+                    userErrors {
+                        field
+                        message
+                    }
+                    webhookSubscription {
+                        id
+                    }
+                }
+                GRAPHQL;
+        }
+
+        $query = [
+            'query' => 'mutation {' . implode(' ', $mutations) . '}'
+        ];
+
+        // Send a single POST request with all webhook creation mutations
+        $response = Http::withHeaders($customHeaders)->post($url, $query);
+
+        // Log and handle the response
+        if ($response->successful()) {
+            $responseData = $response->json('data');
+            foreach ($topics as $index => $topic) {
+                $webhookData = $responseData["webhookSubscription{$index}"] ?? null;
+                Log::info("webhookData", ['webhookData' => $webhookData]);
+                if ($webhookData && empty($webhookData['userErrors'])) {
+                    Log::info('Webhook created successfully.', [
+                        'shop' => $shopDetail,
+                        'topic' => $topic['topic'],
+                        'webhook_id' => $webhookData['webhookSubscription']['id'] ?? null,
+                    ]);
+                } else {
+                    Log::error('Failed to create webhook.', [
+                        'shop' => $shopDetail,
+                        'topic' => $topic['topic'],
+                        'errors' => $webhookData['userErrors'] ?? ['Unknown error'],
+                    ]);
+                }
+            }
+        } else {
+            Log::error('Failed to execute GraphQL request.', [
+                'shop' => $shopDetail,
+                'response' => $response->json(),
+                'status' => $response->status()
+            ]);
+        }
+
+        return true;
     }
 }
