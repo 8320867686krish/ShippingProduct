@@ -126,7 +126,7 @@ class WebhookController extends Controller
                     if ($charge['status'] !== "CANCELLED") {
                         Charge::updateOrCreate(['user_id' => $user['id']], [
                             'charge_id' => $chargeId[4],
-                            'status' => $charge['status'],
+                            'status' => strtolower($charge['status']),
                             'name' => $charge['name'],
                             'type' => '',
                             'price' => "10.00",
