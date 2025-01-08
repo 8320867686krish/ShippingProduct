@@ -22,10 +22,14 @@ Route::get('callback', [WebhookController::class,'callback']);
 Route::get('recurring/create', [RecurringChargeController::class, 'createRecurringCharge']);
 Route::get('recurring/confirm', [RecurringChargeController::class, 'confirmRecurringCharge']);
 
+
 Route::post('customers/update', [WebhookController::class, 'customersUpdate']);
 Route::post('customers/delete', [webhookController::class, 'customersDelete']);
 Route::post('shop/update', [webhookController::class, 'shopUpdate']);
 Route::post('products/update', [webhookController::class, 'handleProductUpdateWebhook']);
+Route::post('app/uninstalled', [webhookController::class, 'handleUninstallWebhook']);
+Route::post('appsubscriptions/update', [webhookController::class, 'handleAppSubscriptions']);
+
 
 Route::get('/', [HomeController::class, 'index'])->middleware(['verify.shopify', 'verify.shop'])->name('home');
 Route::get('/{path}', [HomeController::class, 'common'])->where('path', '[a-zA-Z0-9-_]+')->middleware(['verify.shop']);

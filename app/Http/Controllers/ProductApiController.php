@@ -15,7 +15,7 @@ class ProductApiController extends Controller
     public function products(Request $request)
     {
         try {
-            $shop = $request->attributes->get('shopifySession', "jaypal-demo.myshopify.com");
+            $shop = $request->attributes->get('shopifySession');
             // $shop = "krishnalaravel-test.myshopify.com";
 
             if (!$shop) {
@@ -100,8 +100,10 @@ class ProductApiController extends Controller
             }
             GRAPHQL;
 
+            $apiVersion = config('services.shopify.api_version');
+
             // Shopify GraphQL endpoint
-            $graphqlEndpoint = "https://$shop/admin/api/2023-07/graphql.json";
+            $graphqlEndpoint = "https://$shop/admin/api/{$apiVersion}/graphql.json";
 
             // Headers for Shopify API request
             $customHeaders = [
@@ -165,7 +167,7 @@ class ProductApiController extends Controller
     {
         try {
             // Retrieve the Shopify session
-            $shop = $request->attributes->get('shopifySession', "jaypal-demo.myshopify.com");
+            $shop = $request->attributes->get('shopifySession');
             // $shop = "swatipatel.myshopify.com";
 
             if (!$shop) {
