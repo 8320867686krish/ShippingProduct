@@ -19,3 +19,5 @@ yarn-error.log
 composer.lock
 /composer.lock
 composer.lock
+package-lock.json
+composer.lock

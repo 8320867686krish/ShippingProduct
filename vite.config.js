@@ -18,4 +18,14 @@ export default defineConfig({
             },
         },
     },
+    server: {
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: true,
+        cors: {
+            origin: '*', // Allow all origins
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ['*'],
+        },
+    },
 });
