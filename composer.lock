@@ -4,7 +4,6 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "08a0bd62f34cf2fd137a41e9d0997a98",
     "packages": [
         {
             "name": "beberlei/assert",
@@ -1602,17 +1601,9 @@
         },
         {
             "name": "kyon147/laravel-shopify",
-            "version": "v23.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Kyon147/laravel-shopify.git",
-                "reference": "9d2e75e05b0bef2b59c7ad012fd1b6d3f3db5cbc"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Kyon147/laravel-shopify/zipball/9d2e75e05b0bef2b59c7ad012fd1b6d3f3db5cbc",
+"url": "https://api.github.com/repos/Kyon147/laravel-shopify/zipball/9d2e75e05b0bef2b59c7ad012fd1b6d3f3db5cbc",
                 "reference": "9d2e75e05b0bef2b59c7ad012fd1b6d3f3db5cbc",
-                "shasum": ""
+"shasum": ""
             },
             "require": {
                 "ext-json": "*",
@@ -1691,7 +1682,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2025-03-25T12:23:46+00:00"
+
         },
         {
             "name": "laravel/framework",
