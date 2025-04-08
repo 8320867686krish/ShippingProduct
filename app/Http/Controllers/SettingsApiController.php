@@ -121,36 +121,84 @@ class SettingsApiController extends Controller
         }
     }
 
-    private function setMetafield(array $metafields, $password, $shop)
-    {
-        $response = Http::withHeaders([
-            'X-Shopify-Access-Token' => $password,
-            'Content-Type' => 'application/json',
-        ])->post("https://{$shop}/admin/api/2024-01/graphql.json", [
-            'query' => 'mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
-                metafieldsSet(metafields: $metafields) {
-                    metafields {
-                        id
-                        namespace
-                        key
-                        value
-                    }
-                    userErrors {
-                        field
-                        message
-                        elementIndex
-                    }
-                    __typename
-                }
-            }',
-            'variables' => [
-                'metafields' => $metafields
-            ]
-        ]);
+    // private function setMetafield(array $metafields, $password, $shop)
+    // {
+    //     $version = config('shopify-app.api_version');
 
-        Log::info("updadeted metafield", ['response' => $response->json()]);
-        return $response->json();
+    //     $response = Http::withHeaders([
+    //         'X-Shopify-Access-Token' => $password,
+    //         'Content-Type' => 'application/json',
+    //     ])->post("https://{$shop}/admin/api/{$version}/graphql.json", [
+    //         'query' => 'mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+    //             metafieldsSet(metafields: $metafields) {
+    //                 metafields {
+    //                     id
+    //                     namespace
+    //                     key
+    //                     value
+    //                 }
+    //                 userErrors {
+    //                     field
+    //                     message
+    //                     elementIndex
+    //                 }
+    //                 __typename
+    //             }
+    //         }',
+    //         'variables' => [
+    //             'metafields' => $metafields
+    //         ]
+    //     ]);
+
+    //     Log::info("updadeted metafield", ['response' => $response->json()]);
+    //     return $response->json();
+    // }
+
+    private function setMetafield(array $metafields, string $accessToken, string $shopDomain): array
+    {
+        $version = config('shopify-app.api_version');
+        $url = "https://{$shopDomain}/admin/api/{$version}/graphql.json";
+
+        $batchedMetafields = collect($metafields)->chunk(10); // Shopify allows 10 per request
+        $allResponses = [];
+
+        foreach ($batchedMetafields as $index => $batch) {
+            $response = Http::withHeaders([
+                'X-Shopify-Access-Token' => $accessToken,
+                'Content-Type' => 'application/json',
+            ])->post($url, [
+                'query' => <<<'GQL'
+                mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+                    metafieldsSet(metafields: $metafields) {
+                        metafields {
+                            id
+                            namespace
+                            key
+                            value
+                        }
+                        userErrors {
+                            field
+                            message
+                            elementIndex
+                        }
+                        __typename
+                    }
+                }
+                GQL,
+                'variables' => [
+                    'metafields' => $batch->values()->all()
+                ]
+            ]);
+
+            $responseData = $response->json();
+            Log::info("Metafields batch #{$index} response", $responseData);
+
+            $allResponses[] = $responseData;
+        }
+
+        return $allResponses;
     }
+
 
     public function store(Request $request)
     {
@@ -266,6 +314,18 @@ class SettingsApiController extends Controller
                 foreach ($request->input('productdata') as $product) {
                     if (isset($product)) {
                         $productValue = $product['checked'] == 1 ? "{$product['value']}" : "0.00";
+                        $existingProduct = Product::where([
+                            'product_id' => $product['product_id'],
+                            'setting_id' => $setting->id,
+                            'value' => $productValue
+                        ])->first();
+
+                        if($existingProduct) {
+                            $shouldSave = false;
+                        } else {
+                            $shouldSave = true;
+                        }
+    
                         if ($product['checked']) {
                             $productData = [
                                 "user_id" => $token['id'],
@@ -283,18 +343,18 @@ class SettingsApiController extends Controller
                             ])->delete();
                         }
 
-                        Log::info('input logs:', [$product['product_id'] => $productValue]);
-
-                        $metafields[] = [
-                            'namespace' => "custom",
-                            'key' => "shipping_price",
-                            'type' => "number_decimal",
-                            'value' => $productValue,
-                            'ownerId' => "gid://shopify/Product/{$product['product_id']}"
-                        ];
+                        if($shouldSave) {
+                            $metafields[] = [
+                                'namespace' => "custom",
+                                'key' => "shipping_price",
+                                'type' => "number_decimal",
+                                'value' => $productValue,
+                                'ownerId' => "gid://shopify/Product/{$product['product_id']}"
+                            ];
+                        }
                     }
                 }
-
+                Log::info('metafields:', ["metafields"=>$metafields]);
                 $this->setMetafield($metafields, $token['password'], $shop);
             }
 
