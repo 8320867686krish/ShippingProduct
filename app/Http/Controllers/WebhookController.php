@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Psr\Log\LogLevel;
 use Throwable;
 
 class WebhookController extends Controller
@@ -79,23 +80,56 @@ class WebhookController extends Controller
     public function handleProductUpdateWebhook(Request $request)
     {
         $hmacHeader = $request->header('X-Shopify-Hmac-Sha256');
+        $shopDomain = $request->header('X-Shopify-Shop-Domain');
         $data = $request->getContent();
 
+        // Verify webhook
         if (!$this->verifyWebhookInternal($data, $hmacHeader)) {
-            Log::error('Shopify webhook verification failed. handleProductUpdateWebhook');
-            return null;
+            Log::warning('Webhook verification failed', [
+                'shop' => $shopDomain,
+                'hmac' => $hmacHeader,
+                'data' => $data,
+            ]);
+            return response()->json(['error' => 'Invalid webhook signature'], 401);
         }
 
-        $productId = $request->input('id');
-        $productTitle = $request->input('title');
+        // Decode JSON
+        $payload = json_decode($data, true);
 
-        $shopDomain = $request->header('X-Shopify-Shop-Domain');
+        // Guard against malformed payload
+        if (!isset($payload['id']) || !isset($payload['title'])) {
+            Log::error('Malformed product update webhook payload', [
+                'shop' => $shopDomain,
+                'payload' => $payload,
+            ]);
+            return response()->json(['error' => 'Invalid product payload'], 422);
+        }
 
-        ProductStoreMetafieldJob::dispatch($productId, $productTitle, $shopDomain);
-
+        $productId = $payload['id'];
+        $productTitle = $payload['title'];
+        $start = microtime(true);
+        Log::info('ProductStoreMetafieldJob started', ['start_time' => $start]);
+        try {
+            // Optional: deduplicate or throttle logic here
+            ProductStoreMetafieldJob::dispatch($productId, $productTitle, $shopDomain);
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch ProductStoreMetafieldJob', [
+                'error' => $e->getMessage(),
+                'product_id' => $productId,
+                'shop' => $shopDomain,
+            ]);
+            return response()->json(['error' => 'Failed to dispatch job'], 500);
+        }
+        $end = microtime(true); // End time
+        $duration = $end - $start; // in seconds (as float)
+        Log::info('ProductStoreMetafieldJob finished', [
+            'end_time' => $end,
+            'duration_seconds' => round($duration, 4)
+        ]);
+        
         return response()->json(['message' => 'Webhook processed successfully'], 200);
-        // return response()->json(['message' => 'Webhook processed successfully', 'metafields' => $metafields], 200);
     }
+
 
     public function shopRedact(Request $request)
     {
@@ -206,7 +240,7 @@ class WebhookController extends Controller
     public function callback(Request $request)
     {
         $query = $request->query();
-        $shop= $query['shop'] ?? "";
+        $shop = $query['shop'] ?? "";
         $hmac = $query['hmac'] ?? "";
         unset($query['hmac']);
         ksort($query);
@@ -230,11 +264,10 @@ class WebhookController extends Controller
             $shop_data->password = $accessToken;
             $shop_data->needs_update = 0;
             $shop_data->save();
-            $redirect_url = "https://".$shop."/admin/apps/".env('SHOPIFY_APP');
-            return redirect(  $redirect_url );
-
+            $redirect_url = "https://" . $shop . "/admin/apps/" . env('SHOPIFY_APP');
+            return redirect($redirect_url);
         }
 
-       // return response()->json(['error' => 'Failed to get access token'], 400);
+        // return response()->json(['error' => 'Failed to get access token'], 400);
     }
 }

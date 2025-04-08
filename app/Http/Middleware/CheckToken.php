@@ -35,6 +35,7 @@ class CheckToken
 
         try {
             // Attempt to decode the token
+            JWT::$leeway = 60;
             $decoded = JWT::decode($token, new Key($secret, 'HS256'));
 
             $shopUrl = $decoded->dest;

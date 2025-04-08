@@ -44,15 +44,12 @@ class ProductStoreMetafieldJob implements ShouldQueue
 
         if (!empty($metafields) && !empty($setting)) {
             foreach ($metafields as $metafield) {
-                Log::info('loop metafields', ['metafields' => $metafield]);
-                Log::info('loop owner_id', ['owner_id' => $metafield['owner_id']]);
-
                 if ($metafield['namespace'] === 'custom' && $metafield['key'] === 'shipping_price') {
                     $productData = [
                         "user_id" => $accessToken['id'],
                         "setting_id" => $setting,
                         "product_id" => $metafield['owner_id'],
-                        "title" => $this->shopDomain,
+                        "title" => $this->productTitle,
                         "value" => $metafield['value'],
                         "checked" => 1
                     ];
@@ -64,6 +61,11 @@ class ProductStoreMetafieldJob implements ShouldQueue
                     }
                 }
             }
+        } else if (empty($metafields) && !empty($setting)) {
+            Product::where([
+                'product_id' => $this->productId,
+                'setting_id' => $setting,
+            ])->delete();
         }
 
         Log::info('metafields', ['metafields' => $metafields]);
