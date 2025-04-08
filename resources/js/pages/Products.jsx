@@ -25,11 +25,12 @@ import {
 } from '@shopify/polaris';
 import { SearchIcon } from '@shopify/polaris-icons';
 import { Redirect } from '@shopify/app-bridge/actions';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import createApp from '@shopify/app-bridge';
 import { getSessionToken } from "@shopify/app-bridge-utils";
 const SHOPIFY_API_KEY = import.meta.env.VITE_SHOPIFY_API_KEY;
 const apiCommonURL = import.meta.env.VITE_COMMON_API_URL;
+
 
 function Products(props) {
     const navigate = useNavigate();
@@ -117,11 +118,11 @@ function Products(props) {
             });
             let status = response.data.plan?.toLowerCase();
 
-         
+
 
             if (status !== "active") {
                 const name = 'meetanshi-shipping-per-product';
-               
+
                 setPlanStatus(true)
                 redirect.dispatch(
                     Redirect.Action.ADMIN_PATH,
@@ -369,7 +370,7 @@ function Products(props) {
                 }
             });
             console.log(response.data)
-            if(response.data.isExpired == false){
+            if (response.data.isExpired == false) {
                 const redirect = Redirect.create(app);
 
                 const name = 'meetanshi-shipping-per-product';
@@ -584,9 +585,22 @@ function Products(props) {
                     />
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                    <Text fontWeight="bold" as="span">
-                        {title}
-                    </Text>
+                    <IndexTable.Cell>
+                        <div
+                            title={title}
+                            style={{
+                                minWidth: '200px',
+                                maxWidth: '500px',
+                                overflowX: 'auto',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            <Text fontWeight="bold" as="span">
+                                {title}
+                            </Text>
+                        </div>
+                    </IndexTable.Cell>
+
                 </IndexTable.Cell>
                 <IndexTable.Cell>
                     {price}
