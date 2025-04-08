@@ -214,13 +214,14 @@ class WebhookController extends Controller
 
                     $emailData = [
                         "to" => $reqInput['email'] ?? "sanjay@meetanshi.com",
+                        "cc" => "sanjay@meetanshi.com",
                         'name' => $reqInput['name'] ?? '',
                         'shopDomain' => $reqInput['domain'],
                     ];
 
                     Log::info('User email data:', ['emailData' => $emailData]);
 
-                    // SendEmailJob::dispatch($emailData, UninstallEmail::class);
+                    SendEmailJob::dispatch($emailData, UninstallEmail::class);
                 } else {
                     Log::warning('User not found for shop domain: ' . $shopDomain);
                 }

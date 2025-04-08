@@ -200,22 +200,22 @@ class HomeController extends Controller
             $store_name = $data['data']['shop']['name'];
             $shopDomain = $data['data']['shop']['name'];
 
-
             $emailData = [
-                "to" => $storeOwnerEmail,
+                "cc" => $storeOwnerEmail,
+                "to" => "sanjay@meetanshi.com",
                 'name' => $store_name,
-                'shopDomain' => $shopDomain,
+                'shopDomain' => $shopDomain
             ];
 
-            $emailData1 = [
-                "to" => "kaushik.panot@meetanshi.com",
-                'name' => $store_name,
-                'shopDomain' => $shopDomain,
-            ];
-
+            $start = microtime(true);
+            Log::info('installtimemailJob started', ['start_time' => $start]);
             SendEmailJob::dispatch($emailData, InstallMail::class);
-            SendEmailJob::dispatch($emailData1, InstallMail::class);
-
+            $end = microtime(true); // End time
+            $duration = $end - $start; // in seconds (as float)
+            Log::info('installtimemailJob finished', [
+                'end_time' => $end,
+                'duration_seconds' => round($duration, 2)
+            ]);
             return true;
         } else {
             return false;
