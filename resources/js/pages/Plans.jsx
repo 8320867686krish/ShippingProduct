@@ -13,7 +13,7 @@ function PricingPlanRedirect() {
 
     redirect.dispatch(
       Redirect.Action.ADMIN_PATH,
-      '/store/khushi-sonani/charges/khushi_test/pricing_plans'
+      '/charges/meetanshi-shipping-per-product/pricing_plans'
     );
     //   redirect.dispatch(
     //     Redirect.Action.ADMIN_PATH,
