@@ -1,7 +1,7 @@
 import { Redirect } from '@shopify/app-bridge/actions';
 import { useAppBridge } from '@shopify/app-bridge-react';
 import { Button } from '@shopify/polaris';
-import React, { use } from 'react';
+import React, { useEffect } from 'react';
 
 function PricingPlanRedirect() {
   const app = useAppBridge();
