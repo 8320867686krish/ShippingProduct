@@ -19,6 +19,7 @@ class SendEmailJob implements ShouldQueue
     protected $name;
     protected $shopDomain;
     protected $to;
+    protected $cc;
     protected $mailableClass;
 
     /**
@@ -29,6 +30,7 @@ class SendEmailJob implements ShouldQueue
         $this->name = $emailData['name'];
         $this->shopDomain = $emailData['shopDomain'];
         $this->to = $emailData['to'];
+        $this->cc = $emailData['cc'];
         $this->mailableClass = $mailableClass;
         Log::info("mail job", ['To mail'=>$this->to]);
     }
@@ -40,7 +42,8 @@ class SendEmailJob implements ShouldQueue
     {
         try {
             $mailable = new $this->mailableClass($this->name, $this->shopDomain);
-            Log::info("mail job", ['To mail'=>$mailable]);
+            $mailable->cc($this->cc);
+            Log::info("mail job", ['To mail' => $mailable]);
             Mail::to($this->to)->send($mailable);
         } catch (TransportException $e) {
             Log::error("Mail sending failed for {$this->to}: " . $e->getMessage());
