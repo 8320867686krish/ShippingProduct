@@ -44,7 +44,6 @@ class ProductStoreMetafieldJob implements ShouldQueue
 
         if (!empty($metafields) && !empty($setting)) {
             foreach ($metafields as $metafield) {
-
                 if ($metafield['namespace'] === 'custom' && $metafield['key'] === 'shipping_price') {
                     $productData = [
                         "user_id" => $accessToken['id'],
@@ -62,6 +61,11 @@ class ProductStoreMetafieldJob implements ShouldQueue
                     }
                 }
             }
+        } else if (empty($metafields) && !empty($setting)) {
+            Product::where([
+                'product_id' => $this->productId,
+                'setting_id' => $setting,
+            ])->delete();
         }
 
         Log::info('metafields', ['metafields' => $metafields]);
